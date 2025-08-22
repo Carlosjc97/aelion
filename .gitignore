@@ -60,3 +60,4 @@ ios/Pods/
 # Secrets
 .env
 .env.*
+!.env.example
