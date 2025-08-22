@@ -43,4 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+build/
+ios/Pods/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Secrets
 .env
+.env.*
