@@ -2,17 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: "assets/.env");
-  runApp(const LearningIAApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Carga opcional del .env (solo si existe localmente). No lo empaques en assets.
+  try {
+    await dotenv.load(fileName: ".env"); // raíz del proyecto
+  } catch (_) {
+    // Si no existe (p.ej. en CI o release), sigue sin tronar
+    debugPrint("[Aelion] .env no encontrado (ok en CI/release).");
+  }
+
+  // Guardia: si la app intenta usar la key y no está, que no reviente
+  final key = dotenv.env['CV_STUDIO_API_KEY'] ?? '';
+  if (key.isEmpty || key == 'changeme') {
+    debugPrint("[Aelion] CV_STUDIO_API_KEY ausente/placeholder. Evita llamadas reales.");
+  }
+
+  runApp(const AelionApp());
 }
 
-class LearningIAApp extends StatelessWidget {
-  const LearningIAApp({super.key});
+class AelionApp extends StatelessWidget {
+  const AelionApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Learning IA',
+      title: 'Aelion',
       theme: ThemeData(primarySwatch: Colors.deepPurple),
       home: const HomePage(),
     );
@@ -39,7 +54,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Learning IA")),
+      appBar: AppBar(title: const Text("Aelion")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
