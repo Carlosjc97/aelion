@@ -1,16 +1,14 @@
-# learning_ia
+# Aelion
 
-A new Flutter project.
+Plataforma de **microaprendizaje con IA**. Convierte una duda en un módulo corto, guiado y accionable.
 
-## Getting Started
+## 🚀 Stack
+- Flutter (canal **stable**)
+- Android/iOS/Web
+- `flutter_dotenv` para variables **locales** (no se suben)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## ⚙️ Setup rápido
+```bash
+flutter pub get
+cp .env.example .env   # opcional para desarrollo local
+flutter run -d chrome  # o tu dispositivo
