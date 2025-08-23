@@ -7,9 +7,18 @@ import 'core/router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
+    // Primero intentamos cargar tu archivo .env local (no subido al repo)
     await dotenv.load(fileName: '.env');
   } catch (_) {
-    debugPrint('[Aelion] .env no encontrado; continúa sin él.');
+    // Si no existe, intentamos cargar el archivo público env.public
+    try {
+      await dotenv.load(fileName: 'env.public');
+    } catch (_) {
+      // Si no se puede cargar ninguno, seguimos sin variables y mostramos un aviso en consola
+      debugPrint(
+        '[Aelion] No se pudo cargar ningún archivo de entorno; continúa sin él.',
+      );
+    }
   }
   runApp(const AelionApp());
 }
