@@ -1,14 +1,19 @@
 # Aelion
 
-Plataforma de **microaprendizaje con IA**. Convierte una duda en un módulo corto, guiado y accionable.
+[![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions)
 
-## 🚀 Stack
-- Flutter (canal **stable**)
-- Android/iOS/Web
-- `flutter_dotenv` para variables **locales** (no se suben)
+Aplicación Flutter para explorar temas y ver módulos de ejemplo. Incluye carga de **variables de entorno** (seguras) y **CI** con GitHub Actions.
 
-## ⚙️ Setup rápido
+---
+
+## Requisitos
+
+- Flutter instalado (canal **stable**)
+- Dart incluído con Flutter
+- Git
+
+Verifica:
 ```bash
-flutter pub get
-cp .env.example .env   # opcional para desarrollo local
-flutter run -d chrome  # o tu dispositivo
+flutter --version
+dart --version
+git --version
