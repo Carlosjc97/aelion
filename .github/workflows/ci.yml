@@ -6,9 +6,18 @@ on:
   pull_request:
     branches: [ "main" ]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      security-events: write   # permite subir reportes de seguridad si luego los publicas
 
     steps:
       - uses: actions/checkout@v4
@@ -19,6 +28,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
       - name: Flutter pub get
         run: flutter pub get
@@ -29,6 +39,7 @@ jobs:
       - name: Flutter test
         run: flutter test
 
+        boot-hardening
       - name: Flutter build web
         run: flutter build web
 
@@ -36,3 +47,18 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Flutter build web (regression guard)
+        run: flutter build web --release
+
+      - name: Gitleaks (secrets scan)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: >
+            detect
+            --verbose
+            --redact
+            --source=.
+            --report-format sarif
+            --report-path gitleaks.sarif
+        main
