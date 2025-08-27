@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -5,7 +8,53 @@ import 'core/app_colors.dart';
 import 'core/router.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Atrapa errores de frameworks externos
+  runZonedGuarded<Future<void>>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await _loadEnv();
+
+      // Atrapa errores del framework Flutter
+      FlutterError.onError = (errorDetails) {
+        // TODO: Reemplazar por un logger de verdad
+        debugPrint('[FlutterError] ${errorDetails.exception}');
+        debugPrint(errorDetails.stack.toString());
+        Zone.current.handleUncaughtError(
+          errorDetails.exception,
+          errorDetails.stack ?? StackTrace.empty,
+        );
+      };
+
+      // Muestra un widget de error visible en modo debug
+      if (kDebugMode) {
+        ErrorWidget.builder = (errorDetails) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Text(
+                    'Error de renderizado:\n\n${errorDetails.exception}',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          );
+        };
+      }
+      runApp(const AelionApp());
+    },
+    (error, stack) {
+      // TODO: Reemplazar por un logger de verdad
+      debugPrint('[runZonedGuarded] $error');
+      debugPrint(stack.toString());
+    },
+  );
+}
+
+/// Carga el fichero de entorno `.env` o en su defecto `env.public`.
+Future<void> _loadEnv() async {
   try {
     await dotenv.load(fileName: '.env');
   } catch (_) {
@@ -15,7 +64,6 @@ Future<void> main() async {
       debugPrint('[Aelion] No se pudo cargar ningún archivo de entorno.');
     }
   }
-  runApp(const AelionApp());
 }
 
 class AelionApp extends StatelessWidget {
