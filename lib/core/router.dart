@@ -3,17 +3,16 @@ import 'package:flutter/material.dart';
 import '../features/home/home_view.dart';
 import '../features/modules/module_outline_view.dart';
 import '../features/topics/topic_search_view.dart';
-import '../features/lesson/lesson_view.dart'; // si aún no la creas, puedes quitar esta línea y el case
+import '../features/lesson/lesson_view.dart'; // quita esta línea si aún no usas LessonView
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       // Home
-      case HomeView.routeName:
       case '/':
         return MaterialPageRoute(builder: (_) => const HomeView());
 
-      // Módulo (recibe un String? topic en settings.arguments)
+      // Módulo (recibe String? topic en settings.arguments)
       case ModuleOutlineView.routeName:
         final String? topic = settings.arguments as String?;
         return MaterialPageRoute(
@@ -24,7 +23,7 @@ class AppRouter {
       case TopicSearchView.routeName:
         return MaterialPageRoute(builder: (_) => const TopicSearchView());
 
-      // Lección (opcional; si no la usas aún, comenta este bloque y el import)
+      // Lección (si no la usas aún, comenta este bloque y el import)
       case LessonView.routeName:
         final args = (settings.arguments as Map<String, dynamic>?) ?? const {};
         return MaterialPageRoute(

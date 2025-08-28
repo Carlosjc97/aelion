@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/core/router.dart';
-import 'package:aelion/features/home/home_view.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
+import 'package:learning_ia/core/router.dart';
+import 'package:learning_ia/features/home/home_view.dart';
+import 'package:learning_ia/features/modules/module_outline_view.dart';
 
 Widget _app() => MaterialApp(
   onGenerateRoute: AppRouter.onGenerateRoute,
@@ -15,7 +15,6 @@ void main() {
     await tester.pumpWidget(_app());
     expect(find.byType(HomeView), findsOneWidget);
 
-    // Navega a /module con un topic en arguments (String)
     Navigator.of(tester.element(find.byType(HomeView))).pushNamed(
       ModuleOutlineView.routeName,
       arguments: 'Introducción a Flutter',
