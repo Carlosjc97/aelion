@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../features/home/home_view.dart';
 import '../features/modules/module_outline_view.dart';
 import '../features/topics/topic_search_view.dart';
-import '../features/lesson/lesson_view.dart'; // quita esta línea si aún no usas LessonView
-import '../features/quiz/quiz_screen.dart';   // << NUEVO
+import '../features/lesson/lesson_view.dart';
+import '../features/quiz/quiz_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -24,7 +24,7 @@ class AppRouter {
       case TopicSearchView.routeName:
         return MaterialPageRoute(builder: (_) => const TopicSearchView());
 
-      // Lección (si no la usas aún, comenta este bloque y el import)
+      // Lección
       case LessonView.routeName:
         final args = (settings.arguments as Map<String, dynamic>?) ?? const {};
         return MaterialPageRoute(
@@ -32,6 +32,10 @@ class AppRouter {
             lessonId: args['lessonId'] as String?,
             title: (args['title'] as String?) ?? 'Lección',
             content: (args['content'] as String?) ?? 'Contenido…',
+            // 🔽 soporta flags y lenguaje si vienen en arguments
+            isPremiumEnabled: (args['isPremiumEnabled'] as bool?) ?? false,
+            isPremiumLesson: (args['isPremiumLesson'] as bool?) ?? false,
+            initialLang: (args['initialLang'] as String?) ?? 'es',
           ),
         );
 
