@@ -4,6 +4,7 @@ import '../../core/app_colors.dart';
 import '../../services/course_api_service.dart';
 import '../../services/progress_service.dart';
 import '../quiz/quiz_screen.dart';
+import '../lesson/lesson_view.dart';
 
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
@@ -19,7 +20,8 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
   bool loading = true;
   Map<String, dynamic>? course; // outline JSON
   final progress = ProgressService();
-  String get courseId => (widget.topic ?? 'Curso').toLowerCase().replaceAll(' ', '_');
+  String get courseId =>
+      (widget.topic ?? 'Curso').toLowerCase().replaceAll(' ', '_');
 
   @override
   void initState() {
@@ -30,7 +32,9 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
   Future<void> _loadOutline() async {
     setState(() => loading = true);
     try {
-      final outline = await CourseApiService.generateOutline(topic: widget.topic ?? 'Curso');
+      final outline = await CourseApiService.generateOutline(
+        topic: widget.topic ?? 'Curso',
+      );
 
       // Asegura mínimo desbloqueo inicial
       final rawModules = outline['modules'];
@@ -40,7 +44,8 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
           modules.first['locked'] = false;
           final rawLessons = modules.first['lessons'];
           if (rawLessons is List && rawLessons.isNotEmpty) {
-            final firstLessons = rawLessons.cast<Map<String, dynamic>>();
+            final firstLessons =
+                rawLessons.cast<Map<String, dynamic>>();
             firstLessons.first['locked'] = false;
           }
         }
@@ -61,8 +66,19 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
               "title": "Introducción",
               "locked": false,
               "lessons": [
-                {"id": "m1l1", "title": "Definición", "locked": false, "status": "todo"},
-                {"id": "m1l2", "title": "Ejemplo práctico", "locked": true, "status": "todo"},
+                {
+                  "id": "m1l1",
+                  "title": "Definición",
+                  "locked": false,
+                  "status": "todo"
+                },
+                {
+                  "id": "m1l2",
+                  "title": "Ejemplo práctico",
+                  "locked": true,
+                  "status": "todo",
+                  "premium": true
+                },
               ]
             }
           ]
@@ -87,7 +103,10 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
                 ? _ErrorReload(onRetry: _loadOutline)
                 : RefreshIndicator(
                     onRefresh: _loadOutline,
-                    child: _OutlineList(course: course!, onReload: _loadOutline),
+                    child: _OutlineList(
+                      course: course!,
+                      onReload: _loadOutline,
+                    ),
                   ),
       ),
     );
@@ -132,7 +151,10 @@ class _ErrorReload extends StatelessWidget {
               children: [
                 const Text('No se pudo cargar el curso.'),
                 const SizedBox(height: 8),
-                FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
+                FilledButton(
+                  onPressed: onRetry,
+                  child: const Text('Reintentar'),
+                ),
               ],
             ),
           ),
@@ -150,7 +172,9 @@ class _OutlineList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rawModules = course['modules'];
-    final modules = (rawModules is List) ? rawModules.cast<Map<String, dynamic>>() : const <Map<String, dynamic>>[];
+    final modules = (rawModules is List)
+        ? rawModules.cast<Map<String, dynamic>>()
+        : const <Map<String, dynamic>>[];
 
     return ListView(
       children: [
@@ -168,7 +192,9 @@ class _OutlineList extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
-                const Text('10 preguntas para ajustar el nivel y priorizar el contenido.'),
+                const Text(
+                  '10 preguntas para ajustar el nivel y priorizar el contenido.',
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -177,13 +203,17 @@ class _OutlineList extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           QuizScreen.routeName,
-                          arguments: (course['topic'] as String?) ?? 'Curso',
+                          arguments:
+                              (course['topic'] as String?) ?? 'Curso',
                         );
                       },
                       child: const Text('Sí, hágamoslo'),
                     ),
                     const SizedBox(width: 8),
-                    TextButton(onPressed: () {}, child: const Text('Ahora no')),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Ahora no'),
+                    ),
                   ],
                 ),
               ],
@@ -213,6 +243,7 @@ class _OutlineList extends StatelessWidget {
                       _LessonTile(
                         module: m,
                         lesson: (raw as Map).cast<String, dynamic>(),
+                        onCompleted: onReload,
                       ),
                   ],
                 ),
@@ -226,13 +257,18 @@ class _OutlineList extends StatelessWidget {
 class _LessonTile extends StatelessWidget {
   final Map<String, dynamic> module;
   final Map<String, dynamic> lesson;
+  final VoidCallback onCompleted;
 
-  const _LessonTile({required this.module, required this.lesson});
+  const _LessonTile({
+    required this.module,
+    required this.lesson,
+    required this.onCompleted,
+  });
 
   @override
   Widget build(BuildContext context) {
     final locked = (lesson['locked'] == true);
-    final isPremiumLesson = (lesson['premium'] == true); // opcional en tu JSON
+    final isPremiumLesson = (lesson['premium'] == true); // opcional en JSON
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
 
@@ -242,32 +278,38 @@ class _LessonTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isPremiumLesson) const Icon(Icons.lock_outline_rounded, size: 18),
+          if (isPremiumLesson)
+            const Icon(Icons.lock_outline_rounded, size: 18),
           const Icon(Icons.chevron_right),
         ],
       ),
       onTap: locked
-    ? null
-    : () async {
-        final result = await Navigator.pushNamed(
-          context,
-          '/lesson',
-          arguments: {
-            'lessonId': lessonId,
-            'title': title,
-            'content': 'Contenido de $title',
-            'isPremiumEnabled': false, // en prototipo premium ponlo true
-            'isPremiumLesson': isPremiumLesson,
-            'initialLang': 'es',
-          },
-        );
+          ? null
+          : () async {
+              final result = await Navigator.pushNamed(
+                context,
+                LessonView.routeName,
+                arguments: {
+                  'lessonId': lessonId,
+                  'title': title,
+                  'content': 'Contenido de $title',
+                  // Flag premium global (OFF por defecto en MVP)
+                  'isPremiumEnabled': false,
+                  'isPremiumLesson': isPremiumLesson,
+                  'initialLang': 'es',
+                },
+              );
 
-        // ✅ Evita usar BuildContext si el widget fue desmontado
-        if (!context.mounted) return;
+              // Evita usar BuildContext si el widget fue desmontado
+              if (!context.mounted) return;
 
-        if (result is Map && result['completed'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Completaste: $title')),
-          );
-        }
-      },
+              if (result is Map && result['completed'] == true) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Completaste: $title')),
+                );
+                onCompleted(); // refresca outline si quieres reconsultar
+              }
+            },
+    );
+  }
+}
