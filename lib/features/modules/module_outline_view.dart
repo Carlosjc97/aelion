@@ -5,6 +5,7 @@ import '../../services/course_api_service.dart';
 import '../../services/progress_service.dart';
 import '../quiz/quiz_screen.dart';
 import '../lesson/lesson_view.dart';
+import '../../services/api_config.dart';
 
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
@@ -294,7 +295,7 @@ class _LessonTile extends StatelessWidget {
                   'title': title,
                   'content': 'Contenido de $title',
                   // Flag premium global (OFF por defecto en MVP)
-                  'isPremiumEnabled': true,
+                  'isPremiumEnabled': AppConfig.premiumEnabled, // ← en lugar de false/true fijo
                   'isPremiumLesson': isPremiumLesson,
                   'initialLang': 'es',
                 },

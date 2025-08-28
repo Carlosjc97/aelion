@@ -1,14 +1,24 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class ApiConfig {
-  // Usa API_BASE_URL si existe; si no, usa BASE_URL; si no, vacío.
-  static String get baseUrl {
-    final a = dotenv.maybeGet('API_BASE_URL')?.trim();
-    if (a != null && a.isNotEmpty) return a;
-    final b = dotenv.maybeGet('BASE_URL')?.trim();
-    if (b != null && b.isNotEmpty) return b;
-    return '';
-  }
+/// Configuración centralizada leída desde .env / env.public
+class AppConfig {
+  static String get env => dotenv.env['AELION_ENV'] ?? 'development';
 
-  static bool get isConfigured => baseUrl.isNotEmpty;
+  static String get baseUrl =>
+      dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
+
+  static String? get cvStudioApiKey => dotenv.env['CV_STUDIO_API_KEY'];
+
+  /// Flag premium controlado por .env
+  ///
+  /// Acepta: true/false, 1/0, yes/no, on/off (case-insensitive)
+  static bool get premiumEnabled {
+    final raw = (dotenv.env['AELION_PREMIUM_ENABLED'] ?? 'false')
+        .trim()
+        .toLowerCase();
+    return raw == 'true' ||
+        raw == '1' ||
+        raw == 'yes' ||
+        raw == 'on';
+  }
 }
