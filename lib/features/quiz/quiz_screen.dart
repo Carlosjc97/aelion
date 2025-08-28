@@ -26,6 +26,10 @@ class _QuizScreenState extends State<QuizScreen> {
     },
   );
 
+  void _select(int qIndex, int optIndex) {
+    setState(() => answers[qIndex] = optIndex);
+  }
+
   void _next() {
     if (index < questions.length - 1) {
       controller.nextPage(
@@ -59,7 +63,7 @@ class _QuizScreenState extends State<QuizScreen> {
               itemBuilder: (context, i) {
                 final q = questions[i];
                 final List<String> opts = (q['opts'] as List).cast<String>();
-                final value = answers[i];
+                final selected = answers[i];
 
                 return Padding(
                   padding: const EdgeInsets.all(16),
@@ -68,16 +72,25 @@ class _QuizScreenState extends State<QuizScreen> {
                     children: [
                       Text(q['q'] as String, style: theme.textTheme.titleLarge),
                       const SizedBox(height: 12),
+
+                      // Opciones SIN RadioListTile (evita deprecations)
                       for (var optIndex = 0; optIndex < opts.length; optIndex++)
-                        RadioListTile<int>(
-                          value: optIndex,
-                          groupValue: value, // deprecation: aviso, no bloquea
-                          title: Text(opts[optIndex]),
-                          onChanged: (v) => setState(() => answers[i] = v), // idem
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            onTap: () => _select(i, optIndex),
+                            leading: Icon(
+                              selected == optIndex
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                            ),
+                            title: Text(opts[optIndex]),
+                          ),
                         ),
+
                       const Spacer(),
                       FilledButton(
-                        onPressed: value == null ? null : _next,
+                        onPressed: selected == null ? null : _next,
                         child: Text(i == total - 1 ? 'Terminar' : 'Siguiente'),
                       ),
                     ],
