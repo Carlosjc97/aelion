@@ -30,21 +30,19 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Static analysis
+      - name: Flutter analyze
         run: flutter analyze
 
-      - name: Run tests
+      - name: Flutter test
         run: flutter test
 
       - name: Enable Flutter web
         run: flutter config --enable-web
 
-      - name: Build web (release)
+      - name: Flutter build web (release)
         run: flutter build web --release
 
       - name: Gitleaks (secrets scan)
         uses: gitleaks/gitleaks-action@v2
-        with:
-          args: detect --no-git -v
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
