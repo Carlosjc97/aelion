@@ -144,7 +144,7 @@ class AelionApp extends StatelessWidget {
             borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: AppColors.surface,
           elevation: 0,
           shape: RoundedRectangleBorder(
