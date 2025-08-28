@@ -4,6 +4,7 @@ import '../features/home/home_view.dart';
 import '../features/modules/module_outline_view.dart';
 import '../features/topics/topic_search_view.dart';
 import '../features/lesson/lesson_view.dart'; // quita esta línea si aún no usas LessonView
+import '../features/quiz/quiz_screen.dart';   // << NUEVO
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -32,6 +33,13 @@ class AppRouter {
             title: (args['title'] as String?) ?? 'Lección',
             content: (args['content'] as String?) ?? 'Contenido…',
           ),
+        );
+
+      // Quiz (recibe String topic en settings.arguments; usa 'Curso' por defecto)
+      case QuizScreen.routeName:
+        final String topic = (settings.arguments as String?) ?? 'Curso';
+        return MaterialPageRoute(
+          builder: (_) => QuizScreen(topic: topic),
         );
 
       // 404 amigable
