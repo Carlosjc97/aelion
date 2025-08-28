@@ -12,21 +12,28 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   final controller = PageController();
   int index = 0;
-  final answers = <int, int?>{};
-  final questions = List.generate(
+
+  // índice de pregunta -> respuesta seleccionada
+  final Map<int, int?> answers = {};
+
+  // Tipado explícito para evitar Object
+  late final List<Map<String, dynamic>> questions = List.generate(
     10,
     (i) => {
       'q': 'Pregunta ${i + 1}: ¿…sobre ${i.isEven ? 'concepto' : 'práctica'}?',
-      'opts': ['A', 'B', 'C', 'D'],
+      'opts': <String>['A', 'B', 'C', 'D'],
       'correct': 1,
     },
   );
 
   void _next() {
     if (index < questions.length - 1) {
-      controller.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      controller.nextPage(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     } else {
-      Navigator.pop(context); // vuelve al Outline
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('¡Gracias! Ajustaremos tu curso.')),
       );
@@ -36,6 +43,8 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     final total = questions.length;
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: Text('Mini test – ${widget.topic}')),
       body: Column(
@@ -49,20 +58,22 @@ class _QuizScreenState extends State<QuizScreen> {
               itemCount: total,
               itemBuilder: (context, i) {
                 final q = questions[i];
+                final List<String> opts = (q['opts'] as List).cast<String>();
                 final value = answers[i];
+
                 return Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(q['q'] as String, style: Theme.of(context).textTheme.titleLarge),
+                      Text(q['q'] as String, style: theme.textTheme.titleLarge),
                       const SizedBox(height: 12),
-                      for (var optIndex = 0; optIndex < 4; optIndex++)
+                      for (var optIndex = 0; optIndex < opts.length; optIndex++)
                         RadioListTile<int>(
                           value: optIndex,
-                          groupValue: value,
-                          title: Text('${q['opts']![optIndex]}'),
-                          onChanged: (v) => setState(() => answers[i] = v),
+                          groupValue: value, // deprecation: aviso, no bloquea
+                          title: Text(opts[optIndex]),
+                          onChanged: (v) => setState(() => answers[i] = v), // idem
                         ),
                       const Spacer(),
                       FilledButton(

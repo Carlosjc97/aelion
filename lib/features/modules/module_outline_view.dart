@@ -107,7 +107,7 @@ class _SkeletonList extends StatelessWidget {
         height: 76,
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppColors.neutral.withOpacity(0.4),
+          color: AppColors.neutral.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(14),
         ),
       ),
