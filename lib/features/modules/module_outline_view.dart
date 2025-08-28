@@ -247,32 +247,27 @@ class _LessonTile extends StatelessWidget {
         ],
       ),
       onTap: locked
-          ? null
-          : () async {
-              // Abrir LessonView con feature flag premium desactivado por ahora
-              final result = await Navigator.pushNamed(
-                context,
-                '/lesson', // importa LessonView.routeName si prefieres
-                arguments: {
-                  'lessonId': lessonId,
-                  'title': title,
-                  'content': 'Contenido de $title',
-                  'isPremiumEnabled': false, // << FLAG GLOBAL (por ahora OFF)
-                  'isPremiumLesson': isPremiumLesson,
-                  'initialLang': 'es',
-                },
-              );
+    ? null
+    : () async {
+        final result = await Navigator.pushNamed(
+          context,
+          '/lesson',
+          arguments: {
+            'lessonId': lessonId,
+            'title': title,
+            'content': 'Contenido de $title',
+            'isPremiumEnabled': false, // en prototipo premium ponlo true
+            'isPremiumLesson': isPremiumLesson,
+            'initialLang': 'es',
+          },
+        );
 
-              // Si volvió con 'completed', podrías refrescar progreso/outline
-              if (result is Map && result['completed'] == true) {
-                // Muestra feedback básico
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Completaste: $title')),
-                );
-                // TODO: aquí podrías invocar onReload() si quieres reconsultar outline
-                // p.ej: onReload();
-              }
-            },
-    );
-  }
-}
+        // ✅ Evita usar BuildContext si el widget fue desmontado
+        if (!context.mounted) return;
+
+        if (result is Map && result['completed'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Completaste: $title')),
+          );
+        }
+      },
