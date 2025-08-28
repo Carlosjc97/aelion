@@ -1,49 +1,34 @@
 name: CI
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up Flutter (stable)
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
       - name: Flutter pub get
         run: flutter pub get
-
       - name: Flutter analyze
         run: flutter analyze
-
       - name: Flutter test
         run: flutter test
-
-        main
       - name: Flutter build web (regression guard)
         run: flutter build web --release
-
-      - name: Flutter build web
-        run: flutter build web
-        boot-hardening
-
       - name: Gitleaks (secrets scan)
         uses: gitleaks/gitleaks-action@v2
         env:
