@@ -294,7 +294,7 @@ class _LessonTile extends StatelessWidget {
                   'title': title,
                   'content': 'Contenido de $title',
                   // Flag premium global (OFF por defecto en MVP)
-                  'isPremiumEnabled': false,
+                  'isPremiumEnabled': true,
                   'isPremiumLesson': isPremiumLesson,
                   'initialLang': 'es',
                 },
