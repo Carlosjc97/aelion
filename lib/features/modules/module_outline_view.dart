@@ -232,17 +232,46 @@ class _LessonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locked = (lesson['locked'] == true);
+    final isPremiumLesson = (lesson['premium'] == true); // opcional en tu JSON
+    final title = (lesson['title'] as String?) ?? 'Lección';
+    final lessonId = (lesson['id'] as String?) ?? title;
+
     return ListTile(
       enabled: !locked,
-      title: Text((lesson['title'] as String?) ?? 'Lección'),
-      trailing: const Icon(Icons.chevron_right),
+      title: Text(title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isPremiumLesson) const Icon(Icons.lock_outline_rounded, size: 18),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
       onTap: locked
           ? null
-          : () {
-              // Aquí abrirías LessonView real (de momento, demo)
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Abrir lección: ${lesson['title']}')),
+          : () async {
+              // Abrir LessonView con feature flag premium desactivado por ahora
+              final result = await Navigator.pushNamed(
+                context,
+                '/lesson', // importa LessonView.routeName si prefieres
+                arguments: {
+                  'lessonId': lessonId,
+                  'title': title,
+                  'content': 'Contenido de $title',
+                  'isPremiumEnabled': false, // << FLAG GLOBAL (por ahora OFF)
+                  'isPremiumLesson': isPremiumLesson,
+                  'initialLang': 'es',
+                },
               );
+
+              // Si volvió con 'completed', podrías refrescar progreso/outline
+              if (result is Map && result['completed'] == true) {
+                // Muestra feedback básico
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Completaste: $title')),
+                );
+                // TODO: aquí podrías invocar onReload() si quieres reconsultar outline
+                // p.ej: onReload();
+              }
             },
     );
   }
