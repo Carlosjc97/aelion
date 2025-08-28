@@ -2,48 +2,48 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProgressService {
-  static String _key(String courseId) => 'progress_$courseId';
+  static const _kCompletedLessonsKey = 'aelion.completed_lessons';
+  static const _kCourseProgressPrefix = 'aelion.course.'; // + courseId
 
-  Future<Map<String, dynamic>?> getProgress(String courseId) async {
+  /// Guarda el outline de un curso (mock/simple).
+  Future<void> saveProgress(String courseId, Map<String, dynamic> outline) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key(courseId));
-    return raw == null ? null : jsonDecode(raw) as Map<String, dynamic>;
+    await prefs.setString('$_kCourseProgressPrefix$courseId', jsonEncode(outline));
   }
 
-  Future<void> saveProgress(String courseId, Map<String, dynamic> data) async {
+  /// Carga el outline guardado (si existe). Retorna null si no hay.
+  Future<Map<String, dynamic>?> loadProgress(String courseId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key(courseId), jsonEncode(data));
+    final raw = prefs.getString('$_kCourseProgressPrefix$courseId');
+    if (raw == null) return null;
+    try {
+      final map = jsonDecode(raw);
+      if (map is Map<String, dynamic>) return map;
+    } catch (_) {}
+    return null;
   }
 
-  Future<Map<String, dynamic>> markLessonDone({
-    required String courseId,
-    required Map<String, dynamic> courseData,
-    required String moduleId,
-    required String lessonId,
-  }) async {
-    final modules = (courseData['modules'] as List).cast<Map<String, dynamic>>();
-    final mi = modules.indexWhere((m) => m['id'] == moduleId);
-    if (mi == -1) return courseData;
-
-    final lessons = (modules[mi]['lessons'] as List).cast<Map<String, dynamic>>();
-    final li = lessons.indexWhere((l) => l['id'] == lessonId);
-    if (li == -1) return courseData;
-
-    lessons[li]['status'] = 'done';
-
-    // Desbloquea siguiente lección o siguiente módulo
-    if (li + 1 < lessons.length) {
-      lessons[li + 1]['locked'] = false;
-    } else {
-      final allDone = lessons.every((l) => l['status'] == 'done');
-      if (allDone && mi + 1 < modules.length) {
-        modules[mi + 1]['locked'] = false;
-        final next = (modules[mi + 1]['lessons'] as List).cast<Map<String, dynamic>>();
-        if (next.isNotEmpty) next[0]['locked'] = false;
-      }
+  /// Marca una lección como completada (persistencia local).
+  Future<void> markLessonCompleted(String lessonId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getStringList(_kCompletedLessonsKey) ?? <String>[];
+    if (!current.contains(lessonId)) {
+      current.add(lessonId);
+      await prefs.setStringList(_kCompletedLessonsKey, current);
     }
+  }
 
-    await saveProgress(courseId, courseData);
-    return courseData;
+  /// Consulta si una lección ya fue completada.
+  Future<bool> isLessonCompleted(String lessonId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getStringList(_kCompletedLessonsKey) ?? <String>[];
+    return current.contains(lessonId);
+  }
+
+  /// (Opcional) Limpia progreso local (útil para debugging).
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kCompletedLessonsKey);
+    // Nota: si quieres limpiar outlines guardados, itera por keys y elimina las que empiecen con el prefijo.
   }
 }
