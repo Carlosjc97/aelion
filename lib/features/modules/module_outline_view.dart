@@ -37,7 +37,6 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
       // 1) intenta cargar desde progreso local
       final local = await progress.load(courseId);
       if (local != null) {
-        if (!mounted) return;
         setState(() => course = local);
         loading = false;
         return;
@@ -62,31 +61,45 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         }
       }
 
-      if (!mounted) return;
       setState(() => course = outline);
       await progress.save(courseId, outline);
     } catch (_) {
       // Fallback seguro
-      if (!mounted) return;
-      setState(() {
-        course = {
-          "topic": widget.topic ?? "Módulo de ejemplo",
-          "level": "beginner",
-          "estimated_hours": 2,
-          "modules": [
-            {
-              "id": "m1",
-              "title": "Introducción",
-              "locked": false,
-              "lessons": [
-                {"id": "m1l1", "title": "Definición", "locked": false, "status": "todo"},
-                {"id": "m1l2", "title": "Ejemplo práctico", "locked": true, "status": "todo", "premium": true},
-              ]
-            }
-          ]
-        };
-      });
-      await progress.save(courseId, course!);
+      final fallback = {
+        "topic": widget.topic ?? "Módulo de ejemplo",
+        "level": "beginner",
+        "estimated_hours": 2,
+        "modules": [
+          {
+            "id": "m1",
+            "title": "Introducción",
+            "locked": false,
+            "lessons": [
+              {"id": "m1l1", "title": "Definición", "locked": false, "status": "todo"},
+              {"id": "m1l2", "title": "Ejemplo práctico", "locked": true, "status": "todo", "premium": true},
+            ]
+          },
+          {
+            "id": "m2",
+            "title": "Práctica intermedia",
+            "locked": true,
+            "lessons": [
+              {"id": "m2l1", "title": "Widgets estatales", "locked": true, "status": "todo"},
+            ]
+          },
+          {
+            "id": "m3",
+            "title": "Proyecto avanzado",
+            "locked": true,
+            "premium": true,
+            "lessons": [
+              {"id": "m3l1", "title": "Integración API", "locked": true, "status": "todo"},
+            ]
+          }
+        ]
+      };
+      setState(() => course = fallback);
+      await progress.save(courseId, fallback);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -114,10 +127,89 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
                         if (!mounted) return;
                         setState(() => course = updated);
                       },
+                      onApplyLevel: (level) async {
+                        if (course == null) return;
+
+                        // ⚠️ capturamos el messenger ANTES del await para evitar el lint
+                        final messenger = ScaffoldMessenger.of(context);
+
+                        final updated = _applyLevelToCourse(course!, level);
+                        await progress.save(courseId, updated);
+                        if (!mounted) return;
+                        setState(() => course = updated);
+
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Nivel aplicado: $level')),
+                        );
+                      },
                     ),
                   ),
       ),
     );
+  }
+
+  Map<String, dynamic> _applyLevelToCourse(Map<String, dynamic> original, String level) {
+    final updated = Map<String, dynamic>.from(original);
+    final raw = updated['modules'];
+    final modules = (raw is List)
+        ? raw.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map)).toList()
+        : <Map<String, dynamic>>[];
+
+    // 1) Orden simple por nivel (heurística por título)
+    int scoreFor(Map<String, dynamic> m) {
+      final t = ((m['title'] as String?) ?? '').toLowerCase();
+      final isIntro = t.contains('intro') || t.contains('introduc') || t.contains('básic') || t.contains('fundament');
+      final isAdvanced = t.contains('avanz') || t.contains('proyecto') || t.contains('project') || t.contains('advanced');
+      switch (level) {
+        case 'beginner':
+          return isIntro ? 0 : (isAdvanced ? 2 : 1);
+        case 'intermediate':
+          return isAdvanced ? 2 : (isIntro ? 0 : 1);
+        case 'advanced':
+        default:
+          return isAdvanced ? 0 : (isIntro ? 2 : 1);
+      }
+    }
+
+    modules.sort((a, b) => scoreFor(a).compareTo(scoreFor(b)));
+
+    // 2) Lock/Unlock mínimo
+    for (final m in modules) {
+      m['locked'] = true;
+      final raws = m['lessons'];
+      if (raws is List) {
+        for (var l in raws) {
+          (l as Map)['locked'] = true;
+        }
+      }
+    }
+
+    int unlockCount;
+    switch (level) {
+      case 'beginner':
+        unlockCount = 1;
+        break;
+      case 'intermediate':
+        unlockCount = modules.length >= 2 ? 2 : 1;
+        break;
+      case 'advanced':
+      default:
+        unlockCount = modules.length;
+        break;
+    }
+
+    for (var i = 0; i < modules.length && i < unlockCount; i++) {
+      modules[i]['locked'] = false;
+      final raws = modules[i]['lessons'];
+      if (raws is List && raws.isNotEmpty) {
+        final first = (raws.first as Map);
+        first['locked'] = false;
+      }
+    }
+
+    updated['modules'] = modules;
+    updated['level'] = level;
+    return updated;
   }
 }
 
@@ -172,11 +264,13 @@ class _OutlineList extends StatelessWidget {
   final Map<String, dynamic> course;
   final String courseId;
   final Future<void> Function(Map<String, dynamic> updated) onCourseUpdated;
+  final Future<void> Function(String level) onApplyLevel;
 
   const _OutlineList({
     required this.course,
     required this.courseId,
     required this.onCourseUpdated,
+    required this.onApplyLevel,
   });
 
   @override
@@ -215,9 +309,8 @@ class _OutlineList extends StatelessWidget {
                         );
                         if (!context.mounted) return;
                         if (result is Map && result['quizPassed'] == true) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Resultados aplicados al curso.')),
-                          );
+                          final String level = (result['level'] as String?) ?? 'beginner';
+                          await onApplyLevel(level);
                         }
                       },
                       child: const Text('Sí, hágamoslo'),
@@ -247,16 +340,7 @@ class _OutlineList extends StatelessWidget {
                 color: AppColors.surface,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ExpansionTile(
-                  title: Row(
-                    children: [
-                      Expanded(child: Text((m['title'] as String?) ?? 'Módulo')),
-                      if ((m['premium'] == true) && AppConfig.premiumEnabled == false)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Icon(Icons.lock_outline_rounded, size: 18),
-                        ),
-                    ],
-                  ),
+                  title: _ModuleTitleWithProgress(module: m),
                   children: [
                     for (final raw in (m['lessons'] as List? ?? const []))
                       _LessonTile(
@@ -270,6 +354,40 @@ class _OutlineList extends StatelessWidget {
                 ),
               ),
             ),
+      ],
+    );
+  }
+}
+
+class _ModuleTitleWithProgress extends StatelessWidget {
+  final Map<String, dynamic> module;
+  const _ModuleTitleWithProgress({required this.module});
+
+  @override
+  Widget build(BuildContext context) {
+    final lessons = (module['lessons'] as List? ?? const []);
+    final total = lessons.length;
+    final doneCount = lessons.where((e) {
+      final m = (e as Map);
+      return (m['status'] as String?) == 'done';
+    }).length;
+
+    return Row(
+      children: [
+        Expanded(child: Text((module['title'] as String?) ?? 'Módulo')),
+        if (total > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Text(
+              '$doneCount/$total',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+        if ((module['premium'] == true) && AppConfig.premiumEnabled == false)
+          const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Icon(Icons.lock_outline_rounded, size: 18),
+          ),
       ],
     );
   }
@@ -297,10 +415,20 @@ class _LessonTile extends StatelessWidget {
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
     final moduleId = (module['id'] as String?) ?? 'm?';
+    final status = (lesson['status'] as String?) ?? 'todo';
+    final isDone = status == 'done';
 
     return ListTile(
       enabled: !locked,
-      title: Text(title),
+      title: Row(
+        children: [
+          if (isDone) ...[
+            const Icon(Icons.check_circle, size: 18),
+            const SizedBox(width: 6),
+          ],
+          Flexible(child: Text(title)),
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -312,7 +440,6 @@ class _LessonTile extends StatelessWidget {
       onTap: locked
           ? null
           : () async {
-              // 1) Navegar a la lección
               final result = await Navigator.pushNamed(
                 context,
                 LessonView.routeName,
@@ -329,7 +456,6 @@ class _LessonTile extends StatelessWidget {
               );
               if (!context.mounted) return;
 
-              // 2) Si volvió con "completed", actualizar progreso
               if (result is Map && result['completed'] == true) {
                 final svc = ProgressService();
                 final updated = await svc.markLessonCompleted(
@@ -337,12 +463,9 @@ class _LessonTile extends StatelessWidget {
                   moduleId: moduleId,
                   lessonId: lessonId,
                 );
-                if (!context.mounted) return;
-
                 if (updated != null) {
                   await onCourseUpdated(updated);
                   if (!context.mounted) return;
-
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Completaste: $title')),
                   );

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Guarda y actualiza el progreso de un curso en local (SharedPreferences)
-/// Estructura esperada (como la que ya usamos en ModuleOutlineView):
+/// Estructura esperada:
 /// {
 ///   "topic": "...",
 ///   "modules": [
@@ -11,7 +11,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///       "title": "...",
 ///       "locked": false,
 ///       "lessons": [
-///         {"id":"m1l1","title":"...","locked":false,"status":"todo"},
+///         {
+///           "id":"m1l1",
+///           "title":"...",
+///           "locked":false,
+///           "status":"todo",
+///           "checklist":[{"text":"...", "done":false}, ...] // opcional
+///         },
 ///         ...
 ///       ]
 ///     },
@@ -40,9 +46,6 @@ class ProgressService {
   }
 
   /// Marca la lección como completada y desbloquea la siguiente
-  /// - Desbloquea la siguiente lección del mismo módulo.
-  /// - Si no hay más lecciones, desbloquea la primera del siguiente módulo.
-  /// Devuelve el curso actualizado (o null si algo falla).
   Future<Map<String, dynamic>?> markLessonCompleted({
     required String courseId,
     required String moduleId,
@@ -77,5 +80,56 @@ class ProgressService {
 
     await save(courseId, data);
     return data;
+  }
+
+  /// Carga el checklist guardado para una lección.
+  /// Si no existe, devuelve una lista vacía.
+  Future<List<Map<String, dynamic>>> loadLessonChecklist({
+    required String courseId,
+    required String moduleId,
+    required String lessonId,
+  }) async {
+    final data = await load(courseId);
+    if (data == null) return <Map<String, dynamic>>[];
+
+    final modules = (data['modules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final module = modules.firstWhere(
+      (m) => m['id'] == moduleId,
+      orElse: () => <String, dynamic>{},
+    );
+    final lessons = (module['lessons'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final lesson = lessons.firstWhere(
+      (l) => l['id'] == lessonId,
+      orElse: () => <String, dynamic>{},
+    );
+
+    final raw = lesson['checklist'];
+    if (raw is List) {
+      return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    }
+    return <Map<String, dynamic>>[];
+  }
+
+  /// Guarda (reemplaza) el checklist de una lección.
+  Future<void> saveLessonChecklist({
+    required String courseId,
+    required String moduleId,
+    required String lessonId,
+    required List<Map<String, dynamic>> checklist,
+  }) async {
+    final data = await load(courseId);
+    if (data == null) return;
+
+    final modules = (data['modules'] as List).cast<Map<String, dynamic>>();
+    final mIndex = modules.indexWhere((m) => m['id'] == moduleId);
+    if (mIndex < 0) return;
+
+    final lessons = (modules[mIndex]['lessons'] as List).cast<Map<String, dynamic>>();
+    final lIndex = lessons.indexWhere((l) => l['id'] == lessonId);
+    if (lIndex < 0) return;
+
+    lessons[lIndex]['checklist'] = checklist;
+
+    await save(courseId, data);
   }
 }
