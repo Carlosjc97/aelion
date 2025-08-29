@@ -5,7 +5,7 @@ import '../../services/progress_service.dart';
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
 
-  // IDs requeridos para progreso/bloqueos
+  /// Identificadores requeridos para guardar progreso/checklist
   final String courseId;
   final String moduleId;
   final String lessonId;
@@ -46,9 +46,9 @@ class _LessonViewState extends State<LessonView> {
   late String _contentEs;
   late String _contentEn;
 
-  // Checklist de práctica (3 pasos de ejemplo, persistentes por lección)
-  final int _practiceLen = 3;
-  late List<bool> _practiceChecks;
+  /// Lista de checks: cada item = {"text": String, "done": bool}
+  List<Map<String, dynamic>> _checklist = [];
+  bool _loadingChecklist = true;
 
   bool get _locked =>
       widget.isPremiumEnabled && widget.isPremiumLesson; // candado solo si flag activo
@@ -62,31 +62,62 @@ class _LessonViewState extends State<LessonView> {
     _contentEs = widget.content;
     _contentEn = 'English version of: ${widget.content}';
 
+    // “Mem” (mnemotecnia) simple de ejemplo
     _mem = _lang == 'es'
         ? 'MEM: “Piensa en bloques: UI → Estado → Acciones.”'
         : 'MEM: “Think in blocks: UI → State → Actions.”';
 
-    _practiceChecks = List<bool>.filled(_practiceLen, false);
-    _loadPractice();
+    _loadChecklist();
   }
 
-  Future<void> _loadPractice() async {
-    final data = await progress.loadLessonChecklist(
+  Future<void> _loadChecklist() async {
+    setState(() => _loadingChecklist = true);
+
+    final items = await progress.loadLessonChecklist(
       courseId: widget.courseId,
       moduleId: widget.moduleId,
       lessonId: widget.lessonId,
-      length: _practiceLen,
     );
-    if (!mounted) return;
-    setState(() => _practiceChecks = data);
+
+    // Si no hay checklist guardado, generamos uno básico inicial
+    _checklist = items.isNotEmpty
+        ? items
+        : <Map<String, dynamic>>[
+            {
+              'text': _lang == 'es'
+                  ? 'Leer la explicación de la lección'
+                  : 'Read the lesson explanation',
+              'done': false,
+            },
+            {
+              'text': _lang == 'es'
+                  ? 'Tomar notas clave'
+                  : 'Take keynotes',
+              'done': false,
+            },
+            {
+              'text': _lang == 'es'
+                  ? 'Hacer un pequeño ejercicio'
+                  : 'Do a small exercise',
+              'done': false,
+            },
+            {
+              'text': _lang == 'es'
+                  ? 'Repasar el contenido'
+                  : 'Review the content',
+              'done': false,
+            },
+          ];
+
+    setState(() => _loadingChecklist = false);
   }
 
-  Future<void> _savePractice() async {
+  Future<void> _saveChecklist() async {
     await progress.saveLessonChecklist(
       courseId: widget.courseId,
       moduleId: widget.moduleId,
       lessonId: widget.lessonId,
-      checks: _practiceChecks,
+      checklist: _checklist,
     );
   }
 
@@ -100,17 +131,28 @@ class _LessonViewState extends State<LessonView> {
   }
 
   Future<void> _markDone() async {
-    // Marca como completada en progreso local
-    await progress.markLessonCompleted(
+    // Guarda checklist antes de marcar done
+    await _saveChecklist();
+
+    // Marca como completada en progreso (y desbloquea la siguiente)
+    final updated = await progress.markLessonCompleted(
       courseId: widget.courseId,
       moduleId: widget.moduleId,
       lessonId: widget.lessonId,
     );
+
     if (!mounted) return;
-    Navigator.pop(context, {'completed': true});
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Lección marcada como completada ✅')),
-    );
+
+    if (updated != null) {
+      Navigator.pop(context, {'completed': true});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lección marcada como completada ✅')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo actualizar el progreso')),
+      );
+    }
   }
 
   @override
@@ -155,58 +197,52 @@ class _LessonViewState extends State<LessonView> {
                     ),
                     const SizedBox(height: 12),
 
-                    // SECCIONES
+                    // Contenido bilingüe
                     Expanded(
                       child: SingleChildScrollView(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _SectionTitle(text: _lang == 'es' ? 'Objetivo' : 'Objective'),
-                            Text(
-                              _lang == 'es'
-                                  ? 'Al finalizar, podrás explicar el concepto y aplicarlo en un ejemplo simple.'
-                                  : 'By the end, you will explain the concept and apply it in a simple example.',
-                              style: text.bodyLarge,
-                            ),
-                            const SizedBox(height: 16),
-
-                            _SectionTitle(text: _lang == 'es' ? 'Concepto' : 'Concept'),
                             Text(
                               _lang == 'es' ? _contentEs : _contentEn,
                               style: text.bodyLarge,
                             ),
                             const SizedBox(height: 16),
 
-                            _SectionTitle(text: _lang == 'es' ? 'Ejemplo' : 'Example'),
+                            // Checklist
                             Text(
-                              _lang == 'es'
-                                  ? 'Piensa en un contador con botón: al presionar, aumenta el estado y la UI se actualiza.'
-                                  : 'Think of a counter with a button: pressing increases state and UI updates.',
-                              style: text.bodyLarge,
+                              _lang == 'es' ? 'Checklist' : 'Checklist',
+                              style: text.titleMedium,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
 
-                            _SectionTitle(text: _lang == 'es' ? 'Práctica' : 'Practice'),
-                            ...List.generate(_practiceLen, (i) {
-                              final labelEs = [
-                                'Crear un widget básico',
-                                'Actualizar estado con una acción',
-                                'Mostrar resultado en pantalla',
-                              ][i];
-                              final labelEn = [
-                                'Create a basic widget',
-                                'Update state with an action',
-                                'Render the result on screen',
-                              ][i];
-                              return CheckboxListTile(
-                                value: _practiceChecks[i],
-                                onChanged: (v) async {
-                                  setState(() => _practiceChecks[i] = v ?? false);
-                                  await _savePractice();
-                                },
-                                title: Text(_lang == 'es' ? labelEs : labelEn),
-                              );
-                            }),
+                            if (_loadingChecklist)
+                              const Center(
+                                  child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ))
+                            else
+                              ..._checklist.asMap().entries.map((entry) {
+                                final i = entry.key;
+                                final item = entry.value;
+                                final done = (item['done'] as bool?) ?? false;
+                                final label =
+                                    (item['text'] as String?) ?? '—';
+
+                                return CheckboxListTile(
+                                  value: done,
+                                  title: Text(label),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  onChanged: (v) async {
+                                    setState(() {
+                                      _checklist[i]['done'] = v ?? false;
+                                    });
+                                    await _saveChecklist();
+                                  },
+                                );
+                              }).toList(),
                           ],
                         ),
                       ),
@@ -216,27 +252,16 @@ class _LessonViewState extends State<LessonView> {
                     FilledButton.icon(
                       onPressed: _markDone,
                       icon: const Icon(Icons.check_circle_outline),
-                      label: Text(_lang == 'es'
-                          ? 'Marcar como completada'
-                          : 'Mark as completed'),
+                      label: Text(
+                        _lang == 'es'
+                            ? 'Marcar como completada'
+                            : 'Mark as completed',
+                      ),
                     ),
                   ],
                 ),
               ),
       ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle({required this.text});
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(text, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
     );
   }
 }
