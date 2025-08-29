@@ -5,7 +5,11 @@ import '../../services/progress_service.dart';
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
 
-  final String? lessonId;
+  // AHORA REQUERIDOS (coinciden con ModuleOutlineView y router):
+  final String courseId;
+  final String moduleId;
+  final String lessonId;
+
   final String title;
   final String content;
 
@@ -20,7 +24,9 @@ class LessonView extends StatefulWidget {
 
   const LessonView({
     super.key,
-    this.lessonId,
+    required this.courseId,
+    required this.moduleId,
+    required this.lessonId,
     this.title = 'Lección',
     this.content = 'Contenido…',
     this.isPremiumEnabled = false,
@@ -68,16 +74,18 @@ class _LessonViewState extends State<LessonView> {
   }
 
   Future<void> _markDone() async {
-    // Marca como completada en progreso local (si existe id)
-    if (widget.lessonId != null && widget.lessonId!.isNotEmpty) {
-      await progress.markLessonCompleted(widget.lessonId!);
-    }
-    if (mounted) {
-      Navigator.pop(context, {'completed': true});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lección marcada como completada ✅')),
-      );
-    }
+    // Marca como completada en progreso local con las 3 claves (course/module/lesson)
+    await progress.markLessonCompleted(
+      courseId: widget.courseId,
+      moduleId: widget.moduleId,
+      lessonId: widget.lessonId,
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context, {'completed': true});
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Lección marcada como completada ✅')),
+    );
   }
 
   @override

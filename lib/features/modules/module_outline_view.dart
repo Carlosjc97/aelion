@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-
 import '../../widgets/aelion_appbar.dart';
 import '../../core/app_colors.dart';
-
-// servicios
 import '../../services/course_api_service.dart';
 import '../../services/progress_service.dart';
-import '../../services/api_config.dart'; // <- AppConfig
-
-// vistas
 import '../quiz/quiz_screen.dart';
 import '../lesson/lesson_view.dart';
+import '../../services/api_config.dart';
 
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
@@ -39,11 +34,21 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
   Future<void> _loadOutline() async {
     setState(() => loading = true);
     try {
+      // 1) intenta cargar desde progreso local
+      final local = await progress.load(courseId);
+      if (local != null) {
+        if (!mounted) return;
+        setState(() => course = local);
+        loading = false;
+        return;
+      }
+
+      // 2) si no hay local, genera outline inicial (API o fallback)
       final outline = await CourseApiService.generateOutline(
         topic: widget.topic ?? 'Curso',
       );
 
-      // Desbloqueo mínimo inicial
+      // Asegura desbloqueo inicial mínimo
       final rawModules = outline['modules'];
       if (rawModules is List) {
         final modules = rawModules.cast<Map<String, dynamic>>();
@@ -57,10 +62,12 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         }
       }
 
+      if (!mounted) return;
       setState(() => course = outline);
-      await progress.saveProgress(courseId, outline);
+      await progress.save(courseId, outline);
     } catch (_) {
       // Fallback seguro
+      if (!mounted) return;
       setState(() {
         course = {
           "topic": widget.topic ?? "Módulo de ejemplo",
@@ -72,24 +79,14 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
               "title": "Introducción",
               "locked": false,
               "lessons": [
-                {
-                  "id": "m1l1",
-                  "title": "Definición",
-                  "locked": false,
-                  "status": "todo"
-                },
-                {
-                  "id": "m1l2",
-                  "title": "Ejemplo práctico",
-                  "locked": true,
-                  "status": "todo",
-                  "premium": true
-                },
+                {"id": "m1l1", "title": "Definición", "locked": false, "status": "todo"},
+                {"id": "m1l2", "title": "Ejemplo práctico", "locked": true, "status": "todo", "premium": true},
               ]
             }
           ]
         };
       });
+      await progress.save(courseId, course!);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -111,7 +108,12 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
                     onRefresh: _loadOutline,
                     child: _OutlineList(
                       course: course!,
-                      onReload: _loadOutline,
+                      courseId: courseId,
+                      onCourseUpdated: (updated) async {
+                        await progress.save(courseId, updated);
+                        if (!mounted) return;
+                        setState(() => course = updated);
+                      },
                     ),
                   ),
       ),
@@ -156,10 +158,7 @@ class _ErrorReload extends StatelessWidget {
               children: [
                 const Text('No se pudo cargar el curso.'),
                 const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: onRetry,
-                  child: const Text('Reintentar'),
-                ),
+                FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
               ],
             ),
           ),
@@ -171,8 +170,14 @@ class _ErrorReload extends StatelessWidget {
 
 class _OutlineList extends StatelessWidget {
   final Map<String, dynamic> course;
-  final VoidCallback onReload;
-  const _OutlineList({required this.course, required this.onReload});
+  final String courseId;
+  final Future<void> Function(Map<String, dynamic> updated) onCourseUpdated;
+
+  const _OutlineList({
+    required this.course,
+    required this.courseId,
+    required this.onCourseUpdated,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -197,28 +202,28 @@ class _OutlineList extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  '10 preguntas para ajustar el nivel y priorizar el contenido.',
-                ),
+                const Text('10 preguntas para ajustar el nivel y priorizar el contenido.'),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     FilledButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
                           context,
                           QuizScreen.routeName,
-                          arguments:
-                              (course['topic'] as String?) ?? 'Curso',
+                          arguments: (course['topic'] as String?) ?? 'Curso',
                         );
+                        if (!context.mounted) return;
+                        if (result is Map && result['quizPassed'] == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Resultados aplicados al curso.')),
+                          );
+                        }
                       },
                       child: const Text('Sí, hágamoslo'),
                     ),
                     const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Ahora no'),
-                    ),
+                    TextButton(onPressed: () {}, child: const Text('Ahora no')),
                   ],
                 ),
               ],
@@ -245,32 +250,21 @@ class _OutlineList extends StatelessWidget {
                   title: Row(
                     children: [
                       Expanded(child: Text((m['title'] as String?) ?? 'Módulo')),
-                      // Badge Premium si alguna lección del módulo es premium
-                      if ((m['lessons'] as List?)
-                              ?.any((l) => (l as Map)['premium'] == true) ==
-                          true)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.shade200,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Text(
-                            'Premium',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                      if ((m['premium'] == true) && AppConfig.premiumEnabled == false)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 8),
+                          child: Icon(Icons.lock_outline_rounded, size: 18),
                         ),
                     ],
                   ),
                   children: [
                     for (final raw in (m['lessons'] as List? ?? const []))
                       _LessonTile(
-                        module: m,
+                        courseId: courseId,
+                        course: course,
+                        module: (m),
                         lesson: (raw as Map).cast<String, dynamic>(),
-                        onCompleted: onReload,
+                        onCourseUpdated: onCourseUpdated,
                       ),
                   ],
                 ),
@@ -282,57 +276,77 @@ class _OutlineList extends StatelessWidget {
 }
 
 class _LessonTile extends StatelessWidget {
+  final String courseId;
+  final Map<String, dynamic> course;
   final Map<String, dynamic> module;
   final Map<String, dynamic> lesson;
-  final VoidCallback onCompleted;
+  final Future<void> Function(Map<String, dynamic> updated) onCourseUpdated;
 
   const _LessonTile({
+    required this.courseId,
+    required this.course,
     required this.module,
     required this.lesson,
-    required this.onCompleted,
+    required this.onCourseUpdated,
   });
 
   @override
   Widget build(BuildContext context) {
     final locked = (lesson['locked'] == true);
-    final isPremiumLesson = (lesson['premium'] == true); // opcional en JSON
+    final isPremiumLesson = (lesson['premium'] == true);
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
+    final moduleId = (module['id'] as String?) ?? 'm?';
 
     return ListTile(
       enabled: !locked,
-      title: Row(
+      title: Text(title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(child: Text(title)),
-          if (isPremiumLesson)
+          if (isPremiumLesson && AppConfig.premiumEnabled == false)
             const Icon(Icons.lock_outline_rounded, size: 18),
+          const Icon(Icons.chevron_right),
         ],
       ),
-      trailing: const Icon(Icons.chevron_right),
       onTap: locked
           ? null
           : () async {
+              // 1) Navegar a la lección
               final result = await Navigator.pushNamed(
                 context,
                 LessonView.routeName,
                 arguments: {
+                  'courseId': courseId,
+                  'moduleId': moduleId,
                   'lessonId': lessonId,
                   'title': title,
                   'content': 'Contenido de $title',
-                  // Usa flag real del .env
                   'isPremiumEnabled': AppConfig.premiumEnabled,
                   'isPremiumLesson': isPremiumLesson,
                   'initialLang': 'es',
                 },
               );
-
               if (!context.mounted) return;
 
+              // 2) Si volvió con "completed", actualizar progreso
               if (result is Map && result['completed'] == true) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Completaste: $title')),
+                final svc = ProgressService();
+                final updated = await svc.markLessonCompleted(
+                  courseId: courseId,
+                  moduleId: moduleId,
+                  lessonId: lessonId,
                 );
-                onCompleted();
+                if (!context.mounted) return;
+
+                if (updated != null) {
+                  await onCourseUpdated(updated);
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Completaste: $title')),
+                  );
+                }
               }
             },
     );
