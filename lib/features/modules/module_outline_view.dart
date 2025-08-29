@@ -340,16 +340,7 @@ class _OutlineList extends StatelessWidget {
                 color: AppColors.surface,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ExpansionTile(
-                  title: Row(
-                    children: [
-                      Expanded(child: Text((m['title'] as String?) ?? 'Módulo')),
-                      if ((m['premium'] == true) && AppConfig.premiumEnabled == false)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Icon(Icons.lock_outline_rounded, size: 18),
-                        ),
-                    ],
-                  ),
+                  title: _ModuleTitleWithProgress(module: m),
                   children: [
                     for (final raw in (m['lessons'] as List? ?? const []))
                       _LessonTile(
@@ -363,6 +354,40 @@ class _OutlineList extends StatelessWidget {
                 ),
               ),
             ),
+      ],
+    );
+  }
+}
+
+class _ModuleTitleWithProgress extends StatelessWidget {
+  final Map<String, dynamic> module;
+  const _ModuleTitleWithProgress({required this.module});
+
+  @override
+  Widget build(BuildContext context) {
+    final lessons = (module['lessons'] as List? ?? const []);
+    final total = lessons.length;
+    final doneCount = lessons.where((e) {
+      final m = (e as Map);
+      return (m['status'] as String?) == 'done';
+    }).length;
+
+    return Row(
+      children: [
+        Expanded(child: Text((module['title'] as String?) ?? 'Módulo')),
+        if (total > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Text(
+              '$doneCount/$total',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+        if ((module['premium'] == true) && AppConfig.premiumEnabled == false)
+          const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Icon(Icons.lock_outline_rounded, size: 18),
+          ),
       ],
     );
   }
@@ -390,10 +415,20 @@ class _LessonTile extends StatelessWidget {
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
     final moduleId = (module['id'] as String?) ?? 'm?';
+    final status = (lesson['status'] as String?) ?? 'todo';
+    final isDone = status == 'done';
 
     return ListTile(
       enabled: !locked,
-      title: Text(title),
+      title: Row(
+        children: [
+          if (isDone) ...[
+            const Icon(Icons.check_circle, size: 18),
+            const SizedBox(width: 6),
+          ],
+          Flexible(child: Text(title)),
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
