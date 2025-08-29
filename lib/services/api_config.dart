@@ -13,12 +13,8 @@ class AppConfig {
   ///
   /// Acepta: true/false, 1/0, yes/no, on/off (case-insensitive)
   static bool get premiumEnabled {
-    final raw = (dotenv.env['AELION_PREMIUM_ENABLED'] ?? 'false')
-        .trim()
-        .toLowerCase();
-    return raw == 'true' ||
-        raw == '1' ||
-        raw == 'yes' ||
-        raw == 'on';
+    final raw =
+        (dotenv.env['AELION_PREMIUM_ENABLED'] ?? 'false').trim().toLowerCase();
+    return raw == 'true' || raw == '1' || raw == 'yes' || raw == 'on';
   }
 }
