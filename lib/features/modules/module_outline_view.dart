@@ -3,6 +3,7 @@ import '../../widgets/aelion_appbar.dart';
 import '../../core/app_colors.dart';
 import '../../services/course_api_service.dart';
 import '../../services/progress_service.dart';
+import '../../services/api_config.dart'; // <- AppConfig aquí
 import '../quiz/quiz_screen.dart';
 import '../lesson/lesson_view.dart';
 
@@ -44,8 +45,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
           modules.first['locked'] = false;
           final rawLessons = modules.first['lessons'];
           if (rawLessons is List && rawLessons.isNotEmpty) {
-            final firstLessons =
-                rawLessons.cast<Map<String, dynamic>>();
+            final firstLessons = rawLessons.cast<Map<String, dynamic>>();
             firstLessons.first['locked'] = false;
           }
         }
@@ -203,8 +203,7 @@ class _OutlineList extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           QuizScreen.routeName,
-                          arguments:
-                              (course['topic'] as String?) ?? 'Curso',
+                          arguments: (course['topic'] as String?) ?? 'Curso',
                         );
                       },
                       child: const Text('Sí, hágamoslo'),
@@ -271,10 +270,27 @@ class _LessonTile extends StatelessWidget {
     final isPremiumLesson = (lesson['premium'] == true); // opcional en JSON
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
+    final isPremiumEnabled = AppConfig.premiumEnabled; // <- FLAG REAL
 
     return ListTile(
       enabled: !locked,
-      title: Text(title),
+      title: Row(
+        children: [
+          Expanded(child: Text(title)),
+          if (isPremiumLesson)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.neutral,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'Premium',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -293,21 +309,20 @@ class _LessonTile extends StatelessWidget {
                   'lessonId': lessonId,
                   'title': title,
                   'content': 'Contenido de $title',
-                  // Flag premium global (OFF por defecto en MVP)
-                  'isPremiumEnabled': false,
+                  // Usa el flag real (ON => paywall; OFF => libre)
+                  'isPremiumEnabled': isPremiumEnabled,
                   'isPremiumLesson': isPremiumLesson,
                   'initialLang': 'es',
                 },
               );
 
-              // Evita usar BuildContext si el widget fue desmontado
               if (!context.mounted) return;
 
               if (result is Map && result['completed'] == true) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Completaste: $title')),
                 );
-                onCompleted(); // refresca outline si quieres reconsultar
+                onCompleted(); // refrescar outline si deseas reconsultar
               }
             },
     );
