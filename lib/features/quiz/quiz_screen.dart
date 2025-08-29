@@ -37,7 +37,7 @@ class _QuizScreenState extends State<QuizScreen> {
         curve: Curves.easeOut,
       );
     } else {
-      Navigator.pop(context);
+      Navigator.pop(context, {'quizPassed': true});
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('¡Gracias! Ajustaremos tu curso.')),
       );

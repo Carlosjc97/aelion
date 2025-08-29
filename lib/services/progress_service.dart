@@ -1,49 +1,81 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Guarda y actualiza el progreso de un curso en local (SharedPreferences)
+/// Estructura esperada (como la que ya usamos en ModuleOutlineView):
+/// {
+///   "topic": "...",
+///   "modules": [
+///     {
+///       "id": "m1",
+///       "title": "...",
+///       "locked": false,
+///       "lessons": [
+///         {"id":"m1l1","title":"...","locked":false,"status":"todo"},
+///         ...
+///       ]
+///     },
+///     ...
+///   ]
+/// }
 class ProgressService {
-  static const _kCompletedLessonsKey = 'aelion.completed_lessons';
-  static const _kCourseProgressPrefix = 'aelion.course.'; // + courseId
+  static const _prefix = 'course_progress_';
 
-  /// Guarda el outline de un curso (mock/simple).
-  Future<void> saveProgress(String courseId, Map<String, dynamic> outline) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_kCourseProgressPrefix$courseId', jsonEncode(outline));
-  }
+  String _key(String courseId) => '$_prefix$courseId';
 
-  /// Carga el outline guardado (si existe). Retorna null si no hay.
-  Future<Map<String, dynamic>?> loadProgress(String courseId) async {
+  Future<Map<String, dynamic>?> load(String courseId) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('$_kCourseProgressPrefix$courseId');
+    final raw = prefs.getString(_key(courseId));
     if (raw == null) return null;
     try {
-      final map = jsonDecode(raw);
-      if (map is Map<String, dynamic>) return map;
-    } catch (_) {}
-    return null;
-  }
-
-  /// Marca una lección como completada (persistencia local).
-  Future<void> markLessonCompleted(String lessonId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final current = prefs.getStringList(_kCompletedLessonsKey) ?? <String>[];
-    if (!current.contains(lessonId)) {
-      current.add(lessonId);
-      await prefs.setStringList(_kCompletedLessonsKey, current);
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
     }
   }
 
-  /// Consulta si una lección ya fue completada.
-  Future<bool> isLessonCompleted(String lessonId) async {
+  Future<void> save(String courseId, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
-    final current = prefs.getStringList(_kCompletedLessonsKey) ?? <String>[];
-    return current.contains(lessonId);
+    await prefs.setString(_key(courseId), jsonEncode(data));
   }
 
-  /// (Opcional) Limpia progreso local (útil para debugging).
-  Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_kCompletedLessonsKey);
-    // Nota: si quieres limpiar outlines guardados, itera por keys y elimina las que empiecen con el prefijo.
+  /// Marca la lección como completada y desbloquea la siguiente
+  /// - Desbloquea la siguiente lección del mismo módulo.
+  /// - Si no hay más lecciones, desbloquea la primera del siguiente módulo.
+  /// Devuelve el curso actualizado (o null si algo falla).
+  Future<Map<String, dynamic>?> markLessonCompleted({
+    required String courseId,
+    required String moduleId,
+    required String lessonId,
+  }) async {
+    final data = await load(courseId);
+    if (data == null) return null;
+
+    final modules = (data['modules'] as List).cast<Map<String, dynamic>>();
+    final mIndex = modules.indexWhere((m) => m['id'] == moduleId);
+    if (mIndex < 0) return data;
+
+    final lessons = (modules[mIndex]['lessons'] as List).cast<Map<String, dynamic>>();
+    final lIndex = lessons.indexWhere((l) => l['id'] == lessonId);
+    if (lIndex < 0) return data;
+
+    // Marcar completada
+    lessons[lIndex]['status'] = 'done';
+
+    // Desbloquear la siguiente dentro del mismo módulo
+    if (lIndex + 1 < lessons.length) {
+      lessons[lIndex + 1]['locked'] = false;
+    } else {
+      // Siguiente módulo: desbloquear módulo y su primera lección
+      if (mIndex + 1 < modules.length) {
+        final nextModule = modules[mIndex + 1];
+        nextModule['locked'] = false;
+        final nextLessons = (nextModule['lessons'] as List).cast<Map<String, dynamic>>();
+        if (nextLessons.isNotEmpty) nextLessons.first['locked'] = false;
+      }
+    }
+
+    await save(courseId, data);
+    return data;
   }
 }
