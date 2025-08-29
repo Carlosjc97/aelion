@@ -36,9 +36,9 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
     try {
       // 1) intenta cargar desde progreso local
       final local = await progress.load(courseId);
-      if (mounted && local != null) {
+      if (local != null) {
         setState(() => course = local);
-        setState(() => loading = false);
+        loading = false;
         return;
       }
 
@@ -61,47 +61,45 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         }
       }
 
-      if (mounted) setState(() => course = outline);
+      setState(() => course = outline);
       await progress.save(courseId, outline);
     } catch (_) {
       // Fallback seguro
-      if (mounted) {
-        final fallback = {
-          "topic": widget.topic ?? "Módulo de ejemplo",
-          "level": "beginner",
-          "estimated_hours": 2,
-          "modules": [
-            {
-              "id": "m1",
-              "title": "Introducción",
-              "locked": false,
-              "lessons": [
-                {"id": "m1l1", "title": "Definición", "locked": false, "status": "todo"},
-                {"id": "m1l2", "title": "Ejemplo práctico", "locked": true, "status": "todo", "premium": true},
-              ]
-            },
-            {
-              "id": "m2",
-              "title": "Práctica intermedia",
-              "locked": true,
-              "lessons": [
-                {"id": "m2l1", "title": "Widgets estatales", "locked": true, "status": "todo"},
-              ]
-            },
-            {
-              "id": "m3",
-              "title": "Proyecto avanzado",
-              "locked": true,
-              "premium": true,
-              "lessons": [
-                {"id": "m3l1", "title": "Integración API", "locked": true, "status": "todo"},
-              ]
-            }
-          ]
-        };
-        setState(() => course = fallback);
-        await progress.save(courseId, fallback);
-      }
+      final fallback = {
+        "topic": widget.topic ?? "Módulo de ejemplo",
+        "level": "beginner",
+        "estimated_hours": 2,
+        "modules": [
+          {
+            "id": "m1",
+            "title": "Introducción",
+            "locked": false,
+            "lessons": [
+              {"id": "m1l1", "title": "Definición", "locked": false, "status": "todo"},
+              {"id": "m1l2", "title": "Ejemplo práctico", "locked": true, "status": "todo", "premium": true},
+            ]
+          },
+          {
+            "id": "m2",
+            "title": "Práctica intermedia",
+            "locked": true,
+            "lessons": [
+              {"id": "m2l1", "title": "Widgets estatales", "locked": true, "status": "todo"},
+            ]
+          },
+          {
+            "id": "m3",
+            "title": "Proyecto avanzado",
+            "locked": true,
+            "premium": true,
+            "lessons": [
+              {"id": "m3l1", "title": "Integración API", "locked": true, "status": "todo"},
+            ]
+          }
+        ]
+      };
+      setState(() => course = fallback);
+      await progress.save(courseId, fallback);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -131,11 +129,16 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
                       },
                       onApplyLevel: (level) async {
                         if (course == null) return;
+
+                        // ⚠️ capturamos el messenger ANTES del await para evitar el lint
+                        final messenger = ScaffoldMessenger.of(context);
+
                         final updated = _applyLevelToCourse(course!, level);
                         await progress.save(courseId, updated);
                         if (!mounted) return;
                         setState(() => course = updated);
-                        ScaffoldMessenger.of(context).showSnackBar(
+
+                        messenger.showSnackBar(
                           SnackBar(content: Text('Nivel aplicado: $level')),
                         );
                       },
@@ -152,7 +155,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         ? raw.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map)).toList()
         : <Map<String, dynamic>>[];
 
-    // 1) Heurística de orden por “nivel” basado en título
+    // 1) Orden simple por nivel (heurística por título)
     int scoreFor(Map<String, dynamic> m) {
       final t = ((m['title'] as String?) ?? '').toLowerCase();
       final isIntro = t.contains('intro') || t.contains('introduc') || t.contains('básic') || t.contains('fundament');
@@ -170,7 +173,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
 
     modules.sort((a, b) => scoreFor(a).compareTo(scoreFor(b)));
 
-    // 2) Bloquear todo y desbloquear lo necesario según nivel
+    // 2) Lock/Unlock mínimo
     for (final m in modules) {
       m['locked'] = true;
       final raws = m['lessons'];
@@ -191,7 +194,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         break;
       case 'advanced':
       default:
-        unlockCount = modules.length; // todo habilitado
+        unlockCount = modules.length;
         break;
     }
 
@@ -308,10 +311,6 @@ class _OutlineList extends StatelessWidget {
                         if (result is Map && result['quizPassed'] == true) {
                           final String level = (result['level'] as String?) ?? 'beginner';
                           await onApplyLevel(level);
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Resultados aplicados: $level')),
-                          );
                         }
                       },
                       child: const Text('Sí, hágamoslo'),
@@ -388,30 +387,18 @@ class _LessonTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final locked = (lesson['locked'] == true);
     final isPremiumLesson = (lesson['premium'] == true);
-    final status = (lesson['status'] as String?) ?? 'todo'; // 'todo' | 'done'
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
     final moduleId = (module['id'] as String?) ?? 'm?';
 
-    Icon? statusIcon;
-    if (status == 'done') {
-      statusIcon = const Icon(Icons.check_circle_rounded, size: 18);
-    } else if (locked || (isPremiumLesson && AppConfig.premiumEnabled == false)) {
-      statusIcon = const Icon(Icons.lock_outline_rounded, size: 18);
-    }
-
     return ListTile(
       enabled: !locked,
-      title: Text(
-        title,
-        style: status == 'done'
-            ? const TextStyle(decoration: TextDecoration.lineThrough)
-            : null,
-      ),
+      title: Text(title),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (statusIcon != null) statusIcon,
+          if (isPremiumLesson && AppConfig.premiumEnabled == false)
+            const Icon(Icons.lock_outline_rounded, size: 18),
           const Icon(Icons.chevron_right),
         ],
       ),

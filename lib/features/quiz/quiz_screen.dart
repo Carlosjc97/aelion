@@ -16,7 +16,7 @@ class _QuizScreenState extends State<QuizScreen> {
   // índice de pregunta -> respuesta seleccionada
   final Map<int, int?> answers = {};
 
-  // 10 preguntas dummy con una “correcta” pseudoaleatoria
+  // 10 preguntas dummy
   late final List<Map<String, dynamic>> questions = List.generate(
     10,
     (i) => {
@@ -26,7 +26,7 @@ class _QuizScreenState extends State<QuizScreen> {
     },
   );
 
-  Future<void> _next() async {
+  void _next() async {
     if (index < questions.length - 1) {
       await controller.nextPage(
         duration: const Duration(milliseconds: 250),
@@ -35,7 +35,6 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
 
-    // Fin del quiz → calcular puntaje y nivel
     int score = 0;
     for (var i = 0; i < questions.length; i++) {
       final selected = answers[i];
@@ -53,11 +52,6 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     if (!mounted) return;
-    // Feedback antes de cerrar (evita usar context luego del pop)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Nivel asignado: $level (puntaje: $score/10)')),
-    );
-
     Navigator.pop(context, {
       'quizPassed': true,
       'score': score,
@@ -93,13 +87,23 @@ class _QuizScreenState extends State<QuizScreen> {
                     children: [
                       Text(q['q'] as String, style: theme.textTheme.titleLarge),
                       const SizedBox(height: 12),
-                      for (var optIndex = 0; optIndex < opts.length; optIndex++)
-                        RadioListTile<int>(
-                          value: optIndex,
-                          groupValue: value,
-                          title: Text(opts[optIndex]),
-                          onChanged: (v) => setState(() => answers[i] = v),
+
+                      // ✅ Nuevo patrón con RadioGroup (sin deprecations)
+                      RadioGroup<int>(
+                        value: value,
+                        onChanged: (v) => setState(() => answers[i] = v),
+                        child: Column(
+                          children: [
+                            for (var optIndex = 0; optIndex < opts.length; optIndex++)
+                              RadioListTile<int>(
+                                value: optIndex,
+                                // groupValue/onChanged se manejan por RadioGroup
+                                title: Text(opts[optIndex]),
+                              ),
+                          ],
                         ),
+                      ),
+
                       const Spacer(),
                       FilledButton(
                         onPressed: value == null ? null : _next,
