@@ -16,17 +16,17 @@ class _QuizScreenState extends State<QuizScreen> {
   // índice de pregunta -> respuesta seleccionada
   final Map<int, int?> answers = {};
 
-  // 10 preguntas dummy
+  // 10 preguntas dummy con una “correcta” pseudoaleatoria
   late final List<Map<String, dynamic>> questions = List.generate(
     10,
     (i) => {
       'q': 'Pregunta ${i + 1}: ¿…sobre ${i.isEven ? 'concepto' : 'práctica'}?',
       'opts': <String>['A', 'B', 'C', 'D'],
-      'correct': i % 4, // solo para tener una “correcta” pseudoaleatoria
+      'correct': i % 4,
     },
   );
 
-  void _next() async {
+  Future<void> _next() async {
     if (index < questions.length - 1) {
       await controller.nextPage(
         duration: const Duration(milliseconds: 250),
@@ -53,16 +53,16 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     if (!mounted) return;
+    // Feedback antes de cerrar (evita usar context luego del pop)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Nivel asignado: $level (puntaje: $score/10)')),
+    );
+
     Navigator.pop(context, {
       'quizPassed': true,
       'score': score,
       'level': level,
     });
-
-    // (Opcional) toast local si quisieras feedback inmediato:
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(content: Text('Nivel asignado: $level (puntaje: $score/10)')),
-    // );
   }
 
   @override
@@ -96,9 +96,9 @@ class _QuizScreenState extends State<QuizScreen> {
                       for (var optIndex = 0; optIndex < opts.length; optIndex++)
                         RadioListTile<int>(
                           value: optIndex,
-                          groupValue: value, // (deprecated warning benigno)
+                          groupValue: value,
                           title: Text(opts[optIndex]),
-                          onChanged: (v) => setState(() => answers[i] = v), // idem
+                          onChanged: (v) => setState(() => answers[i] = v),
                         ),
                       const Spacer(),
                       FilledButton(
