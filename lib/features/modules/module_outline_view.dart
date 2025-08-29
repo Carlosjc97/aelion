@@ -37,6 +37,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
       // 1) intenta cargar desde progreso local
       final local = await progress.load(courseId);
       if (local != null) {
+        if (!mounted) return;
         setState(() => course = local);
         loading = false;
         return;
@@ -61,10 +62,12 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         }
       }
 
+      if (!mounted) return;
       setState(() => course = outline);
       await progress.save(courseId, outline);
     } catch (_) {
       // Fallback seguro
+      if (!mounted) return;
       setState(() {
         course = {
           "topic": widget.topic ?? "Módulo de ejemplo",
@@ -108,7 +111,8 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
                       courseId: courseId,
                       onCourseUpdated: (updated) async {
                         await progress.save(courseId, updated);
-                        if (mounted) setState(() => course = updated);
+                        if (!mounted) return;
+                        setState(() => course = updated);
                       },
                     ),
                   ),
@@ -308,6 +312,7 @@ class _LessonTile extends StatelessWidget {
       onTap: locked
           ? null
           : () async {
+              // 1) Navegar a la lección
               final result = await Navigator.pushNamed(
                 context,
                 LessonView.routeName,
@@ -324,6 +329,7 @@ class _LessonTile extends StatelessWidget {
               );
               if (!context.mounted) return;
 
+              // 2) Si volvió con "completed", actualizar progreso
               if (result is Map && result['completed'] == true) {
                 final svc = ProgressService();
                 final updated = await svc.markLessonCompleted(
@@ -331,8 +337,12 @@ class _LessonTile extends StatelessWidget {
                   moduleId: moduleId,
                   lessonId: lessonId,
                 );
+                if (!context.mounted) return;
+
                 if (updated != null) {
                   await onCourseUpdated(updated);
+                  if (!context.mounted) return;
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Completaste: $title')),
                   );
