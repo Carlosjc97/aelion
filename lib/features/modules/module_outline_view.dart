@@ -241,9 +241,7 @@ class _OutlineList extends StatelessWidget {
               opacity: (m['locked'] == true) ? 0.5 : 1,
               child: Card(
                 color: AppColors.surface,
-                margin: const EdgeBoxConstraints.only(bottom: 12).bottom == 12
-                    ? const EdgeInsets.only(bottom: 12) // evita lints raros
-                    : EdgeInsets.zero,
+                margin: const EdgeInsets.only(bottom: 12),
                 child: ExpansionTile(
                   title: Row(
                     children: [
