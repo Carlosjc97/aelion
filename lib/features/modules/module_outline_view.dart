@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+
 import '../../widgets/aelion_appbar.dart';
 import '../../core/app_colors.dart';
+
+// servicios
 import '../../services/course_api_service.dart';
 import '../../services/progress_service.dart';
-import '../../services/api_config.dart'; // <- AppConfig aquí
+import '../../services/api_config.dart'; // <- AppConfig
+
+// vistas
 import '../quiz/quiz_screen.dart';
 import '../lesson/lesson_view.dart';
 
@@ -21,6 +26,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
   bool loading = true;
   Map<String, dynamic>? course; // outline JSON
   final progress = ProgressService();
+
   String get courseId =>
       (widget.topic ?? 'Curso').toLowerCase().replaceAll(' ', '_');
 
@@ -37,7 +43,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         topic: widget.topic ?? 'Curso',
       );
 
-      // Asegura mínimo desbloqueo inicial
+      // Desbloqueo mínimo inicial
       final rawModules = outline['modules'];
       if (rawModules is List) {
         final modules = rawModules.cast<Map<String, dynamic>>();
@@ -54,7 +60,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
       setState(() => course = outline);
       await progress.saveProgress(courseId, outline);
     } catch (_) {
-      // Fallback seguro (nunca pantalla blanca)
+      // Fallback seguro
       setState(() {
         course = {
           "topic": widget.topic ?? "Módulo de ejemplo",
@@ -118,7 +124,6 @@ class _SkeletonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ListView para evitar overflows en pantallas pequeñas
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: 3,
@@ -203,7 +208,8 @@ class _OutlineList extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           QuizScreen.routeName,
-                          arguments: (course['topic'] as String?) ?? 'Curso',
+                          arguments:
+                              (course['topic'] as String?) ?? 'Curso',
                         );
                       },
                       child: const Text('Sí, hágamoslo'),
@@ -236,7 +242,29 @@ class _OutlineList extends StatelessWidget {
                 color: AppColors.surface,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ExpansionTile(
-                  title: Text((m['title'] as String?) ?? 'Módulo'),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text((m['title'] as String?) ?? 'Módulo')),
+                      // Badge Premium si alguna lección del módulo es premium
+                      if ((m['lessons'] as List?)
+                              ?.any((l) => (l as Map)['premium'] == true) ==
+                          true)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade200,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'Premium',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   children: [
                     for (final raw in (m['lessons'] as List? ?? const []))
                       _LessonTile(
@@ -270,7 +298,6 @@ class _LessonTile extends StatelessWidget {
     final isPremiumLesson = (lesson['premium'] == true); // opcional en JSON
     final title = (lesson['title'] as String?) ?? 'Lección';
     final lessonId = (lesson['id'] as String?) ?? title;
-    final isPremiumEnabled = AppConfig.premiumEnabled; // <- FLAG REAL
 
     return ListTile(
       enabled: !locked,
@@ -278,27 +305,10 @@ class _LessonTile extends StatelessWidget {
         children: [
           Expanded(child: Text(title)),
           if (isPremiumLesson)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.neutral,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'Premium',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-            ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isPremiumLesson)
             const Icon(Icons.lock_outline_rounded, size: 18),
-          const Icon(Icons.chevron_right),
         ],
       ),
+      trailing: const Icon(Icons.chevron_right),
       onTap: locked
           ? null
           : () async {
@@ -309,8 +319,8 @@ class _LessonTile extends StatelessWidget {
                   'lessonId': lessonId,
                   'title': title,
                   'content': 'Contenido de $title',
-                  // Usa el flag real (ON => paywall; OFF => libre)
-                  'isPremiumEnabled': isPremiumEnabled,
+                  // Usa flag real del .env
+                  'isPremiumEnabled': AppConfig.premiumEnabled,
                   'isPremiumLesson': isPremiumLesson,
                   'initialLang': 'es',
                 },
@@ -322,7 +332,7 @@ class _LessonTile extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Completaste: $title')),
                 );
-                onCompleted(); // refrescar outline si deseas reconsultar
+                onCompleted();
               }
             },
     );
