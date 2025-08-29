@@ -5,7 +5,7 @@ import '../../services/progress_service.dart';
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
 
-  // AHORA REQUERIDOS (coinciden con ModuleOutlineView y router):
+  // IDs requeridos para progreso/bloqueos
   final String courseId;
   final String moduleId;
   final String lessonId;
@@ -46,6 +46,10 @@ class _LessonViewState extends State<LessonView> {
   late String _contentEs;
   late String _contentEn;
 
+  // Checklist de práctica (3 pasos de ejemplo, persistentes por lección)
+  final int _practiceLen = 3;
+  late List<bool> _practiceChecks;
+
   bool get _locked =>
       widget.isPremiumEnabled && widget.isPremiumLesson; // candado solo si flag activo
 
@@ -58,10 +62,32 @@ class _LessonViewState extends State<LessonView> {
     _contentEs = widget.content;
     _contentEn = 'English version of: ${widget.content}';
 
-    // “Mem” (mnemotecnia) simple de ejemplo
     _mem = _lang == 'es'
         ? 'MEM: “Piensa en bloques: UI → Estado → Acciones.”'
         : 'MEM: “Think in blocks: UI → State → Actions.”';
+
+    _practiceChecks = List<bool>.filled(_practiceLen, false);
+    _loadPractice();
+  }
+
+  Future<void> _loadPractice() async {
+    final data = await progress.loadLessonChecklist(
+      courseId: widget.courseId,
+      moduleId: widget.moduleId,
+      lessonId: widget.lessonId,
+      length: _practiceLen,
+    );
+    if (!mounted) return;
+    setState(() => _practiceChecks = data);
+  }
+
+  Future<void> _savePractice() async {
+    await progress.saveLessonChecklist(
+      courseId: widget.courseId,
+      moduleId: widget.moduleId,
+      lessonId: widget.lessonId,
+      checks: _practiceChecks,
+    );
   }
 
   void _switchLang() {
@@ -74,13 +100,12 @@ class _LessonViewState extends State<LessonView> {
   }
 
   Future<void> _markDone() async {
-    // Marca como completada en progreso local con las 3 claves (course/module/lesson)
+    // Marca como completada en progreso local
     await progress.markLessonCompleted(
       courseId: widget.courseId,
       moduleId: widget.moduleId,
       lessonId: widget.lessonId,
     );
-
     if (!mounted) return;
     Navigator.pop(context, {'completed': true});
     ScaffoldMessenger.of(context).showSnackBar(
@@ -130,12 +155,59 @@ class _LessonViewState extends State<LessonView> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Contenido bilingüe
+                    // SECCIONES
                     Expanded(
                       child: SingleChildScrollView(
-                        child: Text(
-                          _lang == 'es' ? _contentEs : _contentEn,
-                          style: text.bodyLarge,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SectionTitle(text: _lang == 'es' ? 'Objetivo' : 'Objective'),
+                            Text(
+                              _lang == 'es'
+                                  ? 'Al finalizar, podrás explicar el concepto y aplicarlo en un ejemplo simple.'
+                                  : 'By the end, you will explain the concept and apply it in a simple example.',
+                              style: text.bodyLarge,
+                            ),
+                            const SizedBox(height: 16),
+
+                            _SectionTitle(text: _lang == 'es' ? 'Concepto' : 'Concept'),
+                            Text(
+                              _lang == 'es' ? _contentEs : _contentEn,
+                              style: text.bodyLarge,
+                            ),
+                            const SizedBox(height: 16),
+
+                            _SectionTitle(text: _lang == 'es' ? 'Ejemplo' : 'Example'),
+                            Text(
+                              _lang == 'es'
+                                  ? 'Piensa en un contador con botón: al presionar, aumenta el estado y la UI se actualiza.'
+                                  : 'Think of a counter with a button: pressing increases state and UI updates.',
+                              style: text.bodyLarge,
+                            ),
+                            const SizedBox(height: 16),
+
+                            _SectionTitle(text: _lang == 'es' ? 'Práctica' : 'Practice'),
+                            ...List.generate(_practiceLen, (i) {
+                              final labelEs = [
+                                'Crear un widget básico',
+                                'Actualizar estado con una acción',
+                                'Mostrar resultado en pantalla',
+                              ][i];
+                              final labelEn = [
+                                'Create a basic widget',
+                                'Update state with an action',
+                                'Render the result on screen',
+                              ][i];
+                              return CheckboxListTile(
+                                value: _practiceChecks[i],
+                                onChanged: (v) async {
+                                  setState(() => _practiceChecks[i] = v ?? false);
+                                  await _savePractice();
+                                },
+                                title: Text(_lang == 'es' ? labelEs : labelEn),
+                              );
+                            }),
+                          ],
                         ),
                       ),
                     ),
@@ -144,12 +216,27 @@ class _LessonViewState extends State<LessonView> {
                     FilledButton.icon(
                       onPressed: _markDone,
                       icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Marcar como completada'),
+                      label: Text(_lang == 'es'
+                          ? 'Marcar como completada'
+                          : 'Mark as completed'),
                     ),
                   ],
                 ),
               ),
       ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle({required this.text});
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(text, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
     );
   }
 }
