@@ -218,10 +218,11 @@ class _LessonViewState extends State<LessonView> {
 
                             if (_loadingChecklist)
                               const Center(
-                                  child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(),
-                              ))
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
                             else
                               ..._checklist.asMap().entries.map((entry) {
                                 final i = entry.key;
@@ -242,7 +243,7 @@ class _LessonViewState extends State<LessonView> {
                                     await _saveChecklist();
                                   },
                                 );
-                              }).toList(),
+                              }),
                           ],
                         ),
                       ),
