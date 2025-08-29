@@ -88,21 +88,15 @@ class _QuizScreenState extends State<QuizScreen> {
                       Text(q['q'] as String, style: theme.textTheme.titleLarge),
                       const SizedBox(height: 12),
 
-                      // ✅ Nuevo patrón con RadioGroup (sin deprecations)
-                      RadioGroup<int>(
-                        value: value,
-                        onChanged: (v) => setState(() => answers[i] = v),
-                        child: Column(
-                          children: [
-                            for (var optIndex = 0; optIndex < opts.length; optIndex++)
-                              RadioListTile<int>(
-                                value: optIndex,
-                                // groupValue/onChanged se manejan por RadioGroup
-                                title: Text(opts[optIndex]),
-                              ),
-                          ],
+                      for (var optIndex = 0; optIndex < opts.length; optIndex++)
+                        RadioListTile<int>(
+                          value: optIndex,
+                          // ignore: deprecated_member_use
+                          groupValue: value,
+                          title: Text(opts[optIndex]),
+                          // ignore: deprecated_member_use
+                          onChanged: (v) => setState(() => answers[i] = v),
                         ),
-                      ),
 
                       const Spacer(),
                       FilledButton(
