@@ -1,5 +1,3 @@
-mkdir -p lib/services
-cat > lib/services/api_config.dart <<'EOF'
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Config centralizada leída de .env / env.public
@@ -22,4 +20,3 @@ class AppConfig {
     return raw == 'true' || raw == '1' || raw == 'yes' || raw == 'on';
   }
 }
-EOF

@@ -1,4 +1,3 @@
-cat > lib/services/course_api_service.dart <<'EOF'
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -119,4 +118,3 @@ class CourseApiService {
     };
   }
 }
-EOF
