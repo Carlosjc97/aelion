@@ -312,6 +312,8 @@ class _LessonTile extends StatelessWidget {
                 context,
                 LessonView.routeName,
                 arguments: {
+                  'courseId': courseId,
+                  'moduleId': moduleId,
                   'lessonId': lessonId,
                   'title': title,
                   'content': 'Contenido de $title',
