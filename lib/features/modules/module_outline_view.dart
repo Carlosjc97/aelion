@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../widgets/aelion_appbar.dart';
-import '../../core/app_colors.dart';
-import '../../services/course_api_service.dart';
-import '../../services/progress_service.dart';
-import '../quiz/quiz_screen.dart';
-import '../lesson/lesson_view.dart';
-import '../../services/api_config.dart';
+import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/features/lesson/lesson_view.dart';
+import 'package:learning_ia/features/quiz/quiz_screen.dart';
+import 'package:learning_ia/services/api_config.dart';
+import 'package:learning_ia/services/course_api_service.dart';
+import 'package:learning_ia/services/progress_service.dart';
+import 'package:learning_ia/widgets/aelion_appbar.dart';
 
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
