@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'core/app_colors.dart';
-import 'core/router.dart';
+import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/core/router.dart';
 
 Future<void> main() async {
   runZonedGuarded<Future<void>>(
@@ -13,37 +13,36 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       await _loadEnv();
 
-      // Captura errores de Flutter
-      FlutterError.onError = (errorDetails) {
-        debugPrint('[FlutterError] ${errorDetails.exception}');
-        debugPrint(errorDetails.stack.toString());
-        Zone.current.handleUncaughtError(
-          errorDetails.exception,
-          errorDetails.stack ?? StackTrace.empty,
-        );
+      // New error handlers from user
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.dumpErrorToConsole(details);
+        // Forward to zone so runZonedGuarded can catch as well.
+        Zone.current.handleUncaughtError(details.exception, details.stack!);
       };
 
-      // En debug: widget de error visible en pantalla (evita “pantalla blanca”)
-      if (kDebugMode) {
-        ErrorWidget.builder = (errorDetails) {
-          return MaterialApp(
-            home: Scaffold(
-              appBar: AppBar(title: const Text('Aelion – Error')),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Error de renderizado:\n\n${errorDetails.exception}\n\n${errorDetails.stack}',
-                  style: const TextStyle(color: Colors.red),
+      ErrorWidget.builder = (FlutterErrorDetails details) {
+        return Material(
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Scaffold(
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    // Short summary + the exception; avoid huge stack floods
+                    'Widget build error:\n${details.exceptionAsString()}',
+                  ),
                 ),
               ),
             ),
-          );
-        };
-      }
+          ),
+        );
+      };
 
       runApp(const AelionApp());
     },
     (error, stack) {
+      // This is the zoned error handler, good for logging
       debugPrint('[runZonedGuarded] $error');
       debugPrint(stack.toString());
     },
