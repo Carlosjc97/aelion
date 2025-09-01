@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:learning_ia/core/app_colors.dart';
 class HomeView extends StatelessWidget {
   static const routeName = '/';
 
