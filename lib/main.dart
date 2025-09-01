@@ -12,26 +12,21 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       await _loadEnv();
 
-      // New error handlers from user
-      FlutterError.onError = (FlutterErrorDetails details) {
-        FlutterError.dumpErrorToConsole(details);
-        // Forward to zone so runZonedGuarded can catch as well.
-        Zone.current.handleUncaughtError(details.exception, details.stack!);
+      // Set up error handling as per user instructions
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
       };
 
-      ErrorWidget.builder = (FlutterErrorDetails details) {
+      ErrorWidget.builder = (details) {
         return Material(
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: Scaffold(
-              body: SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    // Short summary + the exception; avoid huge stack floods
-                    'Widget build error:\n${details.exceptionAsString()}',
-                  ),
-                ),
+          color: Colors.white,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Oops! ${details.exceptionAsString()}',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -41,8 +36,8 @@ Future<void> main() async {
       runApp(const AelionApp());
     },
     (error, stack) {
-      // This is the zoned error handler, good for logging
-      debugPrint('[runZonedGuarded] $error');
+      // Zoned error handler for logging
+      debugPrint('[runZonedGuarded] Uncaught error: $error');
       debugPrint(stack.toString());
     },
   );
