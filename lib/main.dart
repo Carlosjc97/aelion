@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'core/app_colors.dart';
-import 'core/router.dart';
+import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/core/router.dart';
 
 Future<void> main() async {
   runZonedGuarded<Future<void>>(
@@ -13,38 +12,32 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       await _loadEnv();
 
-      // Captura errores de Flutter
-      FlutterError.onError = (errorDetails) {
-        debugPrint('[FlutterError] ${errorDetails.exception}');
-        debugPrint(errorDetails.stack.toString());
-        Zone.current.handleUncaughtError(
-          errorDetails.exception,
-          errorDetails.stack ?? StackTrace.empty,
-        );
+      // Set up error handling as per user instructions
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
       };
 
-      // En debug: widget de error visible en pantalla (evita “pantalla blanca”)
-      if (kDebugMode) {
-        ErrorWidget.builder = (errorDetails) {
-          return MaterialApp(
-            home: Scaffold(
-              appBar: AppBar(title: const Text('Aelion – Error')),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Error de renderizado:\n\n${errorDetails.exception}\n\n${errorDetails.stack}',
-                  style: const TextStyle(color: Colors.red),
-                ),
+      ErrorWidget.builder = (details) {
+        return Material(
+          color: Colors.white,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Oops! ${details.exceptionAsString()}',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
             ),
-          );
-        };
-      }
+          ),
+        );
+      };
 
       runApp(const AelionApp());
     },
     (error, stack) {
-      debugPrint('[runZonedGuarded] $error');
+      // Zoned error handler for logging
+      debugPrint('[runZonedGuarded] Uncaught error: $error');
       debugPrint(stack.toString());
     },
   );

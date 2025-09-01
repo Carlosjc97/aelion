@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../widgets/aelion_appbar.dart';
-import '../../core/app_colors.dart';
-import '../modules/module_outline_view.dart';
+import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/features/modules/module_outline_view.dart';
+import 'package:learning_ia/widgets/aelion_appbar.dart';
 
 class TopicSearchView extends StatelessWidget {
   static const routeName = '/topics';

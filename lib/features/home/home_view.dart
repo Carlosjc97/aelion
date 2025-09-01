@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
-import '../topics/topic_search_view.dart';
-import '../modules/module_outline_view.dart';
+import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/features/topics/topic_search_view.dart';
+import 'package:learning_ia/features/modules/module_outline_view.dart';
 
 class HomeView extends StatelessWidget {
   static const routeName = '/';
@@ -10,6 +10,10 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    assert(() {
+      debugPrint('BUILD: HomeView');
+      return true;
+    }());
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -119,10 +123,10 @@ class HomeView extends StatelessWidget {
                               title: 'Toma un curso',
                               emoji: '📘',
                               onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  ModuleOutlineView.routeName,
-                                );
+                                  Navigator.pushNamed(
+                                    context,
+                                    ModuleOutlineView.routeName,
+                                  );
                               },
                             ),
                             const SizedBox(height: 12),
@@ -149,78 +153,6 @@ class HomeView extends StatelessWidget {
                             ),
                           ],
                         ),
-
-                      const SizedBox(height: 24),
-
-                      // Búsqueda + accesos secundarios
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: 'Buscar un tema',
-                                      prefixIcon: Icon(Icons.search_rounded),
-                                    ),
-                                    onSubmitted: (_) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        TopicSearchView.routeName,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                FilledButton.icon(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      TopicSearchView.routeName,
-                                    );
-                                  },
-                                  icon: const Icon(Icons.search),
-                                  label: const Text('Buscar'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                ActionChip(
-                                  avatar: const Text('🔎'),
-                                  label: const Text('Buscar un tema'),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      TopicSearchView.routeName,
-                                    );
-                                  },
-                                ),
-                                ActionChip(
-                                  avatar: const Text('📌'),
-                                  label: const Text('Ver ejemplo de módulo'),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      ModuleOutlineView.routeName,
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),

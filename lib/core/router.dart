@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../features/home/home_view.dart';
-import '../features/modules/module_outline_view.dart';
-import '../features/topics/topic_search_view.dart';
-import '../features/lesson/lesson_view.dart';
-import '../features/quiz/quiz_screen.dart';
+import 'package:learning_ia/features/home/home_view.dart';
+import 'package:learning_ia/features/lesson/lesson_view.dart';
+import 'package:learning_ia/features/modules/module_outline_view.dart';
+import 'package:learning_ia/features/quiz/quiz_screen.dart';
+import 'package:learning_ia/features/topics/topic_search_view.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {

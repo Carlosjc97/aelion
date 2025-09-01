@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
-import '../../services/progress_service.dart';
+import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/services/progress_service.dart';
 
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
