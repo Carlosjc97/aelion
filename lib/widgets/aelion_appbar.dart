@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/app_colors.dart';
+import 'package:learning_ia/core/app_colors.dart';
 
 class AelionAppBar extends AppBar {
   AelionAppBar({super.key, String title = 'Aelion'})

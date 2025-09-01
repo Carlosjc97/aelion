@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
-import '../topics/topic_search_view.dart';
-import '../modules/module_outline_view.dart';
+import 'package:learning_ia/core/app_colors.dart';
 
 class HomeView extends StatelessWidget {
   static const routeName = '/';
@@ -10,14 +8,13 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    final text = Theme.of(context).textTheme; // Re-introduce this
 
     return Scaffold(
       appBar: AppBar(title: const Text('Aelion')),
       body: SafeArea(
-        child: LayoutBuilder(
+        child: LayoutBuilder( // Keep the structure
           builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 720;
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               child: Center(
@@ -26,7 +23,7 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header
+                      // Header - This is the only part I'm restoring inside the Column
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.surface,
@@ -65,214 +62,13 @@ class HomeView extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 22),
-
-                      // Acciones principales
-                      if (isWide)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _CtaCard.primary(
-                                title: 'Toma un curso',
-                                emoji: '📘',
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    ModuleOutlineView.routeName,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: _CtaCard.primary(
-                                title: 'Aprende un idioma',
-                                emoji: '🌍',
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    TopicSearchView.routeName,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: _CtaCard.primary(
-                                title: 'Resuelve un problema',
-                                emoji: '🧩',
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    TopicSearchView.routeName,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        Column(
-                          children: [
-                            _CtaCard.primary(
-                              title: 'Toma un curso',
-                              emoji: '📘',
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  ModuleOutlineView.routeName,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            _CtaCard.primary(
-                              title: 'Aprende un idioma',
-                              emoji: '🌍',
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  TopicSearchView.routeName,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            _CtaCard.primary(
-                              title: 'Resuelve un problema',
-                              emoji: '🧩',
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  TopicSearchView.routeName,
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-
-                      const SizedBox(height: 24),
-
-                      // Búsqueda + accesos secundarios
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: 'Buscar un tema',
-                                      prefixIcon: Icon(Icons.search_rounded),
-                                    ),
-                                    onSubmitted: (_) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        TopicSearchView.routeName,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                FilledButton.icon(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      TopicSearchView.routeName,
-                                    );
-                                  },
-                                  icon: const Icon(Icons.search),
-                                  label: const Text('Buscar'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                ActionChip(
-                                  avatar: const Text('🔎'),
-                                  label: const Text('Buscar un tema'),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      TopicSearchView.routeName,
-                                    );
-                                  },
-                                ),
-                                ActionChip(
-                                  avatar: const Text('📌'),
-                                  label: const Text('Ver ejemplo de módulo'),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      ModuleOutlineView.routeName,
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                      // The rest of the children are omitted for this step
                     ],
                   ),
                 ),
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _CtaCard extends StatelessWidget {
-  final String title;
-  final String emoji;
-  final VoidCallback onTap;
-
-  const _CtaCard.primary({
-    required this.title,
-    required this.emoji,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Ink(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.neutral),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.onSurface,
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.onSurface),
-          ],
         ),
       ),
     );
