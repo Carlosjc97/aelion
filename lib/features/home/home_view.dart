@@ -12,12 +12,13 @@ class HomeView extends StatelessWidget {
       debugPrint('BUILD: HomeView');
       return true;
     }());
-    final text = Theme.of(context).textTheme; // Re-introduce this
+
+    final text = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Aelion')),
       body: SafeArea(
-        child: LayoutBuilder( // Keep the structure
+        child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -27,7 +28,7 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header - This is the only part I'm restoring inside the Column
+                      // Header restaurado
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.surface,
@@ -66,7 +67,8 @@ class HomeView extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // The rest of the children are omitted for this step
+
+                      // (Seguiremos reintroduciendo el resto por etapas)
                     ],
                   ),
                 ),
