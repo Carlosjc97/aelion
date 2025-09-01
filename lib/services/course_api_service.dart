@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import 'api_config.dart';
+import 'package:learning_ia/services/api_config.dart';
 
 /// Servicio de curso – usa AppConfig. No depende de `isConfigured`.
 class CourseApiService {
