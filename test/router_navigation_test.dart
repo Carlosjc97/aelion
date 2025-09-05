@@ -13,12 +13,18 @@ Widget _app() => MaterialApp(
 void main() {
   testWidgets('Home -> Module navega con topic String', (tester) async {
     await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+
     expect(find.byType(HomeView), findsOneWidget);
 
-    Navigator.of(tester.element(find.byType(HomeView))).pushNamed(
+    // Simula navegación con argumento
+    final context = tester.element(find.byType(HomeView));
+    Navigator.pushNamed(
+      context,
       ModuleOutlineView.routeName,
       arguments: 'Introducción a Flutter',
     );
+
     await tester.pumpAndSettle();
     expect(find.byType(ModuleOutlineView), findsOneWidget);
   });
