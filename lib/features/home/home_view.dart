@@ -10,25 +10,34 @@ class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   Widget _buildFeaturedCourses(BuildContext context) {
-    // Sample data
     final courses = [
       Course(
         title: 'Toma un curso',
         subtitle: '8 Courses',
         imageUrl: 'https://d1mo3tzxttab3n.cloudfront.net/static/img/shop/560x580/vint0080.jpg',
-        onTap: () => Navigator.pushNamed(context, ModuleOutlineView.routeName),
+        onTap: () => Navigator.pushNamed(
+          context,
+          ModuleOutlineView.routeName,
+          arguments: 'Toma un curso',
+        ),
       ),
       Course(
         title: 'Aprende un idioma',
         subtitle: '8 Courses',
         imageUrl: 'https://hips.hearstapps.com/esquireuk.cdnds.net/16/39/980x980/square-1475143834-david-gandy.jpg?resize=480:*',
-        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
+        onTap: () => Navigator.pushNamed(
+          context,
+          TopicSearchView.routeName,
+        ),
       ),
       Course(
         title: 'Resuelve un problema',
         subtitle: '8 Courses',
         imageUrl: 'https://www.visafranchise.com/wp-content/uploads/2019/05/patrick-findaro-visa-franchise-square.jpg',
-        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
+        onTap: () => Navigator.pushNamed(
+          context,
+          TopicSearchView.routeName,
+        ),
       ),
     ];
 
@@ -50,10 +59,6 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(() {
-      debugPrint('BUILD: HomeView');
-      return true;
-    }());
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -64,16 +69,12 @@ class HomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -85,9 +86,7 @@ class HomeView extends StatelessWidget {
                         children: [
                           Text(
                             'Aelion',
-                            style: text.headlineLarge?.copyWith(
-                              color: AppColors.secondary,
-                            ),
+                            style: text.headlineLarge?.copyWith(color: AppColors.secondary),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -103,10 +102,7 @@ class HomeView extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 22),
-
-              // Featured Courses
               _buildFeaturedCourses(context),
             ],
           ),
