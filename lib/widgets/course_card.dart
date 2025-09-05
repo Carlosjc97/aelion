@@ -31,9 +31,6 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // ← declarada
-// pero no se usa en ningún lado
-
     return InkWell(
       onTap: course.onTap,
       borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -41,41 +38,42 @@ class CourseCard extends StatelessWidget {
         height: 180,
         width: 180,
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-      decoration: BoxDecoration(
-        color: primaryColor.withAlpha(200),
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            offset: const Offset(0, 5),
-            blurRadius: 10,
-            color: AppColors.primary.withAlpha(20),
-          )
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        child: Stack(
-          children: <Widget>[
-            background,
-            Positioned(
-              top: 20,
-              left: 10,
-              child: CircleAvatar(
-                backgroundColor: Colors.grey.shade300,
-                backgroundImage: NetworkImage(course.imageUrl),
-              ),
-            ),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: _CardInfo(
-                title: course.title,
-                subtitle: course.subtitle,
-                textColor: primaryColor == Colors.white ? AppColors.onSurface : Colors.white,
-                chipColor: AppColors.secondary,
-              ),
+        decoration: BoxDecoration(
+          color: primaryColor.withAlpha(200),
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              offset: const Offset(0, 5),
+              blurRadius: 10,
+              color: AppColors.primary.withAlpha(20),
             )
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          child: Stack(
+            children: <Widget>[
+              background,
+              Positioned(
+                top: 20,
+                left: 10,
+                child: CircleAvatar(
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage: NetworkImage(course.imageUrl),
+                ),
+              ),
+              Positioned(
+                bottom: 10,
+                left: 10,
+                child: _CardInfo(
+                  title: course.title,
+                  subtitle: course.subtitle,
+                  textColor: primaryColor == Colors.white ? AppColors.onSurface : Colors.white,
+                  chipColor: AppColors.secondary,
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
