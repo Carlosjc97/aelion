@@ -31,7 +31,8 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = Theme.of(context); // ← declarada
+// pero no se usa en ningún lado
 
     return InkWell(
       onTap: course.onTap,
