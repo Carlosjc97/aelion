@@ -17,3 +17,7 @@ Verifica:
 flutter --version
 dart --version
 git --version
+
+## Acknowledgements
+
+- The design for the course cards is adapted from [TheAlphamerc/flutter_smart_course](https://github.com/TheAlphamerc/flutter_smart_course), which is licensed under the BSD-2-Clause license.
