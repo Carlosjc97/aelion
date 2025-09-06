@@ -7,14 +7,15 @@ void main() {
   testWidgets('HomeView smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeView()));
 
-    // Ahora Home muestra 3 tarjetas (incluida "Resuelve un problema")
+    // HomeView ahora muestra 3 CourseCard
     expect(find.byType(CourseCard), findsNWidgets(3));
 
-    // Títulos visibles
+    // Textos visibles
     expect(find.text('Toma un curso'), findsOneWidget);
     expect(find.text('Aprende un idioma'), findsOneWidget);
+    expect(find.text('Resuelve un problema'), findsOneWidget);
 
-    // Sección de populares
+    // Sección de cursos populares
     expect(find.text('Cursos populares'), findsOneWidget);
     expect(find.text('Introducción a la IA'), findsOneWidget);
   });
