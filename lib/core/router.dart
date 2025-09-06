@@ -15,6 +15,7 @@ class AppRouter {
         );
 
       default:
+        // Texto exacto para el test de 404
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
             body: Center(
