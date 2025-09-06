@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:learning_ia/features/home/home_view.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
 import 'package:learning_ia/features/topics/topic_search_view.dart';
+import 'package:learning_ia/widgets/course_card.dart';
 
 void main() {
   // We define a local onGenerateRoute for this test to handle all necessary
