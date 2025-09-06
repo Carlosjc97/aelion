@@ -7,15 +7,15 @@ void main() {
   testWidgets('HomeView smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeView()));
 
-    // Header
+    // Header básico
     expect(find.text('Aelion'), findsOneWidget);
     expect(find.text('Aprende en minutos'), findsOneWidget);
 
-    // En lugar de contar tarjetas exactas, validamos las dos importantes:
+    // Validamos por contenido, no por cantidad exacta de cards
     expect(find.widgetWithText(CourseCard, 'Toma un curso'), findsOneWidget);
     expect(find.widgetWithText(CourseCard, 'Aprende un idioma'), findsOneWidget);
 
-    // Semantics (accesibilidad)
+    // Accesibilidad
     expect(find.bySemanticsLabel("Open 'Toma un curso'"), findsOneWidget);
     expect(find.bySemanticsLabel("Open 'Aprende un idioma'"), findsOneWidget);
 
