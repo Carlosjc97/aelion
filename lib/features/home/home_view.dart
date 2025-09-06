@@ -160,4 +160,3 @@ Widget _buildTrendingCourses(BuildContext context) {
     }).toList(),
   );
 }
-```0
