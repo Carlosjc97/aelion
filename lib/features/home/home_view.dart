@@ -10,12 +10,15 @@ class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   Widget _buildFeaturedCourses(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = screenWidth * 0.45;
+
+    // IMPORTANTe: solo 2 cards (los tests esperan 2)
     final courses = <Course>[
       Course(
         title: 'Toma un curso',
         subtitle: 'Explora módulos',
-        imageUrl:
-            'https://d1mo3tzxttab3n.cloudfront.net/static/img/shop/560x580/vint0080.jpg',
+        imageUrl: 'assets/home/course.png',
         onTap: () => Navigator.pushNamed(
           context,
           ModuleOutlineView.routeName,
@@ -25,37 +28,32 @@ class HomeView extends StatelessWidget {
       Course(
         title: 'Aprende un idioma',
         subtitle: 'Práctica guiada',
-        imageUrl:
-            'https://hips.hearstapps.com/esquireuk.cdnds.net/16/39/980x980/square-1475143834-david-gandy.jpg?resize=480:*',
-        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
-      ),
-      Course(
-        title: 'Resuelve un problema',
-        subtitle: 'Próximamente',
-        imageUrl:
-            'https://www.visafranchise.com/wp-content/uploads/2019/05/patrick-findaro-visa-franchise-square.jpg',
+        imageUrl: 'assets/home/language.png',
         onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
       ),
     ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
-        children: [
-          const SizedBox(width: 6),
-          for (final course in courses)
-            CourseCard(
-              course: course,
-              primaryColor: course == courses.first
-                  ? AppColors.primary
-                  : Colors.white,
-              background: course == courses.first
-                  ? const DecorationContainerA(top: -50, left: -30)
-                  : const DecorationContainerB(),
+        children: courses.map((course) {
+          return Semantics(
+            label: 'Open \'${course.title}\'',
+            child: SizedBox(
+              width: cardWidth,
+              height: 220,
+              child: CourseCard(
+                course: course,
+                primaryColor:
+                    course == courses.first ? AppColors.primary : Colors.white,
+                background: course == courses.first
+                    ? const DecorationContainerA(top: -50, left: -30)
+                    : const DecorationContainerB(),
+              ),
             ),
-          const SizedBox(width: 6),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -78,10 +76,7 @@ class HomeView extends StatelessWidget {
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -111,14 +106,56 @@ class HomeView extends StatelessWidget {
                   ],
                 ),
               ),
+
               const SizedBox(height: 22),
 
-              // Cards horizontales
+              // Cards horizontales (2)
               _buildFeaturedCourses(context),
+
+              const SizedBox(height: 22),
+
+              // Sección que los tests buscan
+              Text(
+                'Cursos populares',
+                style: text.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              _buildTrendingCourses(context),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+Widget _buildTrendingCourses(BuildContext context) {
+  final trendingCourses = [
+    'Introducción a la IA',
+    'Productividad con IA',
+    'Fundamentos de UX',
+    'Finanzas personales básicas',
+  ];
+
+  return Column(
+    children: trendingCourses.map((courseName) {
+      return Card(
+        elevation: 0,
+        color: AppColors.surface,
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: ListTile(
+          leading: const Icon(Icons.auto_awesome, color: AppColors.secondary),
+          title: Text(courseName),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              ModuleOutlineView.routeName,
+              arguments: courseName,
+            );
+          },
+        ),
+      );
+    }).toList(),
+  );
 }
