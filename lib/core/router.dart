@@ -19,10 +19,19 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const TopicSearchView());
 
       default:
-        // Los tests esperan el texto "404" exacto.
+        // Muestra un Text('404') EXACTO + mensaje legible
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
-            body: Center(child: Text('404')),
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('404', style: TextStyle(fontSize: 20)),
+                  SizedBox(height: 8),
+                  Text('No existe la ruta', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
           ),
         );
     }
