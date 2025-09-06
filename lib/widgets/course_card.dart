@@ -6,7 +6,7 @@ import 'package:learning_ia/widgets/quad_clipper.dart';
 class Course {
   final String title;
   final String subtitle;
-  final String imageUrl; // can be a remote URL, but tests run with no network
+  final String imageUrl;
   final VoidCallback? onTap;
 
   Course({
@@ -54,39 +54,34 @@ class CourseCard extends StatelessWidget {
           child: Stack(
             children: <Widget>[
               background,
-
-              // Avatar/imagen SIN depender de NetworkImage para que no rompa en tests.
               Positioned(
                 top: 20,
                 left: 10,
                 child: CircleAvatar(
                   radius: 28,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.grey.shade300,
                   child: ClipOval(
                     child: Image.network(
                       course.imageUrl,
                       width: 56,
                       height: 56,
                       fit: BoxFit.cover,
-                      // En tests (sin red) entrará aquí y NO fallará el build.
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.school_rounded,
-                        size: 28,
-                        color: AppColors.secondary,
-                      ),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.school_rounded,
+                              size: 28, color: AppColors.secondary),
                     ),
                   ),
                 ),
               ),
-
               Positioned(
                 bottom: 10,
                 left: 10,
                 child: _CardInfo(
                   title: course.title,
                   subtitle: course.subtitle,
-                  textColor:
-                      (primaryColor == Colors.white) ? AppColors.onSurface : Colors.white,
+                  textColor: primaryColor == Colors.white
+                      ? AppColors.onSurface
+                      : Colors.white,
                   chipColor: AppColors.secondary,
                 ),
               )
@@ -197,13 +192,16 @@ class DecorationContainerA extends StatelessWidget {
         Positioned(
           top: 20,
           right: -30,
-          child: _circularContainer(80, Colors.transparent, borderColor: Colors.white),
+          child: _circularContainer(
+              80, Colors.transparent,
+              borderColor: Colors.white),
         )
       ],
     );
   }
 
-  Widget _smallContainer(Color color, double top, double left, {double radius = 10}) {
+  Widget _smallContainer(Color color, double top, double left,
+      {double radius = 10}) {
     return Positioned(
       top: top,
       left: left,
@@ -241,7 +239,8 @@ class DecorationContainerB extends StatelessWidget {
           child: CircleAvatar(
             radius: 70,
             backgroundColor: AppColors.secondary.withAlpha(100),
-            child: const CircleAvatar(radius: 30, backgroundColor: Colors.white),
+            child: const CircleAvatar(
+                radius: 30, backgroundColor: Colors.white),
           ),
         ),
         Positioned(
@@ -249,7 +248,8 @@ class DecorationContainerB extends StatelessWidget {
           right: -40,
           child: ClipRect(
             clipper: QuadClipper(),
-            child: const CircleAvatar(backgroundColor: AppColors.secondary, radius: 40),
+            child: const CircleAvatar(
+                backgroundColor: AppColors.secondary, radius: 40),
           ),
         ),
       ],
