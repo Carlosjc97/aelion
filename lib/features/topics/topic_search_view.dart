@@ -27,7 +27,7 @@ class _TopicSearchViewState extends State<TopicSearchView> {
     };
 
     return Scaffold(
-      appBar: const AelionAppBar(title: 'Aprende un idioma'),
+      appBar: AelionAppBar(title: 'Aprende un idioma'), // <- sin const
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -36,7 +36,7 @@ class _TopicSearchViewState extends State<TopicSearchView> {
             Text(
               'Practica a tu ritmo · 5 minutos al día',
               style: text.bodyLarge?.copyWith(
-                color: AppColors.onSurface.withValues(alpha: 0.7), // 👈 reemplazo
+                color: AppColors.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 16),
@@ -54,7 +54,7 @@ class _TopicSearchViewState extends State<TopicSearchView> {
                     });
                   },
                   backgroundColor: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.2) // 👈 reemplazo
+                      ? AppColors.primary.withValues(alpha: 0.2)
                       : AppColors.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -67,11 +67,7 @@ class _TopicSearchViewState extends State<TopicSearchView> {
             ),
             const SizedBox(height: 24),
             if (_selectedLanguage != null)
-              Text(
-                'Temas para $_selectedLanguage:',
-                style: text.titleMedium,
-              ),
-            // TODO: Display topics for the selected language
+              Text('Temas para $_selectedLanguage:', style: text.titleMedium),
           ],
         ),
       ),
