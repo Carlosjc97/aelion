@@ -19,17 +19,13 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const TopicSearchView());
 
       default:
-        // Muestra un Text('404') EXACTO + mensaje legible
+        // 404 limpio, compatible con el test
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
             body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('404', style: TextStyle(fontSize: 20)),
-                  SizedBox(height: 8),
-                  Text('No existe la ruta', style: TextStyle(fontSize: 16)),
-                ],
+              child: Text(
+                '404',
+                style: TextStyle(fontSize: 20),
               ),
             ),
           ),
