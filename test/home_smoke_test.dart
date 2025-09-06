@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learning_ia/features/home/home_view.dart';
+import 'package:learning_ia/widgets/course_card.dart';
 
 void main() {
   testWidgets('HomeView smoke test', (WidgetTester tester) async {
