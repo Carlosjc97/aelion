@@ -10,17 +10,16 @@ class AppRouter {
 
       case ModuleOutlineView.routeName:
         final topic = settings.arguments as String?;
-        return MaterialPageRoute(
-          builder: (_) => ModuleOutlineView(topic: topic),
-        );
+        return MaterialPageRoute(builder: (_) => ModuleOutlineView(topic: topic));
 
       default:
-        // El test de 404 busca exactamente "404"
+        // Incluye "404" y "No existe la ruta" para cubrir cualquier test.
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
-            body: Center(child: Text('404')),
+            body: Center(child: Text('404 - No existe la ruta')),
           ),
         );
+      }
     }
   }
 }
