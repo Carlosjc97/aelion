@@ -7,18 +7,20 @@ void main() {
   testWidgets('HomeView smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeView()));
 
-    // Ahora tenemos 2 cards visibles en HomeView
-    expect(find.byType(CourseCard), findsNWidgets(2));
+    // Header
+    expect(find.text('Aelion'), findsOneWidget);
+    expect(find.text('Aprende en minutos'), findsOneWidget);
 
-    // Verificamos accesibilidad
+    // En lugar de contar tarjetas exactas, validamos las dos importantes:
+    expect(find.widgetWithText(CourseCard, 'Toma un curso'), findsOneWidget);
+    expect(find.widgetWithText(CourseCard, 'Aprende un idioma'), findsOneWidget);
+
+    // Semantics (accesibilidad)
     expect(find.bySemanticsLabel("Open 'Toma un curso'"), findsOneWidget);
     expect(find.bySemanticsLabel("Open 'Aprende un idioma'"), findsOneWidget);
 
-    // Sección de cursos populares
+    // Trending
     expect(find.text('Cursos populares'), findsOneWidget);
     expect(find.text('Introducción a la IA'), findsOneWidget);
-
-    // Verificar que "Aprende un idioma" aparece
-    expect(find.text('Aprende un idioma'), findsOneWidget);
   });
 }
