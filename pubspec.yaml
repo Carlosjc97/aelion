@@ -63,7 +63,7 @@ flutter:
   assets:
     - env.public
     - assets/home/course.png
-    - assets/home/languague.png
+    - assets/home/language.png
     - assets/home/problem.png
 
 
