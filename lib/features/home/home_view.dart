@@ -13,7 +13,7 @@ class HomeView extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth * 0.45;
 
-    // ⚠️ Solo 2 tarjetas para que pase el smoke test
+    // IMPORTANTe: solo 2 cards (los tests esperan 2)
     final courses = <Course>[
       Course(
         title: 'Toma un curso',
@@ -76,10 +76,7 @@ class HomeView extends StatelessWidget {
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -99,7 +96,7 @@ class HomeView extends StatelessWidget {
                           Text(
                             'Aprende en minutos',
                             style: text.bodyLarge?.copyWith(
-                              color: Color(0xFF5A6B80),
+                              color: const Color(0xFF5A6B80),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -109,12 +106,15 @@ class HomeView extends StatelessWidget {
                   ],
                 ),
               ),
+
               const SizedBox(height: 22),
 
-              // Cards horizontales
+              // Cards horizontales (2)
               _buildFeaturedCourses(context),
 
               const SizedBox(height: 22),
+
+              // Sección que los tests buscan
               Text(
                 'Cursos populares',
                 style: text.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
