@@ -6,9 +6,7 @@ import 'package:learning_ia/features/topics/topic_search_view.dart';
 import 'package:learning_ia/widgets/course_card.dart';
 
 void main() {
-  // We define a local onGenerateRoute for this test to handle all necessary
-  // routes. This is a workaround because the main AppRouter is missing some
-  // routes needed for testing, and the project instructions forbid modifying it.
+  // Generador de rutas local para el test.
   Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case HomeView.routeName:
@@ -17,36 +15,37 @@ void main() {
         final topic = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => ModuleOutlineView(topic: topic));
       case TopicSearchView.routeName:
-        final language = settings.arguments as String?;
-        return MaterialPageRoute(builder: (_) => const TopicSearchView()); // Simplified for test
+        // No necesitamos el argumento aquí; evitemos variable sin uso.
+        return MaterialPageRoute(builder: (_) => const TopicSearchView());
       default:
-        return MaterialPageRoute(builder: (_) => const Scaffold(body: Text('404')));
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(body: Center(child: Text('404'))),
+        );
     }
   }
 
-  testWidgets('Navigation from HomeView to ModuleOutlineView', (WidgetTester tester) async {
-    // Build our app with a route generator and trigger a frame.
+  testWidgets('Navigation from HomeView to ModuleOutlineView',
+      (WidgetTester tester) async {
     await tester.pumpWidget(MaterialApp(
       onGenerateRoute: onGenerateRoute,
       initialRoute: HomeView.routeName,
     ));
 
-    // Verify we are on the HomeView
+    // Estamos en Home
     expect(find.byType(HomeView), findsOneWidget);
 
-    // Find the first course card, which is 'Toma un curso'
+    // Tocar la tarjeta "Toma un curso"
     final courseCardFinder = find.widgetWithText(CourseCard, 'Toma un curso');
     expect(courseCardFinder, findsOneWidget);
 
-    // Tap the card
     await tester.tap(courseCardFinder);
-    await tester.pumpAndSettle(); // Wait for navigation to complete
+    await tester.pumpAndSettle();
 
-    // Verify that we have navigated to the ModuleOutlineView
+    // Llegamos a ModuleOutlineView
     expect(find.byType(ModuleOutlineView), findsOneWidget);
     expect(find.byType(HomeView), findsNothing);
 
-    // Verify the argument was passed correctly by checking the AppBar title
+    // El título del AppBar refleja el argumento
     expect(find.widgetWithText(AppBar, 'Introducción a la IA'), findsOneWidget);
   });
 }
