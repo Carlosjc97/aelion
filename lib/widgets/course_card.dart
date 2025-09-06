@@ -35,8 +35,6 @@ class CourseCard extends StatelessWidget {
       onTap: course.onTap,
       borderRadius: const BorderRadius.all(Radius.circular(20)),
       child: Container(
-        height: 180,
-        width: 180,
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
         decoration: BoxDecoration(
           color: primaryColor.withAlpha(200),
@@ -61,7 +59,7 @@ class CourseCard extends StatelessWidget {
                   radius: 28,
                   backgroundColor: Colors.grey.shade300,
                   child: ClipOval(
-                    child: Image.network(
+                    child: Image.asset(
                       course.imageUrl,
                       width: 56,
                       height: 56,
@@ -114,9 +112,7 @@ class _CardInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(
-            width: 180,
-            child: Text(
+          Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(color: textColor),
               overflow: TextOverflow.ellipsis,
