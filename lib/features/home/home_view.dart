@@ -10,49 +10,52 @@ class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   Widget _buildFeaturedCourses(BuildContext context) {
-    final courses = [
+    final courses = <Course>[
       Course(
         title: 'Toma un curso',
-        subtitle: '8 Courses',
-        imageUrl: 'https://d1mo3tzxttab3n.cloudfront.net/static/img/shop/560x580/vint0080.jpg',
+        subtitle: 'Explora módulos',
+        imageUrl:
+            'https://d1mo3tzxttab3n.cloudfront.net/static/img/shop/560x580/vint0080.jpg',
         onTap: () => Navigator.pushNamed(
           context,
           ModuleOutlineView.routeName,
-          arguments: 'Toma un curso',
+          arguments: 'Introducción a la IA',
         ),
       ),
       Course(
         title: 'Aprende un idioma',
-        subtitle: '8 Courses',
-        imageUrl: 'https://hips.hearstapps.com/esquireuk.cdnds.net/16/39/980x980/square-1475143834-david-gandy.jpg?resize=480:*',
-        onTap: () => Navigator.pushNamed(
-          context,
-          TopicSearchView.routeName,
-        ),
+        subtitle: 'Práctica guiada',
+        imageUrl:
+            'https://hips.hearstapps.com/esquireuk.cdnds.net/16/39/980x980/square-1475143834-david-gandy.jpg?resize=480:*',
+        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
       ),
       Course(
         title: 'Resuelve un problema',
-        subtitle: '8 Courses',
-        imageUrl: 'https://www.visafranchise.com/wp-content/uploads/2019/05/patrick-findaro-visa-franchise-square.jpg',
-        onTap: () => Navigator.pushNamed(
-          context,
-          TopicSearchView.routeName,
-        ),
+        subtitle: 'Próximamente',
+        imageUrl:
+            'https://www.visafranchise.com/wp-content/uploads/2019/05/patrick-findaro-visa-franchise-square.jpg',
+        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
       ),
     ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Row(
-        children: courses.map((course) {
-          return CourseCard(
-            course: course,
-            primaryColor: course == courses.first ? AppColors.primary : Colors.white,
-            background: course == courses.first
-                ? const DecorationContainerA(top: -50, left: -30)
-                : const DecorationContainerB(),
-          );
-        }).toList(),
+        children: [
+          const SizedBox(width: 6),
+          for (final course in courses)
+            CourseCard(
+              course: course,
+              primaryColor: course == courses.first
+                  ? AppColors.primary
+                  : Colors.white,
+              background: course == courses.first
+                  ? const DecorationContainerA(top: -50, left: -30)
+                  : const DecorationContainerB(),
+            ),
+          const SizedBox(width: 6),
+        ],
       ),
     );
   }
@@ -69,12 +72,16 @@ class HomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 22,
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -86,7 +93,9 @@ class HomeView extends StatelessWidget {
                         children: [
                           Text(
                             'Aelion',
-                            style: text.headlineLarge?.copyWith(color: AppColors.secondary),
+                            style: text.headlineLarge?.copyWith(
+                              color: AppColors.secondary,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -103,6 +112,8 @@ class HomeView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
+
+              // Cards horizontales
               _buildFeaturedCourses(context),
             ],
           ),
