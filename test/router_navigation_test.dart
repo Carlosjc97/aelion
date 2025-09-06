@@ -6,10 +6,9 @@ import 'package:learning_ia/core/router.dart';
 import 'package:learning_ia/features/home/home_view.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
 
-Widget _app({String? initialRoute}) => MaterialApp(
+Widget _app() => MaterialApp(
   onGenerateRoute: AppRouter.onGenerateRoute,
-  // Si pasamos una ruta inicial, úsala; si no, vete al Home.
-  initialRoute: initialRoute ?? HomeView.routeName,
+  initialRoute: HomeView.routeName,
 );
 
 void main() {
@@ -17,7 +16,6 @@ void main() {
     await tester.pumpWidget(_app());
     expect(find.byType(HomeView), findsOneWidget);
 
-    // Empuja ModuleOutlineView con un topic.
     Navigator.of(tester.element(find.byType(HomeView))).pushNamed(
       ModuleOutlineView.routeName,
       arguments: 'Introducción a Flutter',
@@ -28,12 +26,15 @@ void main() {
   });
 
   testWidgets('Ruta inexistente muestra 404', (tester) async {
-    // Inicia directamente con una ruta que NO existe para forzar el fallback.
-    await tester.pumpWidget(_app(initialRoute: '/__ruta_que_no_existe__'));
+    await tester.pumpWidget(_app());
+    expect(find.byType(HomeView), findsOneWidget);
+
+    // Empujar una ruta que no existe
+    Navigator.of(tester.element(find.byType(HomeView)))
+        .pushNamed('/__ruta_que_no_existe__');
     await tester.pumpAndSettle();
 
-    // Busca el texto que renderiza el fallback del router.
-    expect(find.textContaining('404'), findsOneWidget);
-    expect(find.textContaining('No existe la ruta'), findsOneWidget);
+    // Tu router pinta exactamente este texto:
+    expect(find.text('404 - No existe la ruta'), findsOneWidget);
   });
 }
