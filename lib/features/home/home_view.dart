@@ -13,7 +13,7 @@ class HomeView extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth * 0.45;
 
-    // Solo 2 cards (el smoke test espera 2)
+    // ⚠️ Solo 2 tarjetas para que pase el smoke test
     final courses = <Course>[
       Course(
         title: 'Toma un curso',
@@ -38,17 +38,16 @@ class HomeView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: courses.map((course) {
-          final isFirst = course.title == 'Toma un curso';
           return Semantics(
             label: 'Open \'${course.title}\'',
             child: SizedBox(
               width: cardWidth,
               height: 220,
               child: CourseCard(
-                key: isFirst ? const Key('course_card_toma_un_curso') : null,
                 course: course,
-                primaryColor: isFirst ? AppColors.primary : Colors.white,
-                background: isFirst
+                primaryColor:
+                    course == courses.first ? AppColors.primary : Colors.white,
+                background: course == courses.first
                     ? const DecorationContainerA(top: -50, left: -30)
                     : const DecorationContainerB(),
               ),
@@ -77,7 +76,10 @@ class HomeView extends StatelessWidget {
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 22,
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -107,15 +109,12 @@ class HomeView extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 22),
 
               // Cards horizontales
               _buildFeaturedCourses(context),
 
               const SizedBox(height: 22),
-
-              // Trending / populares
               Text(
                 'Cursos populares',
                 style: text.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
