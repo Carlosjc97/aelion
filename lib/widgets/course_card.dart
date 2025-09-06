@@ -6,7 +6,7 @@ import 'package:learning_ia/widgets/quad_clipper.dart';
 class Course {
   final String title;
   final String subtitle;
-  final String imageUrl;
+  final String imageUrl; // can be a remote URL, but tests run with no network
   final VoidCallback? onTap;
 
   Course({
@@ -54,21 +54,39 @@ class CourseCard extends StatelessWidget {
           child: Stack(
             children: <Widget>[
               background,
+
+              // Avatar/imagen SIN depender de NetworkImage para que no rompa en tests.
               Positioned(
                 top: 20,
                 left: 10,
                 child: CircleAvatar(
-                  backgroundColor: Colors.grey.shade300,
-                  backgroundImage: NetworkImage(course.imageUrl),
+                  radius: 28,
+                  backgroundColor: Colors.white,
+                  child: ClipOval(
+                    child: Image.network(
+                      course.imageUrl,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      // En tests (sin red) entrará aquí y NO fallará el build.
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.school_rounded,
+                        size: 28,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
+
               Positioned(
                 bottom: 10,
                 left: 10,
                 child: _CardInfo(
                   title: course.title,
                   subtitle: course.subtitle,
-                  textColor: primaryColor == Colors.white ? AppColors.onSurface : Colors.white,
+                  textColor:
+                      (primaryColor == Colors.white) ? AppColors.onSurface : Colors.white,
                   chipColor: AppColors.secondary,
                 ),
               )
@@ -196,7 +214,8 @@ class DecorationContainerA extends StatelessWidget {
     );
   }
 
-  Widget _circularContainer(double height, Color color, {Color borderColor = Colors.transparent, double borderWidth = 2}) {
+  Widget _circularContainer(double height, Color color,
+      {Color borderColor = Colors.transparent, double borderWidth = 2}) {
     return Container(
       height: height,
       width: height,
