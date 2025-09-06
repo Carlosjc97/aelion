@@ -15,15 +15,10 @@ class AppRouter {
         );
 
       default:
-        // 404 sencillo para los tests
+        // El test de 404 busca exactamente "404"
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
-            body: Center(
-              child: Text(
-                'No existe la ruta', // el test busca este texto
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
+            body: Center(child: Text('404')),
           ),
         );
     }
