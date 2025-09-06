@@ -159,4 +159,4 @@ Widget _buildTrendingCourses(BuildContext context) {
       );
     }).toList(),
   );
-}
+}l
