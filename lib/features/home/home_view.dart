@@ -13,6 +13,7 @@ class HomeView extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth * 0.45;
 
+    // Solo 2 cards para que pase el smoke test
     final courses = <Course>[
       Course(
         title: 'Toma un curso',
@@ -30,7 +31,6 @@ class HomeView extends StatelessWidget {
         imageUrl: 'assets/home/language.png',
         onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
       ),
-      // 🔴 "Resuelve un problema" se quita del UI porque aún no está lista.
     ];
 
     return SingleChildScrollView(
@@ -70,6 +70,7 @@ class HomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
@@ -109,7 +110,10 @@ class HomeView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
+
+              // Cards horizontales (2)
               _buildFeaturedCourses(context),
+
               const SizedBox(height: 22),
               Text(
                 'Cursos populares',
