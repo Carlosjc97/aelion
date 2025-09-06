@@ -30,12 +30,7 @@ class HomeView extends StatelessWidget {
         imageUrl: 'assets/home/language.png',
         onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
       ),
-      Course(
-        title: 'Resuelve un problema',
-        subtitle: 'Próximamente',
-        imageUrl: 'assets/home/problem.png',
-        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
-      ),
+      // 🔴 "Resuelve un problema" se quita del UI porque aún no está lista.
     ];
 
     return SingleChildScrollView(
