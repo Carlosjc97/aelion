@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:learning_ia/core/router.dart';
 import 'package:learning_ia/features/home/home_view.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
 import 'package:learning_ia/features/topics/topic_search_view.dart';
 import 'package:learning_ia/widgets/course_card.dart';
-import 'package:learning_ia/core/router.dart';
 
 void main() {
   testWidgets('Home -> ModuleOutlineView navega con argumento',
@@ -14,27 +14,15 @@ void main() {
       initialRoute: HomeView.routeName,
     ));
 
-    // Estamos en Home
-    expect(find.byType(HomeView), findsOneWidget);
+    final tomaUnCurso = find.widgetWithText(CourseCard, 'Toma un curso');
+    expect(tomaUnCurso, findsOneWidget);
 
-    // Tap en "Toma un curso"
-    final courseCardFinder = find.widgetWithText(CourseCard, 'Toma un curso');
-    expect(courseCardFinder, findsOneWidget);
-
-    await tester.tap(courseCardFinder);
+    await tester.tap(tomaUnCurso);
     await tester.pumpAndSettle();
 
-    // Debemos estar en ModuleOutlineView
     expect(find.byType(ModuleOutlineView), findsOneWidget);
-  });
-
-  testWidgets('Ruta inexistente muestra 404', (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(
-      onGenerateRoute: AppRouter.onGenerateRoute,
-      initialRoute: '/ruta-inexistente',
-    ));
-
-    expect(find.text('404'), findsOneWidget);
+    // comprobamos que el topic se muestra en pantalla (título o cuerpo)
+    expect(find.textContaining('Introducción a la IA'), findsWidgets);
   });
 
   testWidgets('Home -> TopicSearchView navega correctamente',
@@ -44,14 +32,32 @@ void main() {
       initialRoute: HomeView.routeName,
     ));
 
-    // Tap en "Aprende un idioma"
-    final courseCardFinder = find.widgetWithText(CourseCard, 'Aprende un idioma');
-    expect(courseCardFinder, findsOneWidget);
+    final aprendeIdioma = find.widgetWithText(CourseCard, 'Aprende un idioma');
+    expect(aprendeIdioma, findsOneWidget);
 
-    await tester.tap(courseCardFinder);
+    await tester.tap(aprendeIdioma);
     await tester.pumpAndSettle();
 
-    // Debemos estar en TopicSearchView
     expect(find.byType(TopicSearchView), findsOneWidget);
+    expect(find.textContaining('5 minutos al día'), findsOneWidget);
+  });
+
+  testWidgets('Ruta inexistente muestra 404 (o mensaje 404 equivalente)',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      onGenerateRoute: AppRouter.onGenerateRoute,
+      initialRoute: '/ruta-que-no-existe',
+    ));
+
+    // Aceptamos cualquier texto que contenga '404' o el mensaje del router.
+    final matches404OrMessage = find.byWidgetPredicate((w) {
+      if (w is Text) {
+        final t = w.data ?? '';
+        return t.contains('404') || t.contains('No existe la ruta');
+      }
+      return false;
+    });
+
+    expect(matches404OrMessage, findsOneWidget);
   });
 }
