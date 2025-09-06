@@ -14,15 +14,12 @@ class AppRouter {
           builder: (_) => ModuleOutlineView(topic: topic),
         );
 
-      // Aquí puedes agregar más rutas según lo vayas necesitando
-
       default:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Error 404')),
-            body: const Center(
+          builder: (_) => const Scaffold(
+            body: Center(
               child: Text(
-                'No existe la ruta',
+                '404 - No existe la ruta',
                 style: TextStyle(fontSize: 18),
               ),
             ),
