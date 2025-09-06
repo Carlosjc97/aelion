@@ -41,21 +41,13 @@ void main() {
     expect(find.textContaining('5 minutos al día'), findsOneWidget);
   });
 
-  testWidgets('Ruta inexistente muestra 404 (o mensaje equivalente)',
-      (WidgetTester tester) async {
+  testWidgets('Ruta inexistente muestra 404', (WidgetTester tester) async {
     await tester.pumpWidget(MaterialApp(
       onGenerateRoute: AppRouter.onGenerateRoute,
       initialRoute: '/ruta-que-no-existe',
     ));
 
-    final ok = find.byWidgetPredicate((w) {
-      if (w is Text) {
-        final t = w.data ?? '';
-        return t.contains('404') || t.contains('No existe la ruta');
-      }
-      return false;
-    });
-
-    expect(ok, findsOneWidget);
+    // Verifica que se muestre el texto "404"
+    expect(find.text('404'), findsOneWidget);
   });
 }
