@@ -21,7 +21,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ModuleOutlineView), findsOneWidget);
-    // comprobamos que el topic se muestra en pantalla (título o cuerpo)
     expect(find.textContaining('Introducción a la IA'), findsWidgets);
   });
 
@@ -42,15 +41,14 @@ void main() {
     expect(find.textContaining('5 minutos al día'), findsOneWidget);
   });
 
-  testWidgets('Ruta inexistente muestra 404 (o mensaje 404 equivalente)',
+  testWidgets('Ruta inexistente muestra 404 (o mensaje equivalente)',
       (WidgetTester tester) async {
     await tester.pumpWidget(MaterialApp(
       onGenerateRoute: AppRouter.onGenerateRoute,
       initialRoute: '/ruta-que-no-existe',
     ));
 
-    // Aceptamos cualquier texto que contenga '404' o el mensaje del router.
-    final matches404OrMessage = find.byWidgetPredicate((w) {
+    final ok = find.byWidgetPredicate((w) {
       if (w is Text) {
         final t = w.data ?? '';
         return t.contains('404') || t.contains('No existe la ruta');
@@ -58,6 +56,6 @@ void main() {
       return false;
     });
 
-    expect(matches404OrMessage, findsOneWidget);
+    expect(ok, findsOneWidget);
   });
 }
