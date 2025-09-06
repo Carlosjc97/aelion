@@ -30,12 +30,12 @@ class HomeView extends StatelessWidget {
         imageUrl: 'assets/home/language.png',
         onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
       ),
-      // Course(
-      //   title: 'Resuelve un problema',
-      //   subtitle: 'Próximamente',
-      //   imageUrl: 'assets/home/problem.png',
-      //   onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
-      // ),
+      Course(
+        title: 'Resuelve un problema',
+        subtitle: 'Próximamente',
+        imageUrl: 'assets/home/problem.png',
+        onTap: () => Navigator.pushNamed(context, TopicSearchView.routeName),
+      ),
     ];
 
     return SingleChildScrollView(
@@ -75,7 +75,6 @@ class HomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
@@ -115,10 +114,7 @@ class HomeView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
-
-              // Cards horizontales
               _buildFeaturedCourses(context),
-
               const SizedBox(height: 22),
               Text(
                 'Cursos populares',
