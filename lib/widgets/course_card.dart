@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:learning_ia/core/app_colors.dart';
 import 'package:learning_ia/widgets/quad_clipper.dart';
 
-// A simple data model for the course card
+// ---- Modelo simple ----
 class Course {
   final String title;
   final String subtitle;
-  final String imageUrl;
+  final String imageUrl; // puede ser 'assets/...png' o una URL http(s)
   final VoidCallback? onTap;
 
-  Course({
+  const Course({
     required this.title,
     required this.subtitle,
     required this.imageUrl,
@@ -17,6 +17,7 @@ class Course {
   });
 }
 
+// ---- Card principal ----
 class CourseCard extends StatelessWidget {
   final Course course;
   final Color primaryColor;
@@ -25,8 +26,8 @@ class CourseCard extends StatelessWidget {
   const CourseCard({
     super.key,
     required this.course,
-    this.primaryColor = AppColors.primary,
     required this.background,
+    this.primaryColor = AppColors.primary,
   });
 
   @override
@@ -44,7 +45,7 @@ class CourseCard extends StatelessWidget {
               offset: const Offset(0, 5),
               blurRadius: 10,
               color: AppColors.primary.withAlpha(20),
-            )
+            ),
           ],
         ),
         child: ClipRRect(
@@ -52,24 +53,11 @@ class CourseCard extends StatelessWidget {
           child: Stack(
             children: <Widget>[
               background,
+              const Positioned(top: 20, left: 10, child: SizedBox.shrink()),
               Positioned(
                 top: 20,
                 left: 10,
-                child: CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.grey.shade300,
-                  child: ClipOval(
-                    child: Image.asset(
-                      course.imageUrl,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.school_rounded,
-                              size: 28, color: AppColors.secondary),
-                    ),
-                  ),
-                ),
+                child: _CourseAvatar(imageUrl: course.imageUrl),
               ),
               Positioned(
                 bottom: 10,
@@ -82,8 +70,39 @@ class CourseCard extends StatelessWidget {
                       : Colors.white,
                   chipColor: AppColors.secondary,
                 ),
-              )
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CourseAvatar extends StatelessWidget {
+  final String imageUrl;
+  const _CourseAvatar({required this.imageUrl});
+
+  bool get _isAsset => imageUrl.startsWith('assets/');
+
+  @override
+  Widget build(BuildContext context) {
+    final ImageProvider provider =
+        _isAsset ? AssetImage(imageUrl) : NetworkImage(imageUrl) as ImageProvider;
+
+    return CircleAvatar(
+      radius: 28,
+      backgroundColor: Colors.grey.shade300,
+      child: ClipOval(
+        child: Image(
+          image: provider,
+          width: 56,
+          height: 56,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.school_rounded,
+            size: 28,
+            color: AppColors.secondary,
           ),
         ),
       ),
@@ -112,7 +131,9 @@ class _CardInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
+          SizedBox(
+            width: 180,
+            child: Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(color: textColor),
               overflow: TextOverflow.ellipsis,
@@ -120,11 +141,7 @@ class _CardInfo extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 5),
-          _Chip(
-            text: subtitle,
-            color: chipColor,
-            textColor: Colors.white,
-          )
+          _Chip(text: subtitle, color: chipColor),
         ],
       ),
     );
@@ -134,13 +151,8 @@ class _CardInfo extends StatelessWidget {
 class _Chip extends StatelessWidget {
   final String text;
   final Color color;
-  final Color textColor;
 
-  const _Chip({
-    required this.text,
-    required this.color,
-    this.textColor = Colors.white,
-  });
+  const _Chip({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -151,15 +163,15 @@ class _Chip extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(15)),
         color: color.withAlpha(200),
       ),
-      child: Text(
-        text,
-        style: TextStyle(color: textColor, fontSize: 12),
+      child: const Text(
+        '',
+        style: TextStyle(color: Colors.white, fontSize: 12),
       ),
     );
   }
 }
 
-// Decorative background widgets adapted from flutter_smart_course
+// ---- Fondos decorativos ----
 class DecorationContainerA extends StatelessWidget {
   final Color color;
   final double top;
@@ -179,19 +191,15 @@ class DecorationContainerA extends StatelessWidget {
         Positioned(
           top: top,
           left: left,
-          child: CircleAvatar(
-            radius: 100,
-            backgroundColor: color.withAlpha(255),
-          ),
+          child: CircleAvatar(radius: 100, backgroundColor: color.withAlpha(255)),
         ),
         _smallContainer(color, 20, 40),
         Positioned(
           top: 20,
           right: -30,
-          child: _circularContainer(
-              80, Colors.transparent,
+          child: _circularContainer(80, Colors.transparent,
               borderColor: Colors.white),
-        )
+        ),
       ],
     );
   }
@@ -201,10 +209,7 @@ class DecorationContainerA extends StatelessWidget {
     return Positioned(
       top: top,
       left: left,
-      child: CircleAvatar(
-        radius: radius,
-        backgroundColor: color.withAlpha(255),
-      ),
+      child: CircleAvatar(radius: radius, backgroundColor: color.withAlpha(255)),
     );
   }
 
@@ -235,8 +240,7 @@ class DecorationContainerB extends StatelessWidget {
           child: CircleAvatar(
             radius: 70,
             backgroundColor: AppColors.secondary.withAlpha(100),
-            child: const CircleAvatar(
-                radius: 30, backgroundColor: Colors.white),
+            child: const CircleAvatar(radius: 30, backgroundColor: Colors.white),
           ),
         ),
         Positioned(
@@ -245,7 +249,9 @@ class DecorationContainerB extends StatelessWidget {
           child: ClipRect(
             clipper: QuadClipper(),
             child: const CircleAvatar(
-                backgroundColor: AppColors.secondary, radius: 40),
+              backgroundColor: AppColors.secondary,
+              radius: 40,
+            ),
           ),
         ),
       ],
