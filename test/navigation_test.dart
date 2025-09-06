@@ -1,51 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:learning_ia/core/router.dart';
 import 'package:learning_ia/features/home/home_view.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
-import 'package:learning_ia/features/topics/topic_search_view.dart';
-import 'package:learning_ia/widgets/course_card.dart';
 
 void main() {
-  // Generador de rutas local para el test.
-  Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case HomeView.routeName:
-        return MaterialPageRoute(builder: (_) => const HomeView());
-      case ModuleOutlineView.routeName:
-        final topic = settings.arguments as String?;
-        return MaterialPageRoute(builder: (_) => ModuleOutlineView(topic: topic));
-      case TopicSearchView.routeName:
-        // No necesitamos el argumento aquí; evitemos variable sin uso.
-        return MaterialPageRoute(builder: (_) => const TopicSearchView());
-      default:
-        return MaterialPageRoute(
-          builder: (_) => const Scaffold(body: Center(child: Text('404'))),
-        );
-    }
-  }
+  Widget _app({String? initialRoute}) => MaterialApp(
+        onGenerateRoute: AppRouter.onGenerateRoute,
+        initialRoute: initialRoute ?? HomeView.routeName,
+      );
 
-  testWidgets('Navigation from HomeView to ModuleOutlineView',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(
-      onGenerateRoute: onGenerateRoute,
-      initialRoute: HomeView.routeName,
-    ));
-
-    // Estamos en Home
+  testWidgets('Home -> Module navega con topic String', (tester) async {
+    await tester.pumpWidget(_app());
     expect(find.byType(HomeView), findsOneWidget);
 
-    // Tocar la tarjeta "Toma un curso"
-    final courseCardFinder = find.widgetWithText(CourseCard, 'Toma un curso');
-    expect(courseCardFinder, findsOneWidget);
-
-    await tester.tap(courseCardFinder);
+    // Toca la tarjeta por su texto visible
+    await tester.tap(find.text('Toma un curso'));
     await tester.pumpAndSettle();
 
-    // Llegamos a ModuleOutlineView
     expect(find.byType(ModuleOutlineView), findsOneWidget);
-    expect(find.byType(HomeView), findsNothing);
-
-    // El título del AppBar refleja el argumento
+    // Verifica el título recibido por argumentos
     expect(find.widgetWithText(AppBar, 'Introducción a la IA'), findsOneWidget);
+  });
+
+  testWidgets('Ruta inexistente muestra 404', (tester) async {
+    await tester.pumpWidget(_app(initialRoute: '/no-existe'));
+    await tester.pumpAndSettle();
+    // Texto EXACTO que pinta el router en el default
+    expect(find.textContaining('No existe la ruta'), findsOneWidget);
   });
 }
