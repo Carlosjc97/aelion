@@ -1,3 +1,4 @@
+// test/router_navigation_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,15 +21,20 @@ void main() {
       arguments: 'Introducción a Flutter',
     );
     await tester.pumpAndSettle();
+
     expect(find.byType(ModuleOutlineView), findsOneWidget);
   });
 
   testWidgets('Ruta inexistente muestra 404', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      onGenerateRoute: AppRouter.onGenerateRoute,
-      initialRoute: '/no-existe',
-    ));
+    await tester.pumpWidget(_app());
+    expect(find.byType(HomeView), findsOneWidget);
+
+    // Empujar una ruta que no existe
+    Navigator.of(tester.element(find.byType(HomeView)))
+        .pushNamed('/__ruta_que_no_existe__');
     await tester.pumpAndSettle();
-    expect(find.textContaining('No existe la ruta'), findsOneWidget);
+
+    // Tu router pinta exactamente este texto:
+    expect(find.text('404 - No existe la ruta'), findsOneWidget);
   });
 }
