@@ -53,7 +53,6 @@ class CourseCard extends StatelessWidget {
           child: Stack(
             children: <Widget>[
               background,
-              const Positioned(top: 20, left: 10, child: SizedBox.shrink()),
               Positioned(
                 top: 20,
                 left: 10,
@@ -88,7 +87,7 @@ class _CourseAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ImageProvider provider =
-        _isAsset ? AssetImage(imageUrl) : NetworkImage(imageUrl) as ImageProvider;
+        _isAsset ? AssetImage(imageUrl) : NetworkImage(imageUrl);
 
     return CircleAvatar(
       radius: 28,
@@ -99,7 +98,8 @@ class _CourseAvatar extends StatelessWidget {
           width: 56,
           height: 56,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(
+          // Evita el lint de múltiples guiones bajos: nombra los parámetros aunque no los uses.
+          errorBuilder: (context, error, stackTrace) => const Icon(
             Icons.school_rounded,
             size: 28,
             color: AppColors.secondary,
@@ -163,9 +163,10 @@ class _Chip extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(15)),
         color: color.withAlpha(200),
       ),
-      child: const Text(
-        '',
-        style: TextStyle(color: Colors.white, fontSize: 12),
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -197,15 +198,17 @@ class DecorationContainerA extends StatelessWidget {
         Positioned(
           top: 20,
           right: -30,
-          child: _circularContainer(80, Colors.transparent,
-              borderColor: Colors.white),
+          child: _circularContainer(
+            80,
+            Colors.transparent,
+            borderColor: Colors.white,
+          ),
         ),
       ],
     );
   }
 
-  Widget _smallContainer(Color color, double top, double left,
-      {double radius = 10}) {
+  Widget _smallContainer(Color color, double top, double left, {double radius = 10}) {
     return Positioned(
       top: top,
       left: left,
