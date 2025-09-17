@@ -16,11 +16,13 @@ class _QuizScreenState extends State<QuizScreen> {
   // índice de pregunta -> respuesta seleccionada
   final Map<int, int?> answers = {};
 
-  // 10 preguntas dummy
+  // 10 preguntas dummy (luego reemplazamos con IA)
   late final List<Map<String, dynamic>> questions = List.generate(
     10,
     (i) => {
-      'q': 'Pregunta ${i + 1}: ¿…sobre ${i.isEven ? 'concepto' : 'práctica'}?',
+      'q':
+          'Pregunta ${i + 1} sobre ${widget.topic}: '
+          '${i.isEven ? 'concepto' : 'práctica'} ¿Cuál es la opción correcta?',
       'opts': <String>['A', 'B', 'C', 'D'],
       'correct': i % 4,
     },
@@ -63,12 +65,17 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     final total = questions.length;
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: Text('Mini test – ${widget.topic}')),
       body: Column(
         children: [
-          LinearProgressIndicator(value: (index + 1) / total),
+          LinearProgressIndicator(
+            value: (index + 1) / total,
+            color: cs.primary,
+            backgroundColor: cs.surfaceContainerHighest,
+          ),
           Expanded(
             child: PageView.builder(
               controller: controller,
@@ -89,19 +96,21 @@ class _QuizScreenState extends State<QuizScreen> {
                       const SizedBox(height: 12),
 
                       for (var optIndex = 0; optIndex < opts.length; optIndex++)
-                        RadioListTile<int>(
-                          value: optIndex,
-                          // ignore: deprecated_member_use
-                          groupValue: value,
-                          title: Text(opts[optIndex]),
-                          // ignore: deprecated_member_use
-                          onChanged: (v) => setState(() => answers[i] = v),
+                        OptionChoiceTile(
+                          label: opts[optIndex],
+                          selected: value == optIndex,
+                          onTap: () => setState(() => answers[i] = optIndex),
                         ),
 
                       const Spacer(),
-                      FilledButton(
-                        onPressed: value == null ? null : _next,
-                        child: Text(i == total - 1 ? 'Terminar' : 'Siguiente'),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: value == null ? null : _next,
+                          child: Text(
+                            i == total - 1 ? 'Terminar' : 'Siguiente',
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -110,6 +119,36 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class OptionChoiceTile extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const OptionChoiceTile({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: selected ? cs.primary.withValues(alpha: 0.15) : cs.surface,
+      child: ListTile(
+        title: Text(label),
+        trailing: selected
+            ? Icon(Icons.check_circle, color: cs.primary)
+            : const Icon(Icons.circle_outlined),
+        onTap: onTap,
       ),
     );
   }

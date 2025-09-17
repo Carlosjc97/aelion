@@ -1,10 +1,10 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:learning_ia/core/app_colors.dart';
 import 'package:learning_ia/core/router.dart';
+import 'package:learning_ia/services/progress_service.dart';
 
 Future<void> main() async {
   runZonedGuarded<Future<void>>(
@@ -12,11 +12,13 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       await _loadEnv();
 
-      // Set up error handling as per user instructions
+      // Inicializa progreso (singleton con .i)
+      await ProgressService().init();
+
+      // Manejo de errores UI
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
       };
-
       ErrorWidget.builder = (details) {
         return Material(
           color: Colors.white,
@@ -36,14 +38,12 @@ Future<void> main() async {
       runApp(const AelionApp());
     },
     (error, stack) {
-      // Zoned error handler for logging
       debugPrint('[runZonedGuarded] Uncaught error: $error');
       debugPrint(stack.toString());
     },
   );
 }
 
-/// Carga .env o env.public (fallback).
 Future<void> _loadEnv() async {
   try {
     await dotenv.load(fileName: '.env');
@@ -52,6 +52,7 @@ Future<void> _loadEnv() async {
       await dotenv.load(fileName: 'env.public');
     } catch (_) {
       debugPrint('[Aelion] No se pudo cargar ningún archivo de entorno.');
+      debugPrint('API_BASE_URL=${dotenv.env['API_BASE_URL']}');
     }
   }
 }
@@ -84,74 +85,24 @@ class AelionApp extends StatelessWidget {
           centerTitle: true,
           elevation: 0,
         ),
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-          headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          bodyLarge: TextStyle(fontSize: 16, height: 1.35),
-          bodyMedium: TextStyle(fontSize: 14, height: 1.35),
-          labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ).apply(
-          bodyColor: AppColors.onSurface,
-          displayColor: AppColors.onSurface,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
-            minimumSize: const Size.fromHeight(56),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+        textTheme:
+            const TextTheme(
+              headlineLarge: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+              ),
+              headlineMedium: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
+              titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              bodyLarge: TextStyle(fontSize: 16, height: 1.35),
+              bodyMedium: TextStyle(fontSize: 14, height: 1.35),
+              labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ).apply(
+              bodyColor: AppColors.onSurface,
+              displayColor: AppColors.onSurface,
             ),
-            textStyle: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.neutral,
-            foregroundColor: AppColors.onSurface,
-            minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.surface,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          hintStyle: const TextStyle(color: Color(0xFF7A8797)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.neutral),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.neutral),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: AppColors.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          margin: EdgeInsets.zero,
-        ),
-        chipTheme: const ChipThemeData(
-          backgroundColor: AppColors.neutral,
-          labelStyle: TextStyle(fontWeight: FontWeight.w600),
-          elevation: 0,
-          side: BorderSide(color: Colors.transparent),
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        ),
       ),
       onGenerateRoute: AppRouter.onGenerateRoute,
       initialRoute: '/',

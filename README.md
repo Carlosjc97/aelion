@@ -1,23 +1,46 @@
-# Aelion
+﻿# Aelion
 
-[![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions)
-
-Aplicación Flutter para explorar temas y ver módulos de ejemplo. Incluye carga de **variables de entorno** (seguras) y **CI** con GitHub Actions.
-
----
+Aplicacion Flutter para explorar planes de estudio generados con IA.
 
 ## Requisitos
 
-- Flutter instalado (canal **stable**)
-- Dart incluído con Flutter
-- Git
+- Flutter (canal **stable**)
+- Node.js 18+
+- Cuenta con clave de OpenAI (`OPENAI_API_KEY`)
 
-Verifica:
-```bash
-flutter --version
-dart --version
-git --version
+## Puesta en marcha rapida
 
-## Acknowledgements
+1. **Backend**
+   ```powershell
+   cd server
+   npm install
+   npm run dev
+   ```
+   El servidor expone `POST /outline` y `POST /quiz` en `http://localhost:8787` (configurable con `PORT`). Asegurate de crear un `.env` en `server/` con la variable `OPENAI_API_KEY`.
 
-- The design for the course cards is adapted from [TheAlphamerc/flutter_smart_course](https://github.com/TheAlphamerc/flutter_smart_course), which is licensed under the BSD-2-Clause license.
+2. **Configurar la app Flutter**
+   Crea un archivo `.env` en la raiz del proyecto Flutter (`aelion/.env`) con la URL LAN del backend para que tu dispositivo fisico pueda accederlo, por ejemplo:
+   ```env
+   API_BASE_URL=http://192.168.0.21:8787
+   ```
+   > Usa tu IP local: la app leera `API_BASE_URL` en caliente.
+
+3. **Ejecutar Flutter**
+   ```powershell
+   flutter pub get
+   flutter run
+   ```
+
+## Utilidades
+
+- **Probar el endpoint /outline** desde PowerShell:
+  ```powershell
+  ./scripts/test-outline.ps1 -Topic "Introduccion a Flutter" -BaseUrl http://localhost:8787
+  ```
+  Ajusta `-BaseUrl` a tu IP LAN cuando pruebes desde un dispositivo.
+
+## Notas
+
+- El endpoint `/outline` genera modulos y lecciones reales con `gpt-4o-mini` en formato JSON.
+- La app Flutter persiste el progreso y desbloquea lecciones secuenciales en `SharedPreferences`.
+- El manifiesto Android ya referencia `android:networkSecurityConfig="@xml/network_security_config"` para permitir HTTP en desarrollo.

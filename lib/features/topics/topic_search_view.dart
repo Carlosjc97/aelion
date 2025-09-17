@@ -1,65 +1,83 @@
 import 'package:flutter/material.dart';
-import 'package:learning_ia/core/app_colors.dart';
+import 'package:learning_ia/features/quiz/quiz_screen.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
-import 'package:learning_ia/widgets/aelion_appbar.dart';
 
-class TopicSearchView extends StatelessWidget {
-  static const routeName = '/topics';
+class TopicSearchArgs {
+  final String originLabel;
+  final String placeholder;
+  const TopicSearchArgs({required this.originLabel, required this.placeholder});
+}
 
+class TopicSearchView extends StatefulWidget {
+  static const routeName = '/topic-search';
   const TopicSearchView({super.key});
 
   @override
+  State<TopicSearchView> createState() => _TopicSearchViewState();
+}
+
+class _TopicSearchViewState extends State<TopicSearchView> {
+  final controller = TextEditingController();
+  bool busy = false;
+
+  Future<void> _startQuiz() async {
+    final topic = controller.text.trim();
+    if (topic.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Escribe un tema para continuar')),
+      );
+      return;
+    }
+    if (busy) return;
+
+    setState(() => busy = true);
+    try {
+      final result = await Navigator.pushNamed(
+        context,
+        QuizScreen.routeName,
+        arguments: topic,
+      );
+
+      if (!mounted) return;
+      if (result is Map && result['quizPassed'] == true) {
+        await Navigator.pushNamed(
+          context,
+          ModuleOutlineView.routeName,
+          arguments: topic,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final suggestions = [
-      'Introducción a Flutter',
-      'Historia de Guayaquil',
-      'Álgebra básica',
-      'Sistemas solares',
-    ];
+    final args = ModalRoute.of(context)?.settings.arguments as TopicSearchArgs?;
+    final title = args?.originLabel ?? 'Busca un tema';
+    final hint = args?.placeholder ?? '¿Qué quieres aprender?';
 
     return Scaffold(
-      appBar: AelionAppBar(title: 'Buscar tema'),
+      appBar: AppBar(title: Text(title)),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
+              controller: controller,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _startQuiz(),
               decoration: InputDecoration(
-                hintText: 'Escribe un tema...',
+                hintText: hint,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: AppColors.neutral,
               ),
             ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Sugerencias',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: suggestions.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(suggestions[index]),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        ModuleOutlineView.routeName,
-                        arguments: suggestions[index],
-                      );
-                    },
-                  );
-                },
-              ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: busy ? null : _startQuiz,
+              icon: const Icon(Icons.quiz_outlined),
+              label: const Text('Hacer mini test'),
             ),
           ],
         ),
