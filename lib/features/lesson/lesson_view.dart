@@ -9,6 +9,7 @@ class LessonView extends StatefulWidget {
   final String moduleId;
   final String lessonId;
   final String title;
+  final String? description;
   final bool premium;
 
   const LessonView({
@@ -17,6 +18,7 @@ class LessonView extends StatefulWidget {
     required this.moduleId,
     required this.lessonId,
     required this.title,
+    this.description,
     this.premium = false,
   });
 
@@ -28,7 +30,6 @@ class _LessonViewState extends State<LessonView>
     with SingleTickerProviderStateMixin {
   bool _completing = false;
 
-  // Animación de +XP
   late final AnimationController _xpCtrl;
   late final Animation<double> _xpOpacity;
   late final Animation<Offset> _xpOffset;
@@ -62,45 +63,39 @@ class _LessonViewState extends State<LessonView>
     final svc = ProgressService();
 
     try {
-      // Actualiza outline (marca done + desbloquea siguiente)
       await svc.markLessonCompleted(
         courseId: widget.courseId,
         moduleId: widget.moduleId,
         lessonId: widget.lessonId,
       );
 
-      // Racha diaria
       await svc.tickDailyStreak();
 
-      // XP ganado (ajústalo si quieres)
       const gained = 20;
       _lastXp = await svc.addXp(gained);
 
-      // Haptics
       HapticFeedback.lightImpact();
 
-      // Animación
       await _playXpToast(gained);
 
       if (!mounted) return;
 
-      // Mensaje
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          content: Text('¡Lección completada! 🔓  XP total: $_lastXp'),
+          content: Text('Lesson completed! XP total: $_lastXp'),
           action: SnackBarAction(label: 'OK', onPressed: () {}),
         ),
       );
 
-      Navigator.of(context).pop(true); // devolvemos éxito
+      Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       HapticFeedback.mediumImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          content: Text('No se pudo marcar la lección. Intenta de nuevo. ($e)'),
+          content: Text('Could not update the lesson. Try again. ($e)'),
         ),
       );
     } finally {
@@ -124,67 +119,49 @@ class _LessonViewState extends State<LessonView>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final description = widget.description?.trim();
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.title), centerTitle: true),
       body: Stack(
         children: [
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
             children: [
               if (widget.premium)
-                Card(
-                  color: cs.secondaryContainer,
-                  elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.workspace_premium_outlined),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Contenido Premium',
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: .55),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: cs.primary.withValues(alpha: .25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.workspace_premium_outlined),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Premium content',
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
-              Text('Objetivo de la lección', style: tt.titleMedium),
+              Text('Description', style: tt.titleMedium),
               const SizedBox(height: 6),
               Text(
-                '• Comprender el concepto principal.\n'
-                '• Realizar una pequeña práctica.\n'
-                '• Pasar a la siguiente actividad cuando te sientas listo.',
+                description?.isNotEmpty == true
+                    ? description!
+                    : 'Content will be available soon.',
                 style: tt.bodyMedium,
-              ),
-
-              const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: .5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.outline.withValues(alpha: .15)),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Contenido', style: tt.titleMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Aquí va tu contenido real de la lección (texto, imágenes o widgets). '
-                      'Puedes reemplazar este bloque con lo que ya tengas generado por IA o curado.',
-                      style: tt.bodyMedium,
-                    ),
-                  ],
-                ),
               ),
 
               const SizedBox(height: 24),
@@ -198,9 +175,7 @@ class _LessonViewState extends State<LessonView>
                       )
                     : const Icon(Icons.emoji_events_outlined),
                 label: Text(
-                  _completing
-                      ? 'Guardando...'
-                      : 'Marcar lección como completada',
+                  _completing ? 'Saving...' : 'Mark lesson as completed',
                 ),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -209,7 +184,7 @@ class _LessonViewState extends State<LessonView>
 
               const SizedBox(height: 12),
               Text(
-                'Consejo: si algo no te queda claro, vuelve a leer y practica 2 minutos más antes de avanzar.',
+                'Tip: take quick notes before moving on.',
                 style: tt.bodySmall?.copyWith(
                   color: cs.onSurface.withValues(alpha: .7),
                 ),
