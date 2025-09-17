@@ -33,12 +33,10 @@ class CourseProgress {
 }
 
 class ProgressService {
-  // -------- Singleton consistente (SIN .i) --------
   ProgressService._internal();
   static final ProgressService _instance = ProgressService._internal();
   factory ProgressService() => _instance;
 
-  // -------- Claves --------
   static const _kXp = 'xp';
   static const _kBadges = 'badges';
   static const _kStreakStart = 'streakStart';
@@ -52,7 +50,6 @@ class ProgressService {
     _prefs ??= await SharedPreferences.getInstance();
   }
 
-  // ---------- XP / Nivel ----------
   int get xp => _prefs?.getInt(_kXp) ?? 0;
 
   Future<int> addXp(int delta) async {
@@ -64,7 +61,6 @@ class ProgressService {
   int get level => (xp / 100).floor() + 1;
   int xpToNextLevel() => level * 100 - xp;
 
-  // ---------- Badges ----------
   List<String> get badges => _prefs?.getStringList(_kBadges) ?? const [];
 
   Future<void> awardBadge(String id) async {
@@ -76,7 +72,6 @@ class ProgressService {
 
   bool hasBadge(String id) => badges.contains(id);
 
-  // ---------- Racha diaria ----------
   DateTime? _parseDate(String? iso) =>
       iso == null ? null : DateTime.tryParse(iso);
 
@@ -94,7 +89,7 @@ class ProgressService {
     final sameDay = DateTime(start.year, start.month, start.day);
     final nowDay = DateTime(today.year, today.month, today.day);
     final diff = nowDay.difference(sameDay).inDays;
-    if (diff == 0) return; // ya contado hoy
+    if (diff == 0) return;
     if (diff == 1) {
       await _prefs?.setString(_kStreakStart, today.toIso8601String());
       await _prefs?.setInt(_kStreakCount, streakCount + 1);
@@ -104,7 +99,6 @@ class ProgressService {
     }
   }
 
-  // ---------- Avance por curso (compatibilidad) ----------
   Future<CourseProgress> getCourseProgress(String topic) async {
     final raw = _prefs?.getString(_kCourse(topic));
     if (raw == null) {
@@ -151,17 +145,25 @@ class ProgressService {
     return next;
   }
 
-  // ---------- NUEVO: Outline ----------
   Future<Map<String, dynamic>?> load(String courseId) async {
     final raw = _prefs?.getString(_kOutline(courseId));
     if (raw == null) return null;
     final map = jsonDecode(raw);
     if (map is Map<String, dynamic>) return map;
-    return Map<String, dynamic>.from(map as Map);
+    if (map is Map) return Map<String, dynamic>.from(map);
+    return null;
   }
 
   Future<void> save(String courseId, Map<String, dynamic> outline) async {
     await _prefs?.setString(_kOutline(courseId), jsonEncode(outline));
+  }
+
+  List<Map<String, dynamic>> _asMapList(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+    return value
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
 
   Future<Map<String, dynamic>?> markLessonCompleted({
@@ -172,54 +174,43 @@ class ProgressService {
     final outline = await load(courseId);
     if (outline == null) return null;
 
-    final rawModules = outline['modules'];
-    if (rawModules is! List) return outline;
+    final modules = _asMapList(outline['modules']);
+    if (modules.isEmpty) return outline;
 
-    final modules = rawModules
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
-
-    final mIndex = modules.indexWhere((m) => (m['id'] as String?) == moduleId);
+    final mIndex = modules.indexWhere(
+      (module) => module['id']?.toString() == moduleId,
+    );
     if (mIndex < 0) return outline;
 
-    final m = modules[mIndex];
-    final rawLessons = m['lessons'];
-    if (rawLessons is! List) return outline;
+    final module = modules[mIndex];
+    final lessons = _asMapList(module['lessons']);
+    if (lessons.isEmpty) return outline;
 
-    final lessons = rawLessons
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
-
-    final lIndex = lessons.indexWhere((l) => (l['id'] as String?) == lessonId);
+    final lIndex = lessons.indexWhere(
+      (lesson) => lesson['id']?.toString() == lessonId,
+    );
     if (lIndex < 0) return outline;
 
-    // Completar
     lessons[lIndex]['status'] = 'done';
+    lessons[lIndex]['locked'] = false;
 
-    // Desbloquear siguiente
     if (lIndex + 1 < lessons.length) {
       lessons[lIndex + 1]['locked'] = false;
-    } else {
-      // Siguiente módulo
-      if (mIndex + 1 < modules.length) {
-        modules[mIndex + 1]['locked'] = false;
-        final nextLessons = modules[mIndex + 1]['lessons'];
-        if (nextLessons is List && nextLessons.isNotEmpty) {
-          final first = Map<String, dynamic>.from(nextLessons.first as Map);
-          first['locked'] = false;
-          final nextCopy = nextLessons
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .toList();
-          nextCopy[0] = first;
-          modules[mIndex + 1]['lessons'] = nextCopy;
-        }
-      } else {
-        outline['completed'] = true;
+    } else if (mIndex + 1 < modules.length) {
+      final nextModule = Map<String, dynamic>.from(modules[mIndex + 1]);
+      final nextLessons = _asMapList(nextModule['lessons']);
+      if (nextLessons.isNotEmpty) {
+        nextLessons[0]['locked'] = false;
+        nextModule['lessons'] = nextLessons;
       }
+      nextModule['locked'] = false;
+      modules[mIndex + 1] = nextModule;
+    } else {
+      outline['completed'] = true;
     }
 
-    m['lessons'] = lessons;
-    modules[mIndex] = m;
+    module['lessons'] = lessons;
+    modules[mIndex] = module;
     outline['modules'] = modules;
 
     await save(courseId, outline);

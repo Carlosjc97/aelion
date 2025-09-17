@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -12,110 +13,174 @@ class CourseApiService {
 
   static Uri _uri(String path) => Uri.parse('$_base$path');
 
-  /// Obtiene preguntas tipo test desde el proxy (/quiz).
-  /// Formato esperado: { questions: [ { q,a,b,c,d,correct }, ... ] }
-  static Future<List<Map<String, dynamic>>> fetchQuiz({
-    required String topic,
-  }) async {
-    try {
-      final res = await http.post(
-        _uri('/quiz'),
-        headers: const {'Content-Type': 'application/json'},
-        body: jsonEncode({'topic': topic}),
-      );
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final arr = data['questions'];
-        if (arr is List) {
-          return arr
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-      }
-    } catch (_) {
-      // ignora y cae al fallback
-    }
-
-    // Fallback local si falla la API
-    return [
-      {
-        'q': '¿Qué es $topic?',
-        'a': 'Un lenguaje',
-        'b': 'Un framework',
-        'c': 'Una base de datos',
-        'd': 'Un IDE',
-        'correct': 'b',
-      },
-      {
-        'q': '¿Qué archivo define dependencias en Flutter?',
-        'a': 'pubspec.yaml',
-        'b': 'package.json',
-        'c': 'build.gradle',
-        'd': 'pom.xml',
-        'correct': 'a',
-      },
-      {
-        'q': '¿Qué comando crea un proyecto nuevo?',
-        'a': 'flutter create',
-        'b': 'flutter run',
-        'c': 'flutter build',
-        'd': 'dart run',
-        'correct': 'a',
-      },
-    ];
+  static Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return value.map((key, val) => MapEntry('$key', val));
+    return <String, dynamic>{};
   }
 
-  /// Genera un outline 3x3 (3 módulos × 3 lecciones),
-  /// usando las preguntas como títulos de lección y con bloqueo/desbloqueo.
-  static Future<Map<String, dynamic>> generateOutline({
-    required String topic,
-  }) async {
-    // 1) Trae preguntas (o usa fallback)
-    List<Map<String, dynamic>> questions = await fetchQuiz(topic: topic);
+  static List<Map<String, dynamic>> _asMapList(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+    return value
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList(growable: false);
+  }
 
-    // 2) Asegura 9 lecciones
-    while (questions.length < 9) {
-      questions.add({
-        'q': 'Concepto de $topic',
-        'a': 'A',
-        'b': 'B',
-        'c': 'C',
-        'd': 'D',
-        'correct': 'a',
-      });
+  static bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) return value;
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (['true', '1', 'yes', 'y'].contains(normalized)) return true;
+      if (['false', '0', 'no', 'n'].contains(normalized)) return false;
     }
+    return fallback;
+  }
 
-    // 3) Construye módulos/lessons
-    final modules = <Map<String, dynamic>>[];
-    for (var m = 0; m < 3; m++) {
-      final lessons = <Map<String, dynamic>>[];
-      for (var i = 0; i < 3; i++) {
-        final idx = m * 3 + i;
+  static Map<String, dynamic> _shapeOutline(Map<String, dynamic> raw) {
+    final outline = <String, dynamic>{
+      'topic': raw['topic']?.toString() ?? 'Curso',
+      'level': raw['level']?.toString() ?? 'beginner',
+    };
+
+    final modules = _asMapList(raw['modules']).asMap().entries.map((entry) {
+      final moduleIndex = entry.key;
+      final module = Map<String, dynamic>.from(entry.value);
+      final lessons = _asMapList(module['lessons']).asMap().entries.map((
+        lessonEntry,
+      ) {
+        final lessonIndex = lessonEntry.key;
+        final lesson = Map<String, dynamic>.from(lessonEntry.value);
+        final unlocked = moduleIndex == 0 && lessonIndex == 0;
+        final shaped = {
+          ...lesson,
+          'id':
+              lesson['id']?.toString() ??
+              'lesson-${moduleIndex + 1}-${lessonIndex + 1}',
+          'title':
+              lesson['title']?.toString() ??
+              'Leccion ${moduleIndex + 1}.${lessonIndex + 1}',
+          'description':
+              lesson['description']?.toString() ??
+              lesson['content']?.toString(),
+          'locked': _asBool(lesson['locked'], fallback: !unlocked),
+          'status': _coerceStatus(lesson['status']),
+          'premium': lesson.containsKey('premium')
+              ? _asBool(lesson['premium'], fallback: false)
+              : null,
+        };
+        shaped.removeWhere((key, value) => value == null);
+        return shaped;
+      }).toList();
+
+      if (lessons.isEmpty) {
         lessons.add({
-          'id': 'm${m + 1}l${i + 1}',
-          'title': 'Lección ${idx + 1}: ${(questions[idx]['q'] ?? 'Tema')}'
-              .toString(),
-          'locked': !(m == 0 && i == 0), // solo la primera desbloqueada
+          'id': 'lesson-${moduleIndex + 1}-1',
+          'title': 'Leccion ${moduleIndex + 1}.1',
+          'locked': moduleIndex == 0 ? false : true,
           'status': 'todo',
         });
       }
-      modules.add({
-        'id': 'm${m + 1}',
-        'title': 'Módulo ${m + 1}',
-        'locked': m > 0, // módulo 1 desbloqueado, el resto bloqueados
+
+      final isFirstModule = moduleIndex == 0;
+      final locked = _asBool(module['locked'], fallback: !isFirstModule);
+      if (lessons.isNotEmpty && moduleIndex > 0) {
+        lessons[0] = {...lessons[0], 'locked': locked};
+      } else if (lessons.isNotEmpty && isFirstModule) {
+        lessons[0] = {...lessons[0], 'locked': false};
+      }
+
+      return {
+        ...module,
+        'id': module['id']?.toString() ?? 'module-${moduleIndex + 1}',
+        'title': module['title']?.toString() ?? 'Modulo ${moduleIndex + 1}',
+        'locked': locked,
         'lessons': lessons,
-      });
+      };
+    }).toList();
+
+    final modulesOrFallback = modules.isEmpty
+        ? [
+            {
+              'id': 'module-1',
+              'title': 'Modulo 1',
+              'locked': false,
+              'lessons': [
+                {
+                  'id': 'lesson-1-1',
+                  'title': 'Leccion 1.1',
+                  'locked': false,
+                  'status': 'todo',
+                },
+              ],
+            },
+          ]
+        : modules;
+
+    outline['modules'] = modulesOrFallback;
+
+    final requestedHours = _parseHours(raw['estimated_hours']);
+    outline['estimated_hours'] =
+        requestedHours ?? _fallbackEstimatedHours(modulesOrFallback);
+
+    return outline;
+  }
+
+  static int? _parseHours(dynamic value) {
+    final number = double.tryParse(value?.toString() ?? '');
+    if (number == null || number <= 0) {
+      return null;
+    }
+    return number.round();
+  }
+
+  static int _fallbackEstimatedHours(List<dynamic> modules) {
+    final totalLessons = modules.fold<int>(0, (sum, module) {
+      final lessons = module is Map<String, dynamic>
+          ? module['lessons']
+          : module is Map
+          ? module['lessons']
+          : null;
+      if (lessons is List) {
+        return sum + lessons.length;
+      }
+      return sum;
+    });
+
+    if (totalLessons == 0) {
+      return 6;
     }
 
-    // 4) Outline final
-    return {
-      'topic': topic,
-      'level': 'beginner',
-      'estimated_hours': 2,
-      'modules': modules,
-      'generatedAt': DateTime.now().toIso8601String(),
-    };
+    return (totalLessons * 1.5).ceil();
+  }
+
+  static String _coerceStatus(dynamic value) {
+    final raw = value?.toString().toLowerCase().trim();
+    const allowed = {'todo', 'in_progress', 'done'};
+    return allowed.contains(raw) ? raw! : 'todo';
+  }
+
+  static Future<Map<String, dynamic>> generateOutline({
+    required String topic,
+  }) async {
+    final trimmedTopic = topic.trim();
+    if (trimmedTopic.isEmpty) {
+      throw ArgumentError('topic requerido');
+    }
+
+    final response = await http.post(
+      _uri('/outline'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({'topic': trimmedTopic}),
+    );
+
+    if (response.statusCode != 200) {
+      final detail = response.body.isNotEmpty ? response.body : 'sin detalle';
+      throw Exception('outline_error (${response.statusCode}): $detail');
+    }
+
+    final decoded = jsonDecode(response.body);
+    final map = _asMap(decoded);
+    return _shapeOutline(map);
   }
 }
