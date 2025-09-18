@@ -44,3 +44,5 @@ Aplicacion Flutter para explorar planes de estudio generados con IA.
 - El endpoint `/outline` genera modulos y lecciones reales con `gpt-4o-mini` en formato JSON.
 - La app Flutter persiste el progreso y desbloquea lecciones secuenciales en `SharedPreferences`.
 - El manifiesto Android ya referencia `android:networkSecurityConfig="@xml/network_security_config"` para permitir HTTP en desarrollo.
+
+## locura

@@ -10,12 +10,10 @@ Future<void> main() async {
   runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await _loadEnv();
+      await _loadEnv(); // carga variables de entorno
 
-      // Inicializa progreso (singleton con .i)
       await ProgressService().init();
 
-      // Manejo de errores UI
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
       };
@@ -45,15 +43,27 @@ Future<void> main() async {
 }
 
 Future<void> _loadEnv() async {
+  // Intentamos primero el que está en assets (declarado en pubspec.yaml)
+  try {
+    await dotenv.load(fileName: 'env.public');
+    debugPrint(
+      '[Aelion] Cargado env.public (assets). '
+      'API_BASE_URL=${dotenv.env['API_BASE_URL']}',
+    );
+    return;
+  } catch (_) {
+    // sigue abajo
+  }
+
+  // Si no hay env.public, intentamos un .env local (no en assets)
   try {
     await dotenv.load(fileName: '.env');
+    debugPrint(
+      '[Aelion] Cargado .env (filesystem). '
+      'API_BASE_URL=${dotenv.env['API_BASE_URL']}',
+    );
   } catch (_) {
-    try {
-      await dotenv.load(fileName: 'env.public');
-    } catch (_) {
-      debugPrint('[Aelion] No se pudo cargar ningún archivo de entorno.');
-      debugPrint('API_BASE_URL=${dotenv.env['API_BASE_URL']}');
-    }
+    debugPrint('[Aelion] No se pudo cargar env.public ni .env');
   }
 }
 

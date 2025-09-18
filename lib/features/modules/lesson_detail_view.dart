@@ -1,4 +1,3 @@
-// lib/features/modules/lesson_detail_view.dart
 import 'package:flutter/material.dart';
 import 'package:learning_ia/services/progress_service.dart';
 
@@ -20,7 +19,11 @@ class LessonDetailView extends StatefulWidget {
 
 class _LessonDetailViewState extends State<LessonDetailView> {
   bool _saving = false;
+
+  /// Opción seleccionada (a/b/c/d).
   String? _selected;
+
+  /// Estado del chequeo.
   bool _checked = false;
   bool _isCorrect = false;
 
@@ -54,6 +57,23 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     });
   }
 
+  Widget _optionTile({required String value, required String label}) {
+    final selected = _selected == value;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        selected ? Icons.radio_button_checked : Icons.radio_button_off,
+      ),
+      title: Text('${value.toUpperCase()}) $label'),
+      onTap: () {
+        setState(() {
+          _selected = value;
+          _checked = false; // reset feedback al cambiar opción
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -76,7 +96,6 @@ class _LessonDetailViewState extends State<LessonDetailView> {
             ),
             const SizedBox(height: 16),
 
-            // Contenido explicativo
             if (content.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
@@ -99,19 +118,14 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               ),
               const SizedBox(height: 12),
 
-              // Opciones
-              for (final opt in ['a', 'b', 'c', 'd'])
-                RadioListTile<String>(
-                  title: Text('${opt.toUpperCase()}) ${quiz[opt]}'),
-                  value: opt,
-                  groupValue: _selected,
-                  onChanged: (val) {
-                    setState(() {
-                      _selected = val;
-                      _checked = false;
-                    });
-                  },
-                ),
+              // ✅ Sin Radio / RadioListTile -> cero deprecations
+              Column(
+                children: [
+                  for (final opt in ['a', 'b', 'c', 'd'])
+                    if (quiz[opt] != null)
+                      _optionTile(value: opt, label: quiz[opt].toString()),
+                ],
+              ),
 
               const SizedBox(height: 12),
               ElevatedButton.icon(
@@ -134,7 +148,6 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               const SizedBox(height: 24),
             ],
 
-            // Botón de completar
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
