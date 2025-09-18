@@ -43,7 +43,7 @@ Future<void> main() async {
 }
 
 Future<void> _loadEnv() async {
-  // Intentamos primero el que está en assets (declarado en pubspec.yaml)
+  // Intentamos primero el que esta en assets (declarado en pubspec.yaml)
   try {
     await dotenv.load(fileName: 'env.public');
     debugPrint(
@@ -115,6 +115,7 @@ class AelionApp extends StatelessWidget {
             ),
       ),
       onGenerateRoute: AppRouter.onGenerateRoute,
+      onUnknownRoute: AppRouter.onUnknownRoute,
       initialRoute: '/',
     );
   }

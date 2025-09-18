@@ -25,11 +25,27 @@ class AppRouter {
       // 404
       default:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('404 - No existe la ruta')),
-          ),
+          builder: (_) => const _NotFoundPage(),
           settings: settings,
         );
     }
+  }
+
+  static Route<dynamic> onUnknownRoute(RouteSettings settings) {
+    return MaterialPageRoute(
+      builder: (_) => const _NotFoundPage(),
+      settings: settings,
+    );
+  }
+}
+
+class _NotFoundPage extends StatelessWidget {
+  const _NotFoundPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Ruta no encontrada')),
+    );
   }
 }
