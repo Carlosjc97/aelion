@@ -97,3 +97,11 @@ server/yarn.lock
 **/.env.local
 server/.env
 /.env
+gitleaks
+gitleaks.exe
+gitleaks-*
+gitleaks-temp/
+*.sarif
+results.sarif
+*.tar.gz
+*.zip
