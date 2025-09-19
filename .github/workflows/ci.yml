@@ -42,17 +42,18 @@ jobs:
       - name: Flutter build web (release)
         run: flutter build web --release
 
+      # ---- Gitleaks: install manually ----
+      - name: Install Gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz | tar -xz
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      # ---- Gitleaks: run safely ----
       - name: Gitleaks (PR snapshot)
         if: ${{ github.event_name == 'pull_request' }}
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: --no-git --redact --report-format sarif --report-path results.sarif --exit-code 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gitleaks detect --no-git --redact --exit-code 1
 
-      - name: Gitleaks (history scan)
+      - name: Gitleaks (full scan on push)
         if: ${{ github.event_name == 'push' }}
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+        run: gitleaks detect --source . --redact --exit-code 1

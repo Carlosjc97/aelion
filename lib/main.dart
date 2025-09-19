@@ -1,9 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:learning_ia/core/app_colors.dart';
-import 'package:learning_ia/core/router.dart';
+// 👇 usamos alias para evitar conflictos con tear-offs
+import 'package:learning_ia/core/router.dart' as app;
 import 'package:learning_ia/services/progress_service.dart';
 
 Future<void> main() async {
@@ -95,27 +96,21 @@ class AelionApp extends StatelessWidget {
           centerTitle: true,
           elevation: 0,
         ),
-        textTheme:
-            const TextTheme(
-              headlineLarge: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-              ),
-              headlineMedium: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-              titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              bodyLarge: TextStyle(fontSize: 16, height: 1.35),
-              bodyMedium: TextStyle(fontSize: 14, height: 1.35),
-              labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ).apply(
-              bodyColor: AppColors.onSurface,
-              displayColor: AppColors.onSurface,
-            ),
+        textTheme: const TextTheme(
+          headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+          headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          bodyLarge: TextStyle(fontSize: 16, height: 1.35),
+          bodyMedium: TextStyle(fontSize: 14, height: 1.35),
+          labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ).apply(
+          bodyColor: AppColors.onSurface,
+          displayColor: AppColors.onSurface,
+        ),
       ),
-      onGenerateRoute: AppRouter.onGenerateRoute,
-      onUnknownRoute: AppRouter.onUnknownRoute,
+      // 👇 usamos closures + alias
+      onGenerateRoute: (settings) => app.AppRouter.onGenerateRoute(settings),
+      onUnknownRoute: (settings) => app.AppRouter.onUnknownRoute(settings),
       initialRoute: '/',
     );
   }
