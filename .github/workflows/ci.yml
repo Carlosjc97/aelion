@@ -42,7 +42,17 @@ jobs:
       - name: Flutter build web (release)
         run: flutter build web --release
 
-      - name: Gitleaks (secrets scan)
+      - name: Gitleaks (PR snapshot)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --no-git --redact --report-format sarif --report-path results.sarif --exit-code 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gitleaks (history scan)
+        if: ${{ github.event_name == 'push' }}
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

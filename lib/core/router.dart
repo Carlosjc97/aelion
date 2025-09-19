@@ -34,7 +34,7 @@ class AppRouter {
   static Route<dynamic> onUnknownRoute(RouteSettings settings) {
     return MaterialPageRoute(
       builder: (_) => const _NotFoundPage(),
-      settings: settings,
+      settings: const RouteSettings(name: '/404'),
     );
   }
 }

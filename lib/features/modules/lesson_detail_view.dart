@@ -20,12 +20,14 @@ class LessonDetailView extends StatefulWidget {
 class _LessonDetailViewState extends State<LessonDetailView> {
   bool _saving = false;
 
-  /// Opción seleccionada (a/b/c/d).
-  String? _selected;
+  /// Índice seleccionado (0=a, 1=b, 2=c, 3=d)
+  int? _selectedIndex;
 
   /// Estado del chequeo.
   bool _checked = false;
   bool _isCorrect = false;
+
+  static const _letters = ['a', 'b', 'c', 'd'];
 
   Future<void> _markCompleted() async {
     if (_saving) return;
@@ -49,29 +51,13 @@ class _LessonDetailViewState extends State<LessonDetailView> {
 
   void _checkAnswer() {
     final quiz = widget.lesson['quiz'] as Map<String, dynamic>?;
-    if (quiz == null || _selected == null) return;
-    final correct = quiz['correct']?.toString().toLowerCase();
+    if (quiz == null || _selectedIndex == null) return;
+    final correctLetter = (quiz['correct']?.toString().toLowerCase() ?? '');
+    final correctIndex = _letters.indexOf(correctLetter);
     setState(() {
       _checked = true;
-      _isCorrect = (_selected == correct);
+      _isCorrect = (_selectedIndex == correctIndex);
     });
-  }
-
-  Widget _optionTile({required String value, required String label}) {
-    final selected = _selected == value;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        selected ? Icons.radio_button_checked : Icons.radio_button_off,
-      ),
-      title: Text('${value.toUpperCase()}) $label'),
-      onTap: () {
-        setState(() {
-          _selected = value;
-          _checked = false; // reset feedback al cambiar opción
-        });
-      },
-    );
   }
 
   @override
@@ -118,18 +104,39 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               ),
               const SizedBox(height: 12),
 
-              // ✅ Sin Radio / RadioListTile -> cero deprecations
-              Column(
-                children: [
-                  for (final opt in ['a', 'b', 'c', 'd'])
-                    if (quiz[opt] != null)
-                      _optionTile(value: opt, label: quiz[opt].toString()),
-                ],
+              /// ✅ Nuevo patrón: RadioGroup ancestro controla estado (no deprecado)
+              RadioGroup<int>(
+                groupValue: _selectedIndex,
+                onChanged: (int? idx) {
+                  setState(() {
+                    _selectedIndex = idx;
+                    _checked = false; // reset al cambiar opción
+                  });
+                },
+                child: Column(
+                  children: [
+                    for (var i = 0; i < _letters.length; i++)
+                      if (quiz[_letters[i]] != null)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Radio<int>(value: i),
+                          title: Text(
+                            '${_letters[i].toUpperCase()}) ${quiz[_letters[i]]}',
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = i;
+                              _checked = false;
+                            });
+                          },
+                        ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: _selected == null ? null : _checkAnswer,
+                onPressed: _selectedIndex == null ? null : _checkAnswer,
                 icon: const Icon(Icons.check_circle_outline),
                 label: const Text('Comprobar respuesta'),
               ),
@@ -148,6 +155,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               const SizedBox(height: 24),
             ],
 
+            // Botón de completar
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
