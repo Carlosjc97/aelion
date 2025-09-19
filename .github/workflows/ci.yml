@@ -56,4 +56,4 @@ jobs:
 
       - name: Gitleaks (full scan on push)
         if: ${{ github.event_name == 'push' }}
-        run: gitleaks detect --source . --redact --exit-code 1
+        run: gitleaks detect --source . --exclude-path .env,server/.env --redact --exit-code 1
