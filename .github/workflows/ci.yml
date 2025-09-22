@@ -52,8 +52,14 @@ jobs:
       # ---- Gitleaks: run safely ----
       - name: Gitleaks (PR snapshot)
         if: ${{ github.event_name == 'pull_request' }}
-        run: gitleaks detect --no-git --redact --exit-code 1
+        run: gitleaks detect --no-git --redact --exit-code 1 --config .gitleaks.toml --report-format sarif --report-path gitleaks-report.sarif
 
       - name: Gitleaks (full scan on push)
         if: ${{ github.event_name == 'push' }}
-        run: gitleaks detect --source . --exclude-path .env,server/.env --redact --exit-code 1
+        run: gitleaks detect --source . --exclude-path .env,server/.env --redact --exit-code 1 --config .gitleaks.toml --report-format sarif --report-path gitleaks-report.sarif
+
+      - name: Upload Gitleaks report
+        if: ${{ always() }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: gitleaks-report.sarif
