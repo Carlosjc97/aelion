@@ -1,304 +1,242 @@
 import 'package:flutter/material.dart';
-import 'package:learning_ia/core/app_colors.dart';
+import 'package:flutter/services.dart';
 import 'package:learning_ia/services/progress_service.dart';
 
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
 
-  /// Identificadores requeridos para guardar progreso/checklist
   final String courseId;
   final String moduleId;
   final String lessonId;
-
   final String title;
-  final String content;
-
-  /// Feature-flag global para mostrar elementos premium (oculto por defecto).
-  final bool isPremiumEnabled;
-
-  /// Si esta lección es premium (cuando el flag está activado, se aplica el candado).
-  final bool isPremiumLesson;
-
-  /// Idioma inicial de la lección: 'es' o 'en'
-  final String initialLang;
+  final String? description;
+  final bool premium;
 
   const LessonView({
     super.key,
     required this.courseId,
     required this.moduleId,
     required this.lessonId,
-    this.title = 'Lección',
-    this.content = 'Contenido…',
-    this.isPremiumEnabled = false,
-    this.isPremiumLesson = false,
-    this.initialLang = 'es',
+    required this.title,
+    this.description,
+    this.premium = false,
   });
 
   @override
   State<LessonView> createState() => _LessonViewState();
 }
 
-class _LessonViewState extends State<LessonView> {
-  final progress = ProgressService();
+class _LessonViewState extends State<LessonView>
+    with SingleTickerProviderStateMixin {
+  bool _completing = false;
 
-  late String _lang; // 'es' | 'en'
-  late String _mem;  // mnemotecnia
-  late String _contentEs;
-  late String _contentEn;
-
-  /// Lista de checks: cada item = {"text": String, "done": bool}
-  List<Map<String, dynamic>> _checklist = [];
-  bool _loadingChecklist = true;
-
-  bool get _locked =>
-      widget.isPremiumEnabled && widget.isPremiumLesson; // candado solo si flag activo
+  late final AnimationController _xpCtrl;
+  late final Animation<double> _xpOpacity;
+  late final Animation<Offset> _xpOffset;
+  int _lastXp = 0;
+  bool _showXp = false;
 
   @override
   void initState() {
     super.initState();
-    _lang = (widget.initialLang == 'en') ? 'en' : 'es';
-
-    // Demo bilingüe: en producción esto vendría de la API/outline
-    _contentEs = widget.content;
-    _contentEn = 'English version of: ${widget.content}';
-
-    // “Mem” (mnemotecnia) simple de ejemplo
-    _mem = _lang == 'es'
-        ? 'MEM: “Piensa en bloques: UI → Estado → Acciones.”'
-        : 'MEM: “Think in blocks: UI → State → Actions.”';
-
-    _loadChecklist();
-  }
-
-  Future<void> _loadChecklist() async {
-    setState(() => _loadingChecklist = true);
-
-    final items = await progress.loadLessonChecklist(
-      courseId: widget.courseId,
-      moduleId: widget.moduleId,
-      lessonId: widget.lessonId,
+    _xpCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
     );
-
-    // Si no hay checklist guardado, generamos uno básico inicial
-    _checklist = items.isNotEmpty
-        ? items
-        : <Map<String, dynamic>>[
-            {
-              'text': _lang == 'es'
-                  ? 'Leer la explicación de la lección'
-                  : 'Read the lesson explanation',
-              'done': false,
-            },
-            {
-              'text': _lang == 'es'
-                  ? 'Tomar notas clave'
-                  : 'Take keynotes',
-              'done': false,
-            },
-            {
-              'text': _lang == 'es'
-                  ? 'Hacer un pequeño ejercicio'
-                  : 'Do a small exercise',
-              'done': false,
-            },
-            {
-              'text': _lang == 'es'
-                  ? 'Repasar el contenido'
-                  : 'Review the content',
-              'done': false,
-            },
-          ];
-
-    setState(() => _loadingChecklist = false);
+    _xpOpacity = CurvedAnimation(parent: _xpCtrl, curve: Curves.easeOutCubic);
+    _xpOffset = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: const Offset(0, -0.6),
+    ).animate(CurvedAnimation(parent: _xpCtrl, curve: Curves.easeOut));
   }
 
-  Future<void> _saveChecklist() async {
-    await progress.saveLessonChecklist(
-      courseId: widget.courseId,
-      moduleId: widget.moduleId,
-      lessonId: widget.lessonId,
-      checklist: _checklist,
-    );
+  @override
+  void dispose() {
+    _xpCtrl.dispose();
+    super.dispose();
   }
 
-  void _switchLang() {
-    setState(() {
-      _lang = _lang == 'es' ? 'en' : 'es';
-      _mem = _lang == 'es'
-          ? 'MEM: “Piensa en bloques: UI → Estado → Acciones.”'
-          : 'MEM: “Think in blocks: UI → State → Actions.”';
-    });
-  }
+  Future<void> _handleComplete() async {
+    if (_completing) return;
+    setState(() => _completing = true);
 
-  Future<void> _markDone() async {
-    // Guarda checklist antes de marcar done
-    await _saveChecklist();
+    final svc = ProgressService();
 
-    // Marca como completada en progreso (y desbloquea la siguiente)
-    final updated = await progress.markLessonCompleted(
-      courseId: widget.courseId,
-      moduleId: widget.moduleId,
-      lessonId: widget.lessonId,
-    );
-
-    if (!mounted) return;
-
-    if (updated != null) {
-      Navigator.pop(context, {'completed': true});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lección marcada como completada ✅')),
+    try {
+      await svc.markLessonCompleted(
+        courseId: widget.courseId,
+        moduleId: widget.moduleId,
+        lessonId: widget.lessonId,
       );
-    } else {
+
+      await svc.tickDailyStreak();
+
+      const gained = 20;
+      _lastXp = await svc.addXp(gained);
+
+      HapticFeedback.lightImpact();
+
+      await _playXpToast(gained);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo actualizar el progreso')),
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Lesson completed! XP total: $_lastXp'),
+          action: SnackBarAction(label: 'OK', onPressed: () {}),
+        ),
       );
+
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Could not update the lesson. Try again. ($e)'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _completing = false);
+    }
+  }
+
+  Future<void> _playXpToast(int gained) async {
+    setState(() => _showXp = true);
+    _xpCtrl
+      ..reset()
+      ..forward();
+    await _xpCtrl.forward();
+    if (mounted) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      setState(() => _showXp = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final description = widget.description?.trim();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          // Toggle idioma
-          IconButton(
-            tooltip: _lang == 'es' ? 'Switch to English' : 'Cambiar a Español',
-            onPressed: _locked ? null : _switchLang,
-            icon: const Icon(Icons.translate_rounded),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: _locked
-            ? _PremiumPaywall(
-                title: widget.title,
-                onUpgrade: () {
-                  // Aquí podrías abrir tu flujo de suscripción
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Premium pronto ✨')),
-                  );
-                },
-              )
-            : Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // MEM (mnemotecnia)
-                    Card(
-                      color: AppColors.neutral,
-                      child: Padding(
-                        padding: const EdgeInsets.all(14.0),
-                        child: Text(_mem, style: text.bodyMedium),
-                      ),
+      appBar: AppBar(title: Text(widget.title), centerTitle: true),
+      body: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+            children: [
+              if (widget.premium)
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: .55),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: cs.primary.withValues(alpha: .25),
                     ),
-                    const SizedBox(height: 12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.workspace_premium_outlined),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Premium content',
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                    // Contenido bilingüe
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              _lang == 'es' ? _contentEs : _contentEn,
-                              style: text.bodyLarge,
+              Text('Description', style: tt.titleMedium),
+              const SizedBox(height: 6),
+              Text(
+                description?.isNotEmpty == true
+                    ? description!
+                    : 'Content will be available soon.',
+                style: tt.bodyMedium,
+              ),
+
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: _completing ? null : _handleComplete,
+                icon: _completing
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.emoji_events_outlined),
+                label: Text(
+                  _completing ? 'Saving...' : 'Mark lesson as completed',
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              Text(
+                'Tip: take quick notes before moving on.',
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurface.withValues(alpha: .7),
+                ),
+              ),
+            ],
+          ),
+
+          if (_showXp)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: SlideTransition(
+                    position: _xpOffset,
+                    child: FadeTransition(
+                      opacity: _xpOpacity,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: cs.primary.withValues(alpha: .25),
+                              blurRadius: 12,
+                              spreadRadius: 1,
                             ),
-                            const SizedBox(height: 16),
-
-                            // Checklist
-                            Text(
-                              _lang == 'es' ? 'Checklist' : 'Checklist',
-                              style: text.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-
-                            if (_loadingChecklist)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            else
-                              ..._checklist.asMap().entries.map((entry) {
-                                final i = entry.key;
-                                final item = entry.value;
-                                final done = (item['done'] as bool?) ?? false;
-                                final label =
-                                    (item['text'] as String?) ?? '—';
-
-                                return CheckboxListTile(
-                                  value: done,
-                                  title: Text(label),
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading,
-                                  onChanged: (v) async {
-                                    setState(() {
-                                      _checklist[i]['done'] = v ?? false;
-                                    });
-                                    await _saveChecklist();
-                                  },
-                                );
-                              }),
                           ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                '+20 XP',
+                                style: tt.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: _markDone,
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text(
-                        _lang == 'es'
-                            ? 'Marcar como completada'
-                            : 'Mark as completed',
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-      ),
-    );
-  }
-}
-
-class _PremiumPaywall extends StatelessWidget {
-  final String title;
-  final VoidCallback onUpgrade;
-  const _PremiumPaywall({required this.title, required this.onUpgrade});
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.lock_outline_rounded, size: 72),
-          const SizedBox(height: 12),
-          Text('Lección Premium', style: text.headlineMedium),
-          const SizedBox(height: 6),
-          Text(
-            '“$title” está disponible en Premium.\n'
-            'Desbloquea acceso a todas las lecciones y funciones avanzadas.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: onUpgrade,
-            child: const Text('Desbloquear con Premium'),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Volver'),
-          ),
+            ),
         ],
       ),
     );

@@ -1,0 +1,9 @@
+# Gitleaks configuration file
+# This file contains rules to prevent false positives from being reported.
+
+title = "Aelion Gitleaks Configuration"
+
+[[allowlist.strings]]
+  description = "Allow placeholder 'changeme' in env.public"
+  file = "env.public"
+  strings = ["changeme"]

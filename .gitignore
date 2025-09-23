@@ -60,4 +60,48 @@ ios/Pods/
 # Secrets
 .env
 .env.*
-!.env.example
+# --- Flutter ---
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.melos_tool/
+**/Generated.xcconfig
+**/Flutter.podspec
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+macos/Pods/
+*.iml
+*.lock
+*.log
+
+# --- Android ---
+**/local.properties
+**/key.properties
+**/captures/
+
+# --- VSCode/JetBrains ---
+.vscode/
+.idea/
+
+# --- Node (server) ---
+server/node_modules/
+server/npm-debug.log*
+server/yarn.lock
+
+# --- Env secrets (en cualquier carpeta) ---
+.env
+**/.env
+**/.env.local
+server/.env
+/.env
+gitleaks
+gitleaks.exe
+gitleaks-*
+gitleaks-temp/
+*.sarif
+results.sarif
+*.tar.gz
+*.zip

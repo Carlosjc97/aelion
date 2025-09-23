@@ -1,22 +1,23 @@
-import 'dart:async';
-
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:learning_ia/core/app_colors.dart';
-import 'package:learning_ia/core/router.dart';
+// 👇 usamos alias para evitar conflictos con tear-offs
+import 'package:learning_ia/core/router.dart' as app;
+import 'package:learning_ia/services/progress_service.dart';
 
 Future<void> main() async {
   runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await _loadEnv();
+      await _loadEnv(); // carga variables de entorno
 
-      // Set up error handling as per user instructions
+      await ProgressService().init();
+
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
       };
-
       ErrorWidget.builder = (details) {
         return Material(
           color: Colors.white,
@@ -36,23 +37,34 @@ Future<void> main() async {
       runApp(const AelionApp());
     },
     (error, stack) {
-      // Zoned error handler for logging
       debugPrint('[runZonedGuarded] Uncaught error: $error');
       debugPrint(stack.toString());
     },
   );
 }
 
-/// Carga .env o env.public (fallback).
 Future<void> _loadEnv() async {
+  // Intentamos primero el que esta en assets (declarado en pubspec.yaml)
+  try {
+    await dotenv.load(fileName: 'env.public');
+    debugPrint(
+      '[Aelion] Cargado env.public (assets). '
+      'API_BASE_URL=${dotenv.env['API_BASE_URL']}',
+    );
+    return;
+  } catch (_) {
+    // sigue abajo
+  }
+
+  // Si no hay env.public, intentamos un .env local (no en assets)
   try {
     await dotenv.load(fileName: '.env');
+    debugPrint(
+      '[Aelion] Cargado .env (filesystem). '
+      'API_BASE_URL=${dotenv.env['API_BASE_URL']}',
+    );
   } catch (_) {
-    try {
-      await dotenv.load(fileName: 'env.public');
-    } catch (_) {
-      debugPrint('[Aelion] No se pudo cargar ningún archivo de entorno.');
-    }
+    debugPrint('[Aelion] No se pudo cargar env.public ni .env');
   }
 }
 
@@ -95,65 +107,10 @@ class AelionApp extends StatelessWidget {
           bodyColor: AppColors.onSurface,
           displayColor: AppColors.onSurface,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
-            minimumSize: const Size.fromHeight(56),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            textStyle: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.neutral,
-            foregroundColor: AppColors.onSurface,
-            minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.surface,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          hintStyle: const TextStyle(color: Color(0xFF7A8797)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.neutral),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.neutral),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: AppColors.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          margin: EdgeInsets.zero,
-        ),
-        chipTheme: const ChipThemeData(
-          backgroundColor: AppColors.neutral,
-          labelStyle: TextStyle(fontWeight: FontWeight.w600),
-          elevation: 0,
-          side: BorderSide(color: Colors.transparent),
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        ),
       ),
-      onGenerateRoute: AppRouter.onGenerateRoute,
+      // 👇 usamos closures + alias
+      onGenerateRoute: (settings) => app.AppRouter.onGenerateRoute(settings),
+      onUnknownRoute: (settings) => app.AppRouter.onUnknownRoute(settings),
       initialRoute: '/',
     );
   }
