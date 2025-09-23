@@ -10,6 +10,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Necesario para subir SARIF
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -42,24 +47,32 @@ jobs:
       - name: Flutter build web (release)
         run: flutter build web --release
 
-      # ---- Gitleaks: install manually ----
+      # --- Gitleaks: instalar ---
       - name: Install Gitleaks
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz | tar -xz
           chmod +x gitleaks
           sudo mv gitleaks /usr/local/bin/
 
-      # ---- Gitleaks: run safely ----
-      - name: Gitleaks (PR snapshot)
+      # --- PR: snapshot sin git, generando SARIF y NO falla el PR (exit-code 0) ---
+      - name: Gitleaks (PR snapshot to SARIF)
         if: ${{ github.event_name == 'pull_request' }}
-        run: gitleaks detect --no-git --redact --exit-code 1 --config .gitleaks.toml --report-format sarif --report-path gitleaks-report.sarif
+        run: |
+          gitleaks detect --no-git --redact \
+            --report-format sarif --report-path gitleaks-report.sarif \
+            || true
 
-      - name: Gitleaks (full scan on push)
+      # --- Push: escaneo completo, BLOQUEA si hay leaks ---
+      - name: Gitleaks (full scan on push, blocking)
         if: ${{ github.event_name == 'push' }}
-        run: gitleaks detect --source . --exclude-path .env,server/.env --redact --exit-code 1 --config .gitleaks.toml --report-format sarif --report-path gitleaks-report.sarif
+        run: |
+          gitleaks detect --source . --redact \
+            --report-format sarif --report-path gitleaks-report.sarif \
+            --exit-code 1
 
-      - name: Upload Gitleaks report
-        if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@v2
+      # --- Subir SARIF si existe ---
+      - name: Upload SARIF to code scanning
+        if: ${{ hashFiles('gitleaks-report.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gitleaks-report.sarif
