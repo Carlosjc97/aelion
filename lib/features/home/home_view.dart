@@ -1,6 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:learning_ia/l10n/app_localizations.dart';
 import 'package:learning_ia/core/app_colors.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
+import 'package:learning_ia/services/google_sign_in_helper.dart';
 
 class HomeView extends StatefulWidget {
   static const routeName = '/';
@@ -14,14 +18,23 @@ class _HomeViewState extends State<HomeView> {
   final _controller = TextEditingController();
   bool _loading = false;
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
     final topic = _controller.text.trim();
+    final l10n = AppLocalizations.of(context)!;
+
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Escribe un tema para continuar')),
+        SnackBar(content: Text(l10n.homeSnackMissingTopic)),
       );
       return;
     }
+
     if (_loading) return;
 
     setState(() => _loading = true);
@@ -29,22 +42,74 @@ class _HomeViewState extends State<HomeView> {
       if (!mounted) return;
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ModuleOutlineView(topic: topic)),
+        MaterialPageRoute(
+          builder: (_) => ModuleOutlineView(topic: topic),
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
+  Future<void> _handleSignOut() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (!kIsWeb) {
+        final googleSignIn = await GoogleSignInHelper.instance();
+        await googleSignIn.signOut();
+      }
+    } catch (e) {
+      debugPrint('[HomeView] signOut error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeSignOutError)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.homeLogoutTooltip,
+            onPressed: _handleSignOut,
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Hero prompt
+            if (user != null)
+              Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Text(
+                      (user.displayName?.trim().isNotEmpty ?? false)
+                          ? user.displayName!.trim()[0].toUpperCase()
+                          : (user.email?.trim().isNotEmpty ?? false)
+                              ? user.email!.trim()[0].toUpperCase()
+                              : '?',
+                    ),
+                  ),
+                  title: Text(
+                    user.displayName?.isNotEmpty == true
+                        ? user.displayName!
+                        : l10n.homeUserFallback,
+                  ),
+                  subtitle: Text(user.email ?? l10n.homeUserNoEmail),
+                ),
+              ),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -56,7 +121,7 @@ class _HomeViewState extends State<HomeView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '¿Qué quieres aprender hoy?',
+                    l10n.homeGreeting,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -66,10 +131,10 @@ class _HomeViewState extends State<HomeView> {
                     controller: _controller,
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _submit(),
-                    decoration: const InputDecoration(
-                      hintText: 'Ej: Álgebra en 7 días, Gramática inglesa…',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
+                    decoration: InputDecoration(
+                      hintText: l10n.homeInputHint,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.search),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -84,65 +149,70 @@ class _HomeViewState extends State<HomeView> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.auto_awesome),
-                      label: const Text('Generar plan con IA'),
+                      label: Text(l10n.homeGenerate),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-
-            // Chips sugerencias
             Wrap(
               spacing: 8,
               children: [
                 _SuggestionChip(
-                  label: 'Matemáticas',
+                  label: l10n.homeSuggestionMath,
                   onTap: () {
-                    _controller.text = 'Matemáticas básicas';
+                    _controller.text = l10n.homeSuggestionMath;
                     _submit();
                   },
                 ),
                 _SuggestionChip(
-                  label: 'Inglés',
+                  label: l10n.homeSuggestionEnglish,
                   onTap: () {
-                    _controller.text = 'Inglés conversacional';
+                    _controller.text = l10n.homeSuggestionEnglish;
                     _submit();
                   },
                 ),
                 _SuggestionChip(
-                  label: 'Historia',
+                  label: l10n.homeSuggestionHistory,
                   onTap: () {
-                    _controller.text = 'Historia de Roma';
+                    _controller.text = l10n.homeSuggestionHistory;
                     _submit();
                   },
                 ),
               ],
             ),
             const SizedBox(height: 24),
-
-            // Accesos secundarios
-            Text('Atajos', style: theme.textTheme.titleMedium),
+            Text(l10n.homeShortcuts, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             _ShortcutCard(
               icon: Icons.menu_book,
-              title: 'Toma un curso',
-              subtitle: 'Microcursos creados por IA',
-              onTap: () => _controller.text = 'Curso rápido de Flutter',
+              title: l10n.homeShortcutCourse,
+              subtitle: l10n.homeShortcutCourseSubtitle,
+              onTap: () {
+                _controller.text = l10n.homePrefillCourse;
+                _submit();
+              },
             ),
             const SizedBox(height: 12),
             _ShortcutCard(
               icon: Icons.language,
-              title: 'Aprende un idioma',
-              subtitle: 'Vocabulario y gramática práctica',
-              onTap: () => _controller.text = 'Inglés en 1 mes',
+              title: l10n.homeShortcutLanguage,
+              subtitle: l10n.homeShortcutLanguageSubtitle,
+              onTap: () {
+                _controller.text = l10n.homePrefillLanguage;
+                _submit();
+              },
             ),
             const SizedBox(height: 12),
             _ShortcutCard(
               icon: Icons.lightbulb_outline,
-              title: 'Resuelve un problema',
-              subtitle: 'De la duda a un plan guiado',
-              onTap: () => _controller.text = 'Resolver integrales',
+              title: l10n.homeShortcutProblem,
+              subtitle: l10n.homeShortcutProblemSubtitle,
+              onTap: () {
+                _controller.text = l10n.homePrefillProblem;
+                _submit();
+              },
             ),
           ],
         ),
