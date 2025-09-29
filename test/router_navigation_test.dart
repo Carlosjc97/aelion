@@ -1,52 +1,57 @@
-// test/router_navigation_test.dart
+﻿// test/router_navigation_test.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:learning_ia/core/router.dart';
-import 'package:learning_ia/features/home/home_view.dart';
+import 'package:learning_ia/features/auth/auth_gate.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
+import 'package:learning_ia/l10n/app_localizations.dart';
 
 Widget _app() => MaterialApp(
-  // Usamos HomeView como pantalla inicial directa
-  // y dejamos onGenerateRoute para las rutas pushNamed.
-  home: const HomeView(),
-  onGenerateRoute: AppRouter.onGenerateRoute,
-);
+      home: const SizedBox.shrink(),
+      onGenerateRoute: AppRouter.onGenerateRoute,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+    );
 
 void main() {
-  testWidgets('Home -> Module navega con topic String y muestra título', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_app());
-    expect(find.byType(HomeView), findsOneWidget);
-
-    // Navega programáticamente con argumento topic
-    Navigator.of(tester.element(find.byType(HomeView))).pushNamed(
-      ModuleOutlineView.routeName,
-      arguments: 'Introducción a Flutter',
+  testWidgets('Module route envuelve ModuleOutlineView en AuthGate', (tester) async {
+    final route = AppRouter.onGenerateRoute(
+      const RouteSettings(
+        name: ModuleOutlineView.routeName,
+        arguments: 'Introduccion a Flutter',
+      ),
     );
-    await tester.pumpAndSettle();
+    expect(route, isA<MaterialPageRoute>());
 
-    // Llega a la vista correcta
-    expect(find.byType(ModuleOutlineView), findsOneWidget);
+    Widget? built;
+    await tester.pumpWidget(MaterialApp(
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      home: Builder(
+        builder: (context) {
+          built = (route as MaterialPageRoute).builder(context);
+          return const SizedBox.shrink();
+        },
+      ),
+    ));
 
-    // Verifica que el título contenga el topic (AppBar/AelionAppBar)
-    expect(find.textContaining('Introducción a Flutter'), findsWidgets);
+    expect(built, isA<AuthGate>());
+    final gate = built! as AuthGate;
+    expect(gate.child, isA<ModuleOutlineView>());
   });
 
-  testWidgets('Ruta inexistente muestra el placeholder del router', (
-    tester,
-  ) async {
+  testWidgets('Ruta inexistente construye pantalla de 404', (tester) async {
     await tester.pumpWidget(_app());
-    expect(find.byType(HomeView), findsOneWidget);
 
-    // Empujar una ruta que no existe
-    Navigator.of(
-      tester.element(find.byType(HomeView)),
-    ).pushNamed('/__ruta_que_no_existe__');
+    Navigator.of(tester.element(find.byType(SizedBox))).pushNamed('/__ruta_que_no_existe__');
     await tester.pumpAndSettle();
 
-    // El router actual muestra “Ruta no encontrada”
-    expect(find.text('Ruta no encontrada'), findsOneWidget);
+    expect(
+      find.text('Ruta no encontrada'),
+      findsOneWidget,
+      reason: 'El router debe mostrar el placeholder para rutas desconocidas',
+    );
   });
 }
