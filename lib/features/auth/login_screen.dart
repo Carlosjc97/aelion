@@ -7,6 +7,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learning_ia/l10n/app_localizations.dart';
 import 'package:learning_ia/services/google_sign_in_helper.dart';
 
+const _googleServerClientId = '110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -36,7 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final googleSignIn = await GoogleSignInHelper.instance();
+      final googleSignIn = await GoogleSignInHelper.instance(
+        serverClientId: _googleServerClientId,
+      );
       final account = await googleSignIn.authenticate(
         scopeHint: const ['email'],
       );
@@ -156,3 +160,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

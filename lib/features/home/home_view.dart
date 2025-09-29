@@ -7,7 +7,7 @@ import 'package:learning_ia/features/modules/module_outline_view.dart';
 import 'package:learning_ia/services/google_sign_in_helper.dart';
 
 class HomeView extends StatefulWidget {
-  static const routeName = '/';
+  static const routeName = '/home';
   const HomeView({super.key});
 
   @override
@@ -29,9 +29,9 @@ class _HomeViewState extends State<HomeView> {
     final l10n = AppLocalizations.of(context)!;
 
     if (topic.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.homeSnackMissingTopic)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.homeSnackMissingTopic)));
       return;
     }
 
@@ -42,9 +42,7 @@ class _HomeViewState extends State<HomeView> {
       if (!mounted) return;
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => ModuleOutlineView(topic: topic),
-        ),
+        MaterialPageRoute(builder: (_) => ModuleOutlineView(topic: topic)),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -62,9 +60,9 @@ class _HomeViewState extends State<HomeView> {
     } catch (e) {
       debugPrint('[HomeView] signOut error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.homeSignOutError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.homeSignOutError)));
     }
   }
 

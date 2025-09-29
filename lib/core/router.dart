@@ -1,4 +1,3 @@
-// lib/core/router.dart
 import 'package:flutter/material.dart';
 import 'package:learning_ia/features/auth/auth_gate.dart';
 import 'package:learning_ia/features/auth/login_screen.dart';
@@ -10,7 +9,7 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(
-          builder: (_) => const AuthGate(),
+          builder: (_) => const AuthGate(child: HomeView()),
           settings: const RouteSettings(name: '/'),
         );
       case LoginScreen.routeName:
@@ -20,14 +19,14 @@ class AppRouter {
         );
       case HomeView.routeName:
         return MaterialPageRoute(
-          builder: (_) => const HomeView(),
+          builder: (_) => const AuthGate(child: HomeView()),
           settings: const RouteSettings(name: HomeView.routeName),
         );
       case ModuleOutlineView.routeName:
         final arg = settings.arguments;
         final topic = (arg is String) ? arg : null;
         return MaterialPageRoute(
-          builder: (_) => ModuleOutlineView(topic: topic),
+          builder: (_) => AuthGate(child: ModuleOutlineView(topic: topic)),
           settings: settings,
         );
       default:
@@ -51,8 +50,6 @@ class _NotFoundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Ruta no encontrada')),
-    );
+    return const Scaffold(body: Center(child: Text('Ruta no encontrada')));
   }
 }
