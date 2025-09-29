@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signInWithGoogle() async {
     if (_loading) return;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     setState(() {
       _loading = true;
@@ -57,18 +57,18 @@ class _LoginScreenState extends State<LoginScreen> {
       await FirebaseAuth.instance.signInWithCredential(credential);
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        setState(() => _errorMessage = l10n.loginCancelled);
+        setState(() => _errorMessage = (l10n?.loginCancelled ?? 'Sign-in cancelled by the user'));
         return;
       }
       debugPrint('[LoginScreen] GoogleSignInException: ${e.code}');
-      setState(() => _errorMessage = l10n.loginError);
+      setState(() => _errorMessage = (l10n?.loginError ?? 'We could not complete the sign-in. Try again.'));
     } on FirebaseAuthException catch (e) {
       debugPrint('[LoginScreen] FirebaseAuthException: ${e.code}');
-      setState(() => _errorMessage = l10n.loginError);
+      setState(() => _errorMessage = (l10n?.loginError ?? 'We could not complete the sign-in. Try again.'));
     } catch (e, stack) {
       debugPrint('[LoginScreen] signInWithGoogle error: $e');
       debugPrint(stack.toString());
-      setState(() => _errorMessage = l10n.loginError);
+      setState(() => _errorMessage = (l10n?.loginError ?? 'We could not complete the sign-in. Try again.'));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF2459F6);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    l10n.loginTitle,
+                    (l10n?.loginTitle ?? 'Aprende más rápido con IA'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16, color: Colors.black54),
                   ),
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             )
                           : const Icon(Icons.login),
-                      label: Text(_loading ? l10n.loginLoading : l10n.loginButton),
+                      label: Text(_loading ? (l10n?.loginLoading ?? 'Connecting...') : (l10n?.loginButton ?? 'Sign in with Google')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
@@ -160,4 +160,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
 
