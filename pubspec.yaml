@@ -10,12 +10,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
   http: ^1.2.0
   flutter_dotenv: ^5.2.1
   rename: ^3.1.0
   flutter_tts: ^4.2.3
   shared_preferences: ^2.2.2
+  firebase_core: ^4.1.1
+  firebase_crashlytics: ^5.0.2
+  firebase_auth: ^6.1.0
+  google_sign_in: ^7.2.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -24,6 +31,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - env.public
     - assets/home/course.png

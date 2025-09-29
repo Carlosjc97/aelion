@@ -1,0 +1,10 @@
+﻿{
+  "@@locale": "es",
+  "appTitle": "Aelion",
+  "loginTitle": "Aprende más rápido con IA",
+  "loginButton": "Iniciar sesión con Google",
+  "loginLoading": "Conectando...",
+  "loginCancelled": "Inicio cancelado por el usuario",
+  "loginError": "No pudimos completar el inicio de sesión. Intenta de nuevo.",
+  "notFoundRoute": "Ruta no encontrada"
+}
