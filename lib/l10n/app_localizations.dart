@@ -62,7 +62,8 @@ import 'app_localizations_es.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,7 +84,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -131,41 +134,144 @@ abstract class AppLocalizations {
   /// **'We could not complete the sign-in. Try again.'**
   String get loginError;
 
-  /// No description provided for @notFoundRoute.
+  /// No description provided for @authCheckingSession.
   ///
   /// In en, this message translates to:
-  /// **'Route not found'**
-  String get notFoundRoute;
-}
+  /// **'Checking your session...'**
+  String get authCheckingSession;
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
-  const _AppLocalizationsDelegate();
+  /// No description provided for @authError.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not verify your session'**
+  String get authError;
 
-  @override
-  Future<AppLocalizations> load(Locale locale) {
-    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
-  }
+  /// No description provided for @authRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get authRetry;
 
-  @override
-  bool isSupported(Locale locale) => <String>['en', 'es'].contains(locale.languageCode);
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to learn today?'**
+  String get homeGreeting;
 
-  @override
-  bool shouldReload(_AppLocalizationsDelegate old) => false;
-}
+  /// No description provided for @homeInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: Algebra in 7 days, conversational English...'**
+  String get homeInputHint;
 
-AppLocalizations lookupAppLocalizations(Locale locale) {
+  /// No description provided for @homeSnackMissingTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a topic to continue'**
+  String get homeSnackMissingTopic;
 
+  /// No description provided for @homeGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate AI learning plan'**
+  String get homeGenerate;
 
-  // Lookup logic when only language code is specified.
-  switch (locale.languageCode) {
-    case 'en': return AppLocalizationsEn();
-    case 'es': return AppLocalizationsEs();
-  }
+  /// No description provided for @homeShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts'**
+  String get homeShortcuts;
 
-  throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
-}
+  /// No description provided for @homeShortcutCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a course'**
+  String get homeShortcutCourse;
+
+  /// No description provided for @homeShortcutCourseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI generated micro-courses'**
+  String get homeShortcutCourseSubtitle;
+
+  /// No description provided for @homeShortcutLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn a language'**
+  String get homeShortcutLanguage;
+
+  /// No description provided for @homeShortcutLanguageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vocabulary and practical grammar'**
+  String get homeShortcutLanguageSubtitle;
+
+  /// No description provided for @homeShortcutProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve a problem'**
+  String get homeShortcutProblem;
+
+  /// No description provided for @homeShortcutProblemSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From question to guided plan'**
+  String get homeShortcutProblemSubtitle;
+
+  /// No description provided for @homeLogoutTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get homeLogoutTooltip;
+
+  /// No description provided for @homeSignOutError.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not sign you out. Try again.'**
+  String get homeSignOutError;
+
+  /// No description provided for @homeUserFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Aelion user'**
+  String get homeUserFallback;
+
+  /// No description provided for @homeUserNoEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'No email'**
+  String get homeUserNoEmail;
+
+  /// No description provided for @homeSuggestionMath.
+  ///
+  /// In en, this message translates to:
+  /// **'Math basics'**
+  String get homeSuggestionMath;
+
+  /// No description provided for @homeSuggestionEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversational English'**
+  String get homeSuggestionEnglish;
+
+  /// No description provided for @homeSuggestionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History of Rome'**
+  String get homeSuggestionHistory;
+
+  /// No description provided for @homePrefillCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Flutter course'**
+  String get homePrefillCourse;
+
+  /// No description provided for @homePrefillLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'English in 1 month'**
+  String get homePrefillLanguage;
+
+  /// No description provided for @homePrefillProblem.
+  ///
+  ///

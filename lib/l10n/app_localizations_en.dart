@@ -27,5 +27,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginError => 'We could not complete the sign-in. Try again.';
 
   @override
-  String get notFoundRoute => 'Route not found';
-}
+  String get authCheckingSession => 'Checking your session...';
+
+  @override
+  String get authError => 'We could not verify your session';
+
+  @override
+  String get authRetry => 'Try again';
+
+  @override
+  String get homeGreeting => 'What do you want to learn today?';
+
+  @override
+  String get homeInputHint =>
+      'Example: Algebra in 7 days, conversational English...';
+
+  @override
+  String get homeSnackMissingTopic => 'Write a topic to continue';
+
+  @override
+  String get homeGenerate => 'Generate AI learning plan';
+
+  @override
+  String get homeShortcuts => 'Shortcuts';
+
+  @override
+  String get homeShortcutCourse => 'Take a course';
+
+  @override
+  String get homeShortcutCourseSubtitle => 'AI generated micro-
