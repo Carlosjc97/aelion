@@ -1,6 +1,5 @@
-﻿// test/router_navigation_test.dart
+// test/router_navigation_test.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:learning_ia/core/router.dart';
@@ -55,3 +54,4 @@ void main() {
     );
   });
 }
+
