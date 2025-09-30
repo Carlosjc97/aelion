@@ -1,17 +1,21 @@
 runtime: nodejs20
 
-build:
-  # Fuerza el builder y evita el error /platform/env/X_GOOGLE_TARGET_PLATFORM
-  builder: heroku/builder:22
+# Deja que App Hosting use su builder nativo. (Quitamos el bloque 'build')
+# build:
+#   builder: heroku/builder:22
 
 runConfig:
-  # Punto de entrada de tu servidor Express
   entrypoint: node server/server.js
 
 env:
-  # Variables de entorno: referencia el secreto en Secret Manager
-  - name: OPENAI_API_KEY
+  # Usa 'variable' en lugar de 'name'
+  # Limita ambas a RUNTIME para que NO se escriban durante BUILD
+  - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
-  # Opcional: fija entorno de ejecución
-  - name: NODE_ENV
+    availability:
+      - RUNTIME
+
+  - variable: NODE_ENV
     value: production
+    availability:
+      - RUNTIME
