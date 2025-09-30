@@ -1,48 +1,144 @@
 ﻿# Aelion
 
-Aplicacion Flutter para explorar planes de estudio generados con IA.
+Aplicación Flutter para explorar planes de estudio generados con IA.
 
-## Requisitos
+---
 
-- Flutter (canal **stable**)
-- Node.js 18+
-- Cuenta con clave de OpenAI (`OPENAI_API_KEY`)
+## 🚀 Estado del proyecto
 
-## Puesta en marcha rapida
+- ✅ CI/CD en verde (analyze, tests, build web).
+- ✅ Firebase Hosting configurado (`build/web` + rewrites a Functions).
+- ✅ App Hosting estable (`apphosting.yaml` corregido con `env.variable`).
+- ✅ Google Sign-In funcionando (Web Client ID en `google-services.json`).
+- ✅ Outline/Quiz activos.
+- 🔒 Punto de rollback seguro: tag `v0.9.0-mvp-ready`.
 
-1. **Backend**
-   ```powershell
+---
+
+## 📦 Requisitos
+
+- **Flutter** canal stable (3.5+).
+- **Node.js** 20 (App Hosting runtime).
+- **Firebase CLI**.
+- Cuenta con clave de **OpenAI** (`OPENAI_API_KEY` en Secret Manager).
+
+---
+
+## 🛠 Puesta en marcha rápida (desarrollo local)
+
+1. **Backend local**
+   ```bash
    cd server
-   npm install
-   npm run dev
-   ```
-   El servidor expone `POST /outline` y `POST /quiz` en `http://localhost:8787` (configurable con `PORT`). Asegurate de crear un `.env` en `server/` con la variable `OPENAI_API_KEY`.
+   npm ci
+   npm run start   # escucha en http://localhost:8787
+👉 crea .env en server/ con:
 
-2. **Configurar la app Flutter**
-   Crea un archivo `.env` en la raiz del proyecto Flutter (`aelion/.env`) con la URL LAN del backend para que tu dispositivo fisico pueda accederlo, por ejemplo:
-   ```env
-   API_BASE_URL=http://192.168.0.21:8787
-   ```
-   > Usa tu IP local: la app leera `API_BASE_URL` en caliente.
+env
+Copiar código
+OPENAI_API_KEY=tu_api_key_local
+PORT=8787
+App Flutter
 
-3. **Ejecutar Flutter**
-   ```powershell
-   flutter pub get
-   flutter run
-   ```
+bash
+Copiar código
+flutter pub get
+flutter run -d chrome --web-renderer html
+👉 .env local en la raíz del proyecto:
 
-## Utilidades
+env
+Copiar código
+API_BASE_URL=http://192.168.0.21:8787
+Endpoints disponibles
 
-- **Probar el endpoint /outline** desde PowerShell:
-  ```powershell
-  ./scripts/test-outline.ps1 -Topic "Introduccion a Flutter" -BaseUrl http://localhost:8787
-  ```
-  Ajusta `-BaseUrl` a tu IP LAN cuando pruebes desde un dispositivo.
+POST /outline
 
-## Notas
+POST /quiz
 
-- El endpoint `/outline` genera modulos y lecciones reales con `gpt-4o-mini` en formato JSON.
-- La app Flutter persiste el progreso y desbloquea lecciones secuenciales en `SharedPreferences`.
-- El manifiesto Android ya referencia `android:networkSecurityConfig="@xml/network_security_config"` para permitir HTTP en desarrollo.
+GET /health
 
-## locura
+🌐 Producción (Firebase)
+Hosting: sirve build/web.
+
+Cloud Functions: API bajo /api/*.
+
+App Hosting: backend Node (server/server.js).
+
+firebase.json
+json
+Copiar código
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "/api/**", "function": "api" },
+      { "source": "**", "destination": "/index.html" }
+    ]
+  },
+  "functions": { "source": "functions" }
+}
+apphosting.yaml
+yaml
+Copiar código
+runtime: nodejs20
+
+runConfig:
+  entrypoint: node server/server.js
+
+env:
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+    availability: [RUNTIME]
+
+  - variable: NODE_ENV
+    value: production
+    availability: [RUNTIME]
+env.public
+env
+Copiar código
+AELION_ENV=production
+BASE_URL=https://us-east4-aelion-c90d2.cloudfunctions.net/api
+CV_STUDIO_API_KEY=changeme
+📊 QA y validación
+bash
+Copiar código
+flutter analyze
+flutter test --reporter expanded
+flutter build web --release
+firebase emulators:start --only hosting,functions
+Login con Google funciona con el Web Client ID.
+
+Outline y Quiz generan contenido real.
+
+/health responde 200.
+
+📈 Flujo de trabajo
+Ramas:
+
+main (protegida).
+
+feat/* (features).
+
+fix/* (hotfixes).
+
+release/* (estabilización).
+
+CI/CD: GitHub Actions (analyze, test, build, gitleaks).
+
+Tags para releases estables:
+
+bash
+Copiar código
+git tag -a v0.9.0-mvp-ready -m "MVP estable"
+git push origin v0.9.0-mvp-ready
+
+
+🧠 Notas
+
+El endpoint /outline usa gpt-4o-mini.
+
+La app Flutter guarda progreso en SharedPreferences.
+
+Android ya tiene network_security_config para HTTP en dev.
+
+Para rollback: Firebase Console → Hosting → Releases → Rollback o usar el tag en Git.
