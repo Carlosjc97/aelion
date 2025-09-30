@@ -7,7 +7,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learning_ia/l10n/app_localizations.dart';
 import 'package:learning_ia/services/google_sign_in_helper.dart';
 
-const _googleServerClientId = '110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com';
+const _googleServerClientId =
+    '110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -57,18 +58,22 @@ class _LoginScreenState extends State<LoginScreen> {
       await FirebaseAuth.instance.signInWithCredential(credential);
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        setState(() => _errorMessage = (l10n?.loginCancelled ?? 'Sign-in cancelled by the user'));
+        setState(() => _errorMessage =
+            (l10n?.loginCancelled ?? 'Sign-in cancelled by the user'));
         return;
       }
       debugPrint('[LoginScreen] GoogleSignInException: ${e.code}');
-      setState(() => _errorMessage = (l10n?.loginError ?? 'We could not complete the sign-in. Try again.'));
+      setState(() => _errorMessage = (l10n?.loginError ??
+          'We could not complete the sign-in. Try again.'));
     } on FirebaseAuthException catch (e) {
       debugPrint('[LoginScreen] FirebaseAuthException: ${e.code}');
-      setState(() => _errorMessage = (l10n?.loginError ?? 'We could not complete the sign-in. Try again.'));
+      setState(() => _errorMessage = (l10n?.loginError ??
+          'We could not complete the sign-in. Try again.'));
     } catch (e, stack) {
       debugPrint('[LoginScreen] signInWithGoogle error: $e');
       debugPrint(stack.toString());
-      setState(() => _errorMessage = (l10n?.loginError ?? 'We could not complete the sign-in. Try again.'));
+      setState(() => _errorMessage = (l10n?.loginError ??
+          'We could not complete the sign-in. Try again.'));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -94,8 +99,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: primary.withAlpha((0.08 * 255).round()),
                       borderRadius: BorderRadius.circular(14),
@@ -113,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    (l10n?.loginTitle ?? 'Aprende más rápido con IA'),
+                    (l10n?.loginTitle ?? 'Aprende mï¿½s rï¿½pido con IA'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16, color: Colors.black54),
                   ),
@@ -133,7 +138,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             )
                           : const Icon(Icons.login),
-                      label: Text(_loading ? (l10n?.loginLoading ?? 'Connecting...') : (l10n?.loginButton ?? 'Sign in with Google')),
+                      label: Text(_loading
+                          ? (l10n?.loginLoading ?? 'Connecting...')
+                          : (l10n?.loginButton ?? 'Sign in with Google')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
@@ -160,5 +167,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
