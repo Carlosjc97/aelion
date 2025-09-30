@@ -27,6 +27,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  firebase_auth_mocks: ^0.15.1
+  firebase_core_platform_interface: ^6.0.1
   flutter_lints: ^6.0.0
 
 flutter:
@@ -37,5 +39,3 @@ flutter:
     - assets/home/course.png
     - assets/home/language.png
     - assets/home/problem.png
-
-
