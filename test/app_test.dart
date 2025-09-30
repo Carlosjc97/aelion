@@ -14,7 +14,8 @@ Widget _buildApp() => MaterialApp(
     );
 
 void main() {
-  testWidgets('boots and renders initial screen (login when signed out)', (tester) async {
+  testWidgets('boots and renders initial screen (login when signed out)',
+      (tester) async {
     await tester.pumpWidget(_buildApp());
     await tester.pumpAndSettle();
 
@@ -22,4 +23,3 @@ void main() {
     expect(find.byType(LoginScreen), findsOneWidget);
   });
 }
-
