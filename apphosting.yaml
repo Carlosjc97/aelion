@@ -1,6 +1,17 @@
 runtime: nodejs20
-api:
+
+build:
+  # Fuerza el builder y evita el error /platform/env/X_GOOGLE_TARGET_PLATFORM
+  builder: heroku/builder:22
+
+runConfig:
+  # Punto de entrada de tu servidor Express
   entrypoint: node server/server.js
+
 env:
+  # Variables de entorno: referencia el secreto en Secret Manager
   - name: OPENAI_API_KEY
-    value: ${projects.${PROJECT_ID}/secrets/OPENAI_API_KEY}
+    secret: OPENAI_API_KEY
+  # Opcional: fija entorno de ejecución
+  - name: NODE_ENV
+    value: production

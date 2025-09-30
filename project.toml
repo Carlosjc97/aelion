@@ -1,6 +1,0 @@
-[project]
-name = "aelion-server"
-version = "0.1.0"
-
-[build]
-builder = "heroku/builder:22"
