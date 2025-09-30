@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": "^20"
+  },
   "dependencies": {
     "firebase": "^12.3.0"
   }
