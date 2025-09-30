@@ -26,42 +26,81 @@ Aplicación Flutter para explorar planes de estudio generados con IA.
 
 ## 🛠 Puesta en marcha rápida (desarrollo local)
 
-1. **Backend local**
-   ```bash
-   cd server
-   npm ci
-   npm run start   # escucha en http://localhost:8787
-👉 crea .env en server/ con:
+### 1. Configurar Firebase Auth (Google)
 
-env
-Copiar código
-OPENAI_API_KEY=tu_api_key_local
-PORT=8787
-App Flutter
+Para que el inicio de sesión con Google funcione, necesitas configurar tu proyecto de Firebase:
 
-bash
-Copiar código
-flutter pub get
-flutter run -d chrome --web-renderer html
-👉 .env local en la raíz del proyecto:
+1.  **Ejecuta `flutterfire configure`**: Sigue los pasos para conectar tu app a Firebase. Esto generará `lib/firebase_options.dart`.
+2.  **Configura el `google-services.json`**: Asegúrate de que tu fichero `android/app/google-services.json` contiene la configuración `oauth_client` con `client_type` igual a 3. Esto es necesario para el login de Google en Android. Si no tienes este fichero, descárgalo desde la consola de Firebase.
 
-env
-Copiar código
-API_BASE_URL=http://192.168.0.21:8787
-Endpoints disponibles
+    ```json
+    "oauth_client": [
+      {
+        "client_id": "TU-WEB-CLIENT-ID.apps.googleusercontent.com",
+        "client_type": 3
+      }
+    ]
+    ```
 
-POST /outline
+### 2. Backend (Emuladores de Firebase)
 
-POST /quiz
+La nueva API de `/outline` se ejecuta en Firebase Functions. Para desarrollo local, usamos el emulador de Firebase.
 
-GET /health
+```bash
+cd functions
+npm install
+firebase emulators:start --only functions,firestore,auth
+```
 
-🌐 Producción (Firebase)
-Hosting: sirve build/web.
+El emulador de Functions se ejecutará en `http://localhost:5001` y el de Auth en `http://localhost:9099`.
 
-Cloud Functions: API bajo /api/*.
+### 3. App Flutter
 
-App Hosting: backend Node (server/server.js).
+1.  **Crea `env.public`**: En la raíz del proyecto, crea un fichero `env.public` con la URL base de tu emulador de functions:
+
+    ```
+    # Para emulador local
+    API_BASE_URL=http://localhost:5001/<TU_PROJECT_ID>/us-central1
+    ```
+
+2.  **Ejecuta la app**:
+    ```bash
+    flutter pub get
+    flutter run -d chrome
+    ```
+
+---
+
+## 🚀 Arquitectura de Producción (Firebase)
+
+*   **Firebase Hosting**: Sirve el contenido web estático desde `build/web`.
+*   **Firebase Functions**:
+    *   `outline`: Nueva función HTTPS que genera el contenido del curso con cache en Firestore y TTL.
+*   **App Hosting**: El backend en `server/` se mantiene para desarrollo local o como referencia, pero ya no se usa en producción para el endpoint `/outline`.
+
+### Consumir `/outline` desde Functions
+
+El servicio `CourseApiService` ahora usa la variable `API_BASE_URL` de `env.public` para llamar a la función.
+
+```dart
+// lib/services/course_api_service.dart
+static Future<Map<String, dynamic>> generateOutline({
+  required String topic,
+  String depth = 'medium',
+}) async {
+  // ...
+  final response = await http.post(
+    _uri('/outline'), // -> https://<region>-<project>.cloudfunctions.net/outline
+    // ...
+  );
+  // ...
+}
+```
+
+### Skeletons de Carga y Fallback
+
+*   **Skeletons de carga**: La pantalla de `ModuleOutlineView` ahora muestra un esqueleto de la UI mientras se carga el contenido, mejorando la experiencia de usuario.
+*   **Modo demo / fallback**: Si el contenido se sirve desde la caché de la función (`source: 'cache'`), se muestra un banner indicando que el contenido puede no ser el más reciente. Si hay un error de red, se muestra un mensaje de error con un botón para reintentar.
 
 firebase.json
 json
@@ -96,8 +135,11 @@ env:
 env.public
 env
 Copiar código
+# URL para producción (ejemplo)
+API_BASE_URL=https://us-central1-aelion-c90d2.cloudfunctions.net
+
+# Otras variables
 AELION_ENV=production
-BASE_URL=https://us-east4-aelion-c90d2.cloudfunctions.net/api
 CV_STUDIO_API_KEY=changeme
 📊 QA y validación
 bash
