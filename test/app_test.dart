@@ -20,6 +20,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(SignInScreen), findsOneWidget);
   });
 }
