@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learning_ia/features/auth/auth_gate.dart';
-import 'package:learning_ia/features/auth/login_screen.dart';
+import 'package:learning_ia/features/auth/auth.dart';
 import 'package:learning_ia/features/home/home_view.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
+import 'package:learning_ia/widgets/not_found_view.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -12,10 +12,10 @@ class AppRouter {
           builder: (_) => const AuthGate(child: HomeView()),
           settings: const RouteSettings(name: '/'),
         );
-      case LoginScreen.routeName:
+      case SignInScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-          settings: const RouteSettings(name: LoginScreen.routeName),
+          builder: (_) => const SignInScreen(),
+          settings: const RouteSettings(name: SignInScreen.routeName),
         );
       case HomeView.routeName:
         return MaterialPageRoute(
@@ -30,26 +30,14 @@ class AppRouter {
           settings: settings,
         );
       default:
-        return MaterialPageRoute(
-          builder: (_) => const _NotFoundPage(),
-          settings: const RouteSettings(name: '/404'),
-        );
+        return onUnknownRoute(settings);
     }
   }
 
   static Route<dynamic> onUnknownRoute(RouteSettings settings) {
     return MaterialPageRoute(
-      builder: (_) => const _NotFoundPage(),
-      settings: const RouteSettings(name: '/404'),
+      builder: (_) => const SignInScreen(),
+      settings: const RouteSettings(name: SignInScreen.routeName),
     );
-  }
-}
-
-class _NotFoundPage extends StatelessWidget {
-  const _NotFoundPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Ruta no encontrada')));
   }
 }
