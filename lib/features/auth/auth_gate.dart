@@ -1,32 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:learning_ia/l10n/app_localizations.dart';
 import 'package:learning_ia/features/auth/login_screen.dart';
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key, required this.child});
+  const AuthGate({super.key, this.child});
 
-  final Widget child;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        final l10n = AppLocalizations.of(context);
-
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(l10n?.authCheckingSession ?? 'Checking your session...'),
-                ],
-              ),
-            ),
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -38,8 +26,8 @@ class AuthGate extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      l10n?.authError ?? 'We could not verify your session',
+                    const Text(
+                      'We could not verify your session',
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
@@ -50,7 +38,7 @@ class AuthGate extends StatelessWidget {
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: () => FirebaseAuth.instance.signOut(),
-                      child: Text(l10n?.authRetry ?? 'Try again'),
+                      child: const Text('Try again'),
                     ),
                   ],
                 ),
@@ -61,11 +49,29 @@ class AuthGate extends StatelessWidget {
 
         final user = snapshot.data;
         if (user == null) {
-          return const LoginScreen();
+          return const SignInScreen();
         }
 
-        return child;
+        final content = child;
+        if (content != null) {
+          return content;
+        }
+
+        return const HomeScaffold();
       },
+    );
+  }
+}
+
+class HomeScaffold extends StatelessWidget {
+  const HomeScaffold({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Text('Home coming soon'),
+      ),
     );
   }
 }

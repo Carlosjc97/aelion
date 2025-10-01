@@ -8,6 +8,8 @@ import '../../widgets/a11y_button.dart';
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
+  static const String routeName = '/login';
+
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }

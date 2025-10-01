@@ -9,13 +9,13 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(
-          builder: (_) => const AuthGate(child: HomeView()),
+          builder: (_) => const AuthGate(),
           settings: const RouteSettings(name: '/'),
         );
-      case LoginScreen.routeName:
+      case SignInScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-          settings: const RouteSettings(name: LoginScreen.routeName),
+          builder: (_) => const SignInScreen(),
+          settings: const RouteSettings(name: SignInScreen.routeName),
         );
       case HomeView.routeName:
         return MaterialPageRoute(
