@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../widgets/a11y_button.dart';
 
 class SignInScreen extends StatefulWidget {
+  static const routeName = '/signin';
   const SignInScreen({super.key});
 
   @override

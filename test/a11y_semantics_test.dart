@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:aelion/features/auth/sign_in_screen.dart';
+import 'package:flutter/semantics.dart';
+import 'package:learning_ia/features/auth/auth.dart';
 
 void main() {
   testWidgets('SignInScreen: Google sign-in button has correct semantics', (tester) async {
@@ -19,7 +19,7 @@ void main() {
 
     // Assert that the node has the properties of a button.
     expect(
-      semanticsNode.getSemanticsData().hasFlag(SemanticsFlag.isButton),
+      semanticsNode.getSemanticsData().flags.contains(SemanticsFlag.isButton),
       isTrue,
       reason: 'The widget should be marked as a button for accessibility services.',
     );
