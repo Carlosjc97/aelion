@@ -12,10 +12,10 @@ class AppRouter {
           builder: (_) => const AuthGate(child: HomeView()),
           settings: const RouteSettings(name: '/'),
         );
-      case LoginScreen.routeName:
+      case '/signin':
         return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-          settings: const RouteSettings(name: LoginScreen.routeName),
+          builder: (_) => const SignInScreen(),
+          settings: const RouteSettings(name: '/signin'),
         );
       case HomeView.routeName:
         return MaterialPageRoute(
@@ -31,8 +31,8 @@ class AppRouter {
         );
       default:
         return MaterialPageRoute(
-          builder: (_) => const _NotFoundPage(),
-          settings: const RouteSettings(name: '/404'),
+          builder: (_) => const SignInScreen(),
+          settings: RouteSettings(name: settings.name ?? '/signin'),
         );
     }
   }
