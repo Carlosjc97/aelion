@@ -1,21 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:aelion/features/auth/sign_in_screen.dart';
+
+import 'helpers/test_sign_in_screen.dart';
 
 void main() {
   testWidgets('SignInScreen: supports textScaleFactor 2.0 without overflow', (tester) async {
     // Set up a mock for Firebase Auth
     final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
-    binding.window.physicalSizeTestValue = const Size(1080, 1920);
-    binding.window.devicePixelRatioTestValue = 1.0;
+    final TestFlutterView view = binding.platformDispatcher.implicitView!;
+    view.physicalSize = const Size(1080, 1920);
+    view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
-      const MaterialApp(home: SignInScreen()),
+      const MaterialApp(home: TestSignInScreen()),
     );
 
     // Set text scale factor to 2.0
-    binding.window.textScaleFactorTestValue = 2.0;
-    addTearDown(() => binding.window.clearAllTestValues());
+    binding.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(() {
+      binding.platformDispatcher.clearAllTestValues();
+      view.reset();
+    });
 
     await tester.pumpAndSettle();
 
