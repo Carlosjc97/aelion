@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:learning_ia/services/progress_service.dart';
+import 'package:aelion/services/progress_service.dart';
 
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
@@ -154,7 +154,6 @@ class _LessonViewState extends State<LessonView>
                     ],
                   ),
                 ),
-
               Text('Description', style: tt.titleMedium),
               const SizedBox(height: 6),
               Text(
@@ -163,7 +162,6 @@ class _LessonViewState extends State<LessonView>
                     : 'Content will be available soon.',
                 style: tt.bodyMedium,
               ),
-
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _completing ? null : _handleComplete,
@@ -181,7 +179,6 @@ class _LessonViewState extends State<LessonView>
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
-
               const SizedBox(height: 12),
               Text(
                 'Tip: take quick notes before moving on.',
@@ -191,7 +188,6 @@ class _LessonViewState extends State<LessonView>
               ),
             ],
           ),
-
           if (_showXp)
             Positioned.fill(
               child: IgnorePointer(

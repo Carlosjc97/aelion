@@ -1,7 +1,11 @@
-{
+﻿{
   "@@locale": "es",
   "appTitle": "Aelion",
   "loginTitle": "Aprende mas rapido con IA",
+  "loginSubtitle": "Tu ruta de aprendizaje en pocos toques",
+  "loginHighlightPersonalized": "Esquemas personalizados en minutos",
+  "loginHighlightStreak": "Rachas diarias para motivarte",
+  "loginHighlightSync": "Sincroniza en web y Android con tu cuenta Google",
   "loginButton": "Iniciar sesion con Google",
   "loginLoading": "Conectando...",
   "loginCancelled": "Inicio cancelado por el usuario",

@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 /// Servicio para consumir el endpoint /outline.
 /// - Usa API_BASE_URL desde .env.public
-/// - En release: NO permite localhost (falla explícitamente)
+/// - En release: NO permite localhost (falla explÃ­citamente)
 /// - En dev: puede usar emulador si USE_FUNCTIONS_EMULATOR=true
 /// - Soporta Auth con Firebase (Bearer idToken)
 /// - Reintentos con backoff en 429/5xx
@@ -23,14 +23,16 @@ class CourseApiService {
   static String get _baseUrl {
     final envUrl = dotenv.env['API_BASE_URL']?.trim();
 
-    // Si hay env explícita:
+    // Si hay env explÃ­cita:
     if (envUrl != null && envUrl.isNotEmpty) {
-      final sanitized =
-          envUrl.endsWith('/') ? envUrl.substring(0, envUrl.length - 1) : envUrl;
+      final sanitized = envUrl.endsWith('/')
+          ? envUrl.substring(0, envUrl.length - 1)
+          : envUrl;
 
       // Bloquear localhost en release
       if (kReleaseMode &&
-          (sanitized.contains('localhost') || sanitized.contains('127.0.0.1'))) {
+          (sanitized.contains('localhost') ||
+              sanitized.contains('127.0.0.1'))) {
         throw StateError(
           'API_BASE_URL no puede apuntar a localhost/127.0.0.1 en release.',
         );
@@ -38,19 +40,21 @@ class CourseApiService {
       return sanitized;
     }
 
-    // Si no hay env explícita y estamos en release → error controlado
+    // Si no hay env explÃ­cita y estamos en release â†’ error controlado
     if (kReleaseMode) {
       throw StateError(
         'API_BASE_URL debe estar configurado en release (assets/env/.env.public).',
       );
     }
 
-    // Dev: ¿usar emulador?
-    final useEmu = (dotenv.env['USE_FUNCTIONS_EMULATOR'] ?? '').toLowerCase() == 'true';
+    // Dev: Â¿usar emulador?
+    final useEmu =
+        (dotenv.env['USE_FUNCTIONS_EMULATOR'] ?? '').toLowerCase() == 'true';
     if (useEmu) {
       final project = (dotenv.env['FIREBASE_PROJECT_ID'] ?? '').trim();
       // Host por plataforma (Android Emulator usa 10.0.2.2)
-      final host = (dotenv.env['FUNCTIONS_EMULATOR_HOST'] ?? 'localhost').trim();
+      final host =
+          (dotenv.env['FUNCTIONS_EMULATOR_HOST'] ?? 'localhost').trim();
       final port = (dotenv.env['FUNCTIONS_EMULATOR_PORT'] ?? '5001').trim();
       if (project.isEmpty) {
         throw StateError(
@@ -115,7 +119,8 @@ class CourseApiService {
         }
 
         // Errores reintentarbles
-        if (res.statusCode == 429 || (res.statusCode >= 500 && res.statusCode < 600)) {
+        if (res.statusCode == 429 ||
+            (res.statusCode >= 500 && res.statusCode < 600)) {
           attempt++;
           if (attempt > maxRetries) {
             final detail = res.body.isNotEmpty ? res.body : 'No details';
@@ -131,7 +136,8 @@ class CourseApiService {
 
         // Errores no reintentarbles
         final detail = res.body.isNotEmpty ? res.body : 'No details';
-        throw Exception('Failed to generate outline (${res.statusCode}): $detail');
+        throw Exception(
+            'Failed to generate outline (${res.statusCode}): $detail');
       } catch (e) {
         lastError = e;
         attempt++;
@@ -144,7 +150,7 @@ class CourseApiService {
       }
     }
 
-    // No debería llegar aquí
+    // No deberÃ­a llegar aquÃ­
     throw Exception('Failed to generate outline. Last error: $lastError');
   }
 

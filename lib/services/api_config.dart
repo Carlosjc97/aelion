@@ -1,6 +1,6 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Configuración centralizada leída desde .env / env.public
+/// ConfiguraciÃ³n centralizada leÃ­da desde .env / env.public
 class AppConfig {
   static String get env => dotenv.env['AELION_ENV'] ?? 'development';
 

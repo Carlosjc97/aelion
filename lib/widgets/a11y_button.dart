@@ -26,7 +26,8 @@ class A11yButton extends StatelessWidget {
       enabled: onPressed != null,
       onTapHint: onTapHint ?? 'Activate',
       child: ConstrainedBox(
-        constraints: BoxConstraints.tightFor(width: minSize.width, height: minSize.height),
+        constraints: BoxConstraints.tightFor(
+            width: minSize.width, height: minSize.height),
         child: ElevatedButton.icon(
           onPressed: onPressed,
           icon: icon,

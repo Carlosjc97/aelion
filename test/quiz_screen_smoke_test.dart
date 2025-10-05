@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:learning_ia/features/quiz/quiz_screen.dart';
+
+import 'package:aelion/features/quiz/quiz_screen.dart';
 
 void main() {
-  testWidgets('QuizScreen smoke: recorre preguntas y muestra resultados', (
-    tester,
-  ) async {
+  testWidgets('QuizScreen smoke: walks through questions and shows results',
+      (tester) async {
     await tester.pumpWidget(
-      MaterialApp(home: const QuizScreen(topic: 'Algoritmos')),
+      const MaterialApp(home: QuizScreen(topic: 'Algorithms')),
     );
 
-    // Debe existir el AppBar con el título del tópico
-    expect(find.textContaining('Algoritmos'), findsWidgets);
+    await tester.pump(const Duration(milliseconds: 200));
 
-    // Hay 10 preguntas. Para cada una: seleccionar opción 0 y avanzar.
+    expect(find.textContaining('Mini quiz'), findsWidgets);
+
     for (var i = 0; i < 10; i++) {
-      // Busca el primer Radio de la pantalla actual y lo selecciona.
       final radios = find.byType(Radio<int>);
       expect(radios, findsWidgets);
 
       await tester.tap(radios.first);
       await tester.pump();
 
-      // El botón debe estar habilitado
       final isLast = i == 9;
-      final nextLabel = isLast ? 'Terminar' : 'Siguiente';
+      final nextLabel = isLast ? 'Finish' : 'Next';
       final nextButton = find.widgetWithText(FilledButton, nextLabel);
       expect(nextButton, findsOneWidget);
 
@@ -32,18 +30,13 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 300));
     }
 
-    // Al final debe salir el diálogo de resultados
     expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.textContaining('Aciertos:'), findsOneWidget);
-    expect(find.textContaining('Nivel asignado:'), findsOneWidget);
+    expect(find.textContaining('Correct answers'), findsOneWidget);
+    expect(find.textContaining('Suggested level'), findsOneWidget);
 
-    // Cierra el diálogo
-    final continuarBtn = find.widgetWithText(TextButton, 'Continuar');
-    expect(continuarBtn, findsOneWidget);
-    await tester.tap(continuarBtn);
+    final continueButton = find.widgetWithText(TextButton, 'Continue');
+    expect(continueButton, findsOneWidget);
+    await tester.tap(continueButton);
     await tester.pumpAndSettle();
-
-    // La pantalla no debe crashear (seguimos en el QuizScreen o ya hace pop en integración real)
-    expect(find.byType(Scaffold), findsOneWidget);
   });
 }

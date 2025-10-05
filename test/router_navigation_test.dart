@@ -1,13 +1,13 @@
-// test/router_navigation_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:learning_ia/core/router.dart';
-import 'package:learning_ia/features/auth/auth_gate.dart';
-import 'package:learning_ia/features/modules/module_outline_view.dart';
-import 'package:learning_ia/l10n/app_localizations.dart';
+import 'package:aelion/core/router.dart';
+import 'package:aelion/features/auth/auth_gate.dart';
+import 'package:aelion/features/modules/module_outline_view.dart';
+import 'package:aelion/l10n/app_localizations.dart';
 
-Widget _app() => MaterialApp(
+Widget _app({Locale locale = const Locale('es')}) => MaterialApp(
+      locale: locale,
       home: const SizedBox.shrink(),
       onGenerateRoute: AppRouter.onGenerateRoute,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -15,7 +15,8 @@ Widget _app() => MaterialApp(
     );
 
 void main() {
-  testWidgets('Module route envuelve ModuleOutlineView en AuthGate', (tester) async {
+  testWidgets('Module route envuelve ModuleOutlineView en AuthGate',
+      (tester) async {
     final route = AppRouter.onGenerateRoute(
       const RouteSettings(
         name: ModuleOutlineView.routeName,
@@ -26,6 +27,7 @@ void main() {
 
     Widget? built;
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('es'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: Builder(
@@ -44,7 +46,8 @@ void main() {
   testWidgets('Ruta inexistente construye pantalla de 404', (tester) async {
     await tester.pumpWidget(_app());
 
-    Navigator.of(tester.element(find.byType(SizedBox))).pushNamed('/__ruta_que_no_existe__');
+    Navigator.of(tester.element(find.byType(SizedBox)))
+        .pushNamed('/__ruta_que_no_existe__');
     await tester.pumpAndSettle();
 
     expect(
@@ -54,4 +57,3 @@ void main() {
     );
   });
 }
-

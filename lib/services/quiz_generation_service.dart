@@ -1,4 +1,4 @@
-// lib/services/quiz_generation_service.dart
+﻿// lib/services/quiz_generation_service.dart
 import 'dart:math';
 
 class QuizQuestion {
@@ -20,9 +20,9 @@ class QuizGenerationService {
       return QuizQuestion(
         question: 'Pregunta ${i + 1} sobre $topic',
         options: [
-          'Definición básica de $topic',
-          'Ejemplo práctico de $topic',
-          'Concepto erróneo de $topic',
+          'DefiniciÃ³n bÃ¡sica de $topic',
+          'Ejemplo prÃ¡ctico de $topic',
+          'Concepto errÃ³neo de $topic',
           'Detalle avanzado de $topic',
         ],
         correctIndex: rnd.nextInt(4),

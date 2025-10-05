@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class Skeleton extends StatelessWidget {
   const Skeleton({
@@ -19,7 +19,7 @@ class Skeleton extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         color: Color.alphaBlend(
-          Theme.of(context).colorScheme.surfaceVariant.withAlpha(128),
+          Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(128),
           Theme.of(context).colorScheme.surface,
         ),
         borderRadius: BorderRadius.all(Radius.circular(cornerRadius)),

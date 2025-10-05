@@ -1,118 +1,239 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
-import '../../widgets/a11y_button.dart';
+import 'package:aelion/l10n/app_localizations.dart';
+import 'package:aelion/services/google_sign_in_helper.dart';
+import 'package:aelion/widgets/a11y_button.dart';
 
 class SignInScreen extends StatefulWidget {
-  static const routeName = '/signin';
   const SignInScreen({super.key});
+
+  static const routeName = '/sign-in';
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  bool _isSigningIn = false;
+  bool _isLoading = false;
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isSigningIn = true;
-    });
+  Future<void> _onSignInPressed() async {
+    final l10n = AppLocalizations.of(context);
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-      // Obtain the auth details from the request
-      if (googleUser == null) {
-        // The user canceled the sign-in
-        if (mounted) {
-          setState(() {
-            _isSigningIn = false;
-          });
-        }
+      if (kIsWeb) {
+        final provider = GoogleAuthProvider()
+          ..setCustomParameters(<String, String>{'prompt': 'select_account'});
+        await FirebaseAuth.instance.signInWithPopup(provider);
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignIn googleSignIn = await GoogleSignInHelper.instance();
+      GoogleSignInAccount account;
+      try {
+        account = await googleSignIn.authenticate();
+      } on GoogleSignInException catch (error) {
+        if (error.code == GoogleSignInExceptionCode.canceled) {
+          _showSnackBar(
+              l10n?.loginCancelled ?? 'Sign-in cancelled by the user');
+          return;
+        }
+        rethrow;
+      }
 
-      // Create a new credential
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+      GoogleSignInClientAuthorization authorization;
+      try {
+        authorization = await account.authorizationClient
+            .authorizeScopes(const <String>['email', 'profile']);
+      } on GoogleSignInException catch (error) {
+        if (error.code == GoogleSignInExceptionCode.canceled) {
+          _showSnackBar(
+              l10n?.loginCancelled ?? 'Sign-in cancelled by the user');
+          return;
+        }
+        rethrow;
+      }
 
-      // Once signed in, return the UserCredential
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error during sign in: $e')),
+      final GoogleSignInAuthentication auth = account.authentication;
+      if (auth.idToken == null) {
+        throw FirebaseAuthException(
+          code: 'missing-id-token',
+          message: 'Google Sign-In did not return an ID token.',
         );
       }
+
+      final credential = GoogleAuthProvider.credential(
+        idToken: auth.idToken,
+        accessToken: authorization.accessToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } on GoogleSignInException catch (error) {
+      debugPrint(
+          '[SignInScreen] GoogleSignInException: ${error.code} ${error.description}');
+      _showSnackBar(
+          l10n?.loginError ?? 'We could not complete the sign-in. Try again.');
+    } on FirebaseAuthException catch (error) {
+      debugPrint('[SignInScreen] FirebaseAuthException: ${error.code}');
+      _showSnackBar(_describeAuthError(error, l10n));
+    } catch (error, stackTrace) {
+      debugPrint('[SignInScreen] Unexpected sign-in error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      _showSnackBar(
+          l10n?.loginError ?? 'We could not complete the sign-in. Try again.');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSigningIn = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  String _describeAuthError(
+      FirebaseAuthException error, AppLocalizations? l10n) {
+    switch (error.code) {
+      case 'network-request-failed':
+      case 'user-disabled':
+      case 'account-exists-with-different-credential':
+      case 'missing-id-token':
+        return l10n?.loginError ??
+            'We could not complete the sign-in. Try again.';
+      default:
+        return l10n?.loginError ??
+            'We could not complete the sign-in. Try again.';
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('Iniciar sesión'),
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-      ),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      'Bienvenido a Aelion',
-                      style: textTheme.headlineSmall?.copyWith(color: colorScheme.onSurface),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Aprende a tu ritmo. Tu primer plan está a un toque.',
-                    style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  if (_isSigningIn)
-                    const CircularProgressIndicator()
-                  else
-                    A11yButton(
-                      icon: const Icon(Icons.login),
-                      label: 'Continuar con Google',
-                      semanticsLabel: 'Botón: Iniciar sesión con Google',
-                      onTapHint: 'Inicia sesión con tu cuenta de Google',
-                      onPressed: _isSigningIn ? null : _signInWithGoogle,
-                    ),
-                ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool isWide = constraints.maxWidth >= 640;
+            final column = Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n?.appTitle ?? 'Aelion',
+                  style: theme.textTheme.headlineLarge,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n?.loginTitle ?? 'Learn faster with AI',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 32),
+                A11yButton(
+                  onPressed: _isLoading ? null : _onSignInPressed,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.login),
+                  label: l10n?.loginButton ?? 'Sign in with Google',
+                  semanticsLabel: l10n?.loginButton ?? 'Sign in with Google',
+                  onTapHint: l10n?.loginButton ?? 'Sign in with Google',
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _isLoading
+                      ? (l10n?.loginLoading ?? 'Connecting...')
+                      : (l10n?.loginSubtitle ??
+                          'Your learning path in a few taps'),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            );
+
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: isWide
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(child: column),
+                            const SizedBox(width: 40),
+                            const Expanded(
+                              child: _HighlightsCard(),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            column,
+                            const SizedBox(height: 32),
+                            const _HighlightsCard(),
+                          ],
+                        ),
+                ),
               ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _HighlightsCard extends StatelessWidget {
+  const _HighlightsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final bulletStyle = theme.textTheme.bodyMedium;
+    final highlights = <String>[
+      l10n?.loginHighlightPersonalized ?? 'Personalized outlines in minutes',
+      l10n?.loginHighlightStreak ?? 'Daily streaks keep you motivated',
+      l10n?.loginHighlightSync ??
+          'Sync across devices with your Google account',
+    ];
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n?.loginTitle ?? 'Learn faster with AI',
+              style: theme.textTheme.titleLarge,
             ),
-          ),
+            const SizedBox(height: 12),
+            for (final item in highlights) ...[
+              Text(item, style: bulletStyle),
+              if (item != highlights.last) const SizedBox(height: 8),
+            ],
+          ],
         ),
       ),
     );

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'package:learning_ia/services/course_api_service.dart';
-import 'package:learning_ia/widgets/skeleton.dart';
+import 'package:aelion/services/course_api_service.dart';
+import 'package:aelion/widgets/skeleton.dart';
 
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
@@ -119,7 +119,7 @@ class _OutlineContent extends StatelessWidget {
                   const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -144,8 +144,7 @@ class _FallbackBanner extends StatelessWidget {
               child: Text(
                 'Showing cached content. Tap Regenerate for the latest version.',
                 style: TextStyle(
-                    color:
-                        Theme.of(context).colorScheme.onSecondaryContainer),
+                    color: Theme.of(context).colorScheme.onSecondaryContainer),
               ),
             ),
           ],
@@ -171,8 +170,7 @@ class _OutlineSkeleton extends StatelessWidget {
             title: Skeleton(height: 16, width: 200),
             subtitle: Skeleton(height: 14, width: double.infinity),
             trailing: Skeleton(height: 16, width: 40),
-            contentPadding:
-                EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           ),
         );
       },
