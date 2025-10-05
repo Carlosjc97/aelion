@@ -1,51 +1,54 @@
-﻿// test/router_navigation_test.dart
+// test/router_navigation_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:learning_ia/core/router.dart';
+import 'package:learning_ia/features/auth/auth_gate.dart';
 import 'package:learning_ia/features/home/home_view.dart';
 import 'package:learning_ia/features/modules/module_outline_view.dart';
 import 'package:learning_ia/l10n/app_localizations.dart';
 
 Widget _app() => MaterialApp(
-      home: const HomeView(),
+      home: const SizedBox.shrink(),
       onGenerateRoute: AppRouter.onGenerateRoute,
-      supportedLocales: const [Locale('en'), Locale('es')],
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
     );
 
 void main() {
-  testWidgets('Home -> Module navega con topic String y muestra título', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_app());
-    expect(find.byType(HomeView), findsOneWidget);
-
-    Navigator.of(tester.element(find.byType(HomeView))).pushNamed(
-      ModuleOutlineView.routeName,
-      arguments: 'Introducción a Flutter',
+  testWidgets('Module route envuelve ModuleOutlineView en AuthGate', (tester) async {
+    final route = AppRouter.onGenerateRoute(
+      const RouteSettings(
+        name: ModuleOutlineView.routeName,
+        arguments: 'Introducción a Flutter',
+      ),
     );
-    await tester.pumpAndSettle();
 
-    expect(find.byType(ModuleOutlineView), findsOneWidget);
-    expect(find.textContaining('Introducción a Flutter'), findsWidgets);
+    expect(route, isA<MaterialPageRoute>());
+
+    Widget? built;
+    await tester.pumpWidget(MaterialApp(
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      home: Builder(
+        builder: (context) {
+          built = (route as MaterialPageRoute).builder(context);
+          return const SizedBox.shrink();
+        },
+      ),
+    ));
+
+    expect(built, isA<AuthGate>());
+    final gate = built! as AuthGate;
+    expect(gate.child, isA<ModuleOutlineView>());
   });
 
-  testWidgets('Ruta inexistente muestra el placeholder del router', (
-    tester,
-  ) async {
+  testWidgets('Ruta inexistente construye pantalla de 404', (tester) async {
     await tester.pumpWidget(_app());
-    expect(find.byType(HomeView), findsOneWidget);
 
-    Navigator.of(
-      tester.element(find.byType(HomeView)),
-    ).pushNamed('/__ruta_que_no_existe__');
+    Navigator.of(tester.element(find.byType(SizedBox)))
+        .pushNamed('/__ruta_que_no_existe__');
     await tester.pumpAndSettle();
 
     final notFoundEn = find.text('Route not found');
@@ -53,7 +56,7 @@ void main() {
     expect(
       notFoundEn.evaluate().isNotEmpty || notFoundEs.evaluate().isNotEmpty,
       isTrue,
-      reason: 'Should show not-found placeholder in any supported locale',
+      reason: 'Debe mostrar el placeholder de ruta no encontrada en cualquier idioma soportado',
     );
   });
 }

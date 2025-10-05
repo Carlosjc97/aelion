@@ -1,14 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permiso de red -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name="${applicationName}"
         android:label="Aelion"
         android:icon="@mipmap/ic_launcher"
-
-        <!-- Permitir HTTP en desarrollo -->
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
 
@@ -37,7 +34,6 @@
             android:value="2" />
     </application>
 
-    <!-- (Opcional) consultas para intents del sistema -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />

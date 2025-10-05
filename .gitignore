@@ -105,3 +105,5 @@ gitleaks-temp/
 results.sarif
 *.tar.gz
 *.zip
+android/app/google-services.json
+.gitignore

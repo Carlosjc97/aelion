@@ -1,0 +1,6 @@
+runtime: nodejs20
+api:
+  entrypoint: node server/server.js
+env:
+  - name: OPENAI_API_KEY
+    value: ${projects.${PROJECT_ID}/secrets/OPENAI_API_KEY}
