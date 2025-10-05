@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'package:learning_ia/features/lesson/lesson_view.dart';
-import 'package:learning_ia/services/course_api_service.dart';
-import 'package:learning_ia/services/progress_service.dart';
+import 'package:aelion/services/course_api_service.dart';
+import 'package:aelion/widgets/skeleton.dart';
 
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
@@ -15,9 +15,9 @@ class ModuleOutlineView extends StatefulWidget {
 }
 
 class _ModuleOutlineViewState extends State<ModuleOutlineView> {
-  bool _loading = true;
-  bool _initialized = false;
-  Map<String, dynamic>? _outline;
+  bool _isLoading = true;
+  String? _error;
+  Map<String, dynamic>? _outlineResponse; // Contains source and outline
   late String _courseId;
 
   @override
@@ -25,346 +25,126 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
     super.initState();
     _courseId = (widget.topic?.trim().isNotEmpty ?? false)
         ? widget.topic!.trim()
-        : 'Curso';
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_initialized) return;
-    _initialized = true;
-
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if ((widget.topic == null || widget.topic!.trim().isEmpty) &&
-        args is String &&
-        args.trim().isNotEmpty) {
-      _courseId = args.trim();
-    }
-
+        : 'Default Topic';
     _loadOutline();
   }
 
-  Future<void> _loadOutline() async {
-    setState(() => _loading = true);
-    final svc = ProgressService();
+  Future<void> _loadOutline({bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      setState(() => _isLoading = true);
+    }
+    setState(() => _error = null);
 
     try {
-      Map<String, dynamic>? outline = await svc.load(_courseId);
-      if (outline == null || outline.isEmpty) {
-        outline = await CourseApiService.generateOutline(topic: _courseId);
-      }
-
-      outline = _ensureUnlockState(outline);
-      await svc.save(_courseId, outline);
-
+      final response = await CourseApiService.generateOutline(topic: _courseId);
       if (!mounted) return;
       setState(() {
-        _outline = outline;
-        _loading = false;
+        _outlineResponse = response;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo cargar el outline: $e')),
-      );
-    }
-  }
-
-  Map<String, dynamic> _ensureUnlockState(Map<String, dynamic> outline) {
-    final modulesRaw = outline['modules'];
-    final modulesList = modulesRaw is List ? modulesRaw : const [];
-    final normalizedModules = <Map<String, dynamic>>[];
-
-    for (var mIdx = 0; mIdx < modulesList.length; mIdx++) {
-      final rawModule = modulesList[mIdx];
-      if (rawModule is! Map) continue;
-      final moduleMap = Map<String, dynamic>.from(rawModule);
-      final lessonsRaw = moduleMap['lessons'];
-      final lessonsList = lessonsRaw is List ? lessonsRaw : const [];
-      final normalizedLessons = <Map<String, dynamic>>[];
-
-      for (var lIdx = 0; lIdx < lessonsList.length; lIdx++) {
-        final rawLesson = lessonsList[lIdx];
-        if (rawLesson is! Map) continue;
-        final lessonMap = Map<String, dynamic>.from(rawLesson);
-        final unlocked = mIdx == 0 && lIdx == 0;
-        lessonMap['id'] =
-            lessonMap['id']?.toString() ?? 'lesson-${mIdx + 1}-${lIdx + 1}';
-        lessonMap['title'] =
-            lessonMap['title']?.toString() ?? 'Leccion ${mIdx + 1}.${lIdx + 1}';
-        lessonMap['locked'] = unlocked ? false : (lessonMap['locked'] == true);
-        lessonMap['status'] = (lessonMap['status'] as String?) ?? 'todo';
-        normalizedLessons.add(lessonMap);
-      }
-
-      if (normalizedLessons.isEmpty) {
-        normalizedLessons.add({
-          'id': 'lesson-${mIdx + 1}-1',
-          'title': 'Leccion ${mIdx + 1}.1',
-          'locked': mIdx == 0 ? false : true,
-          'status': 'todo',
+      setState(() {
+        _error = 'Error loading content: ${e.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
         });
       }
-
-      final moduleLocked = mIdx == 0 ? false : (moduleMap['locked'] == true);
-      if (normalizedLessons.isNotEmpty) {
-        normalizedLessons[0]['locked'] = moduleLocked ? true : false;
-      }
-
-      normalizedModules.add({
-        ...moduleMap,
-        'id': moduleMap['id']?.toString() ?? 'module-${mIdx + 1}',
-        'title': moduleMap['title']?.toString() ?? 'Modulo ${mIdx + 1}',
-        'locked': moduleLocked,
-        'lessons': normalizedLessons,
-      });
-    }
-
-    if (normalizedModules.isEmpty) {
-      normalizedModules.add({
-        'id': 'module-1',
-        'title': 'Modulo 1',
-        'locked': false,
-        'lessons': [
-          {
-            'id': 'lesson-1-1',
-            'title': 'Leccion 1.1',
-            'locked': false,
-            'status': 'todo',
-          },
-        ],
-      });
-    }
-
-    final hoursValue = outline['estimated_hours'];
-    final parsedHours = int.tryParse('$hoursValue');
-
-    final sanitized = {
-      ...outline,
-      'topic': outline['topic']?.toString() ?? _courseId,
-      'level': outline['level']?.toString() ?? 'beginner',
-      'modules': normalizedModules,
-      'estimated_hours':
-          parsedHours ?? _fallbackEstimatedHours(normalizedModules),
-    };
-
-    return sanitized;
-  }
-
-  int _fallbackEstimatedHours(List<Map<String, dynamic>> modules) {
-    final totalLessons = modules.fold<int>(0, (sum, module) {
-      final lessons = module['lessons'];
-      if (lessons is List) return sum + lessons.length;
-      return sum;
-    });
-    if (totalLessons == 0) return 6;
-    return (totalLessons * 1.5).ceil();
-  }
-
-  Future<void> _regenerate() async {
-    setState(() => _loading = true);
-    try {
-      var outline = await CourseApiService.generateOutline(topic: _courseId);
-      outline = _ensureUnlockState(outline);
-      await ProgressService().save(_courseId, outline);
-      if (!mounted) return;
-      setState(() {
-        _outline = outline;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('No se pudo regenerar: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = _outline?['topic']?.toString() ?? _courseId;
-
+    final title = widget.topic ?? 'Outline';
     return Scaffold(
-      appBar: AppBar(title: Text(title), centerTitle: true),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _outline == null
-          ? _EmptyState(onRetry: _loadOutline)
-          : RefreshIndicator(
-              onRefresh: _loadOutline,
-              child: _buildOutline(context),
-            ),
-      floatingActionButton: _outline == null || _loading
+      appBar: AppBar(
+        title: Text(title),
+        centerTitle: true,
+      ),
+      body: _buildBody(),
+      floatingActionButton: _isLoading || _error != null
           ? null
           : FloatingActionButton.extended(
-              onPressed: _regenerate,
-              icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Regenerar'),
+              onPressed: () => _loadOutline(forceRefresh: true),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Regenerate'),
             ),
     );
   }
 
-  Widget _buildOutline(BuildContext context) {
-    final modules = (_outline!['modules'] as List?) ?? const [];
-    if (modules.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 120),
-        children: const [Center(child: Text('Sin Modulos por ahora'))],
-      );
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const _OutlineSkeleton();
     }
-
-    final level = _outline!['level']?.toString();
-    final estimated = _outline!['estimated_hours'];
-
-    final tiles = <Widget>[
-      _OutlineSummary(level: level, estimatedHours: estimated),
-      const SizedBox(height: 12),
-    ];
-
-    for (var i = 0; i < modules.length; i++) {
-      final moduleRaw = modules[i];
-      if (moduleRaw is! Map) continue;
-      final module = Map<String, dynamic>.from(moduleRaw);
-      final lessons = (module['lessons'] as List? ?? const [])
-          .whereType<Map>()
-          .map((lesson) => Map<String, dynamic>.from(lesson))
-          .toList();
-
-      tiles.add(
-        Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ExpansionTile(
-            initiallyExpanded: i == 0,
-            title: Text(module['title']?.toString() ?? 'Modulo ${i + 1}'),
-            subtitle: Text(
-              module['locked'] == true ? 'Bloqueado' : 'Desbloqueado',
-            ),
-            children: [
-              for (final lesson in lessons)
-                _LessonTile(
-                  courseId: _courseId,
-                  moduleId: module['id']?.toString() ?? 'module-${i + 1}',
-                  lesson: lesson,
-                  onChanged: (outline) {
-                    setState(() => _outline = outline);
-                  },
-                ),
-            ],
-          ),
-        ),
-      );
+    if (_error != null) {
+      return _ErrorState(errorMessage: _error!, onRetry: _loadOutline);
     }
+    final outlineList = _outlineResponse?['outline'] as List?;
+    if (outlineList == null || outlineList.isEmpty) {
+      return _ErrorState(
+          errorMessage: 'No content available for this topic.',
+          onRetry: _loadOutline);
+    }
+    return _OutlineContent(response: _outlineResponse!);
+  }
+}
+
+// --- UI Widgets ---
+
+class _OutlineContent extends StatelessWidget {
+  final Map<String, dynamic> response;
+  const _OutlineContent({required this.response});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<dynamic> outline = response['outline'] ?? [];
+    final String source = response['source'] ?? 'unknown';
 
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
-      children: tiles,
-    );
-  }
-}
-
-class _LessonTile extends StatelessWidget {
-  final String courseId;
-  final String moduleId;
-  final Map<String, dynamic> lesson;
-  final ValueChanged<Map<String, dynamic>> onChanged;
-
-  const _LessonTile({
-    required this.courseId,
-    required this.moduleId,
-    required this.lesson,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locked = lesson['locked'] == true;
-    final done = (lesson['status']?.toString() ?? 'todo') == 'done';
-    final premium = lesson['premium'] == true;
-    final description = lesson['description']?.toString();
-
-    return ListTile(
-      enabled: !locked,
-      leading: Icon(
-        done
-            ? Icons.check_circle
-            : (locked ? Icons.lock : Icons.circle_outlined),
-        color: done
-            ? Colors.green
-            : (locked ? Theme.of(context).disabledColor : null),
-      ),
-      title: Text(lesson['title']?.toString() ?? 'Leccion'),
-      subtitle: description != null && description.isNotEmpty
-          ? Text(description, maxLines: 2, overflow: TextOverflow.ellipsis)
-          : Text(
-              locked
-                  ? 'Bloqueada'
-                  : (premium ? 'Premium' : (done ? 'Completada' : 'Pendiente')),
+      padding: const EdgeInsets.all(12.0),
+      children: [
+        if (source == 'cache') const _FallbackBanner(),
+        ...outline.map((item) {
+          final section = Map<String, dynamic>.from(item);
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: const Icon(Icons.article_outlined, size: 28),
+              title: Text(section['title'] ?? 'Untitled Section'),
+              subtitle: Text(section['description'] ?? 'No description.'),
+              trailing: Text('${section['duration_minutes'] ?? '?'} min'),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             ),
-      onTap: locked
-          ? null
-          : () async {
-              final ok = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => LessonView(
-                    courseId: courseId,
-                    moduleId: moduleId,
-                    lessonId: lesson['id']?.toString() ?? 'lesson',
-                    title: (lesson['title'] as String?) ?? 'Leccion',
-                    description: description,
-                    premium: premium,
-                  ),
-                ),
-              );
-
-              if (ok == true) {
-                final outline = await ProgressService().load(courseId);
-                if (outline != null) onChanged(outline);
-              }
-            },
+          );
+        }),
+      ],
     );
   }
 }
 
-class _OutlineSummary extends StatelessWidget {
-  final String? level;
-  final dynamic estimatedHours;
-
-  const _OutlineSummary({required this.level, required this.estimatedHours});
+class _FallbackBanner extends StatelessWidget {
+  const _FallbackBanner();
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final levelLabel = (level ?? 'beginner').toUpperCase();
-    final hours = _formatHours(estimatedHours);
-
     return Card(
+      color: Theme.of(context).colorScheme.secondaryContainer,
+      margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
-            Icon(Icons.track_changes_outlined, color: cs.primary),
+            Icon(Icons.info_outline,
+                color: Theme.of(context).colorScheme.onSecondaryContainer),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nivel: $levelLabel',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Horas estimadas: $hours',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
+              child: Text(
+                'Showing cached content. Tap Regenerate for the latest version.',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer),
               ),
             ),
           ],
@@ -372,29 +152,61 @@ class _OutlineSummary extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _formatHours(dynamic value) {
-    final number = int.tryParse('$value');
-    if (number == null) return 'n/d';
-    return '$number h';
+class _OutlineSkeleton extends StatelessWidget {
+  const _OutlineSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12.0),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: const ListTile(
+            leading: Skeleton(height: 28, width: 28, cornerRadius: 14),
+            title: Skeleton(height: 16, width: 200),
+            subtitle: Skeleton(height: 14, width: double.infinity),
+            trailing: Skeleton(height: 16, width: 40),
+            contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          ),
+        );
+      },
+    );
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _ErrorState extends StatelessWidget {
+  final String errorMessage;
   final VoidCallback onRetry;
 
-  const _EmptyState({required this.onRetry});
+  const _ErrorState({required this.errorMessage, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('No hay outline disponible'),
-          const SizedBox(height: 8),
-          FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }

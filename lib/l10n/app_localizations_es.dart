@@ -15,6 +15,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginTitle => 'Aprende mas rapido con IA';
 
   @override
+  String get loginSubtitle => 'Tu ruta de aprendizaje en pocos toques';
+
+  @override
+  String get loginHighlightPersonalized => 'Esquemas personalizados en minutos';
+
+  @override
+  String get loginHighlightStreak => 'Rachas diarias para motivarte';
+
+  @override
+  String get loginHighlightSync =>
+      'Sincroniza en web y Android con tu cuenta Google';
+
+  @override
   String get loginButton => 'Iniciar sesion con Google';
 
   @override

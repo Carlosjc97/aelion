@@ -1,186 +1,166 @@
-﻿import 'dart:convert';
+import 'dart:convert';
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 
+/// Servicio para consumir el endpoint /outline.
+/// - Usa API_BASE_URL desde .env.public
+/// - En release: NO permite localhost (falla explÃ­citamente)
+/// - En dev: puede usar emulador si USE_FUNCTIONS_EMULATOR=true
+/// - Soporta Auth con Firebase (Bearer idToken)
+/// - Reintentos con backoff en 429/5xx
 class CourseApiService {
-  /// Base del proxy. Usa API_BASE_URL del .env (ej: http://192.168.100.21:8787)
-  static String get _base {
-    final raw = dotenv.env['API_BASE_URL']?.trim();
-    if (raw == null || raw.isEmpty) return 'http://localhost:8787';
-    return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
-  }
+  CourseApiService._();
 
-  static Uri _uri(String path) => Uri.parse('$_base$path');
+  /// Determina la base URL a usar.
+  /// Prioridad:
+  /// 1) API_BASE_URL de .env.public (recomendado para prod y CI)
+  /// 2) Si en dev USE_FUNCTIONS_EMULATOR=true, arma URL del emulador
+  /// 3) (Solo dev) Fallback localhost:8787 para compat con `server/`
+  static String get _baseUrl {
+    final envUrl = dotenv.env['API_BASE_URL']?.trim();
 
-  static Map<String, dynamic> _asMap(dynamic value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return value.map((key, val) => MapEntry('$key', val));
-    return <String, dynamic>{};
-  }
+    // Si hay env explÃ­cita:
+    if (envUrl != null && envUrl.isNotEmpty) {
+      final sanitized = envUrl.endsWith('/')
+          ? envUrl.substring(0, envUrl.length - 1)
+          : envUrl;
 
-  static List<Map<String, dynamic>> _asMapList(dynamic value) {
-    if (value is! List) return <Map<String, dynamic>>[];
-    return value
-        .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
-        .toList(growable: false);
-  }
-
-  static bool _asBool(dynamic value, {bool fallback = false}) {
-    if (value is bool) return value;
-    if (value is String) {
-      final normalized = value.toLowerCase().trim();
-      if (['true', '1', 'yes', 'y'].contains(normalized)) return true;
-      if (['false', '0', 'no', 'n'].contains(normalized)) return false;
-    }
-    return fallback;
-  }
-
-  static Map<String, dynamic> _shapeOutline(Map<String, dynamic> raw) {
-    final outline = <String, dynamic>{
-      'topic': raw['topic']?.toString() ?? 'Curso',
-      'level': raw['level']?.toString() ?? 'beginner',
-    };
-
-    final modules = _asMapList(raw['modules']).asMap().entries.map((entry) {
-      final moduleIndex = entry.key;
-      final module = Map<String, dynamic>.from(entry.value);
-      final lessons = _asMapList(module['lessons']).asMap().entries.map((
-        lessonEntry,
-      ) {
-        final lessonIndex = lessonEntry.key;
-        final lesson = Map<String, dynamic>.from(lessonEntry.value);
-        final unlocked = moduleIndex == 0 && lessonIndex == 0;
-        final shaped = {
-          ...lesson,
-          'id':
-              lesson['id']?.toString() ??
-              'lesson-${moduleIndex + 1}-${lessonIndex + 1}',
-          'title':
-              lesson['title']?.toString() ??
-              'Leccion ${moduleIndex + 1}.${lessonIndex + 1}',
-          'description':
-              lesson['description']?.toString() ??
-              lesson['content']?.toString(),
-          'locked': _asBool(lesson['locked'], fallback: !unlocked),
-          'status': _coerceStatus(lesson['status']),
-          'premium': lesson.containsKey('premium')
-              ? _asBool(lesson['premium'], fallback: false)
-              : null,
-        };
-        shaped.removeWhere((key, value) => value == null);
-        return shaped;
-      }).toList();
-
-      if (lessons.isEmpty) {
-        lessons.add({
-          'id': 'lesson-${moduleIndex + 1}-1',
-          'title': 'Leccion ${moduleIndex + 1}.1',
-          'locked': moduleIndex == 0 ? false : true,
-          'status': 'todo',
-        });
+      // Bloquear localhost en release
+      if (kReleaseMode &&
+          (sanitized.contains('localhost') ||
+              sanitized.contains('127.0.0.1'))) {
+        throw StateError(
+          'API_BASE_URL no puede apuntar a localhost/127.0.0.1 en release.',
+        );
       }
-
-      final isFirstModule = moduleIndex == 0;
-      final locked = _asBool(module['locked'], fallback: !isFirstModule);
-      if (lessons.isNotEmpty && moduleIndex > 0) {
-        lessons[0] = {...lessons[0], 'locked': locked};
-      } else if (lessons.isNotEmpty && isFirstModule) {
-        lessons[0] = {...lessons[0], 'locked': false};
-      }
-
-      return {
-        ...module,
-        'id': module['id']?.toString() ?? 'module-${moduleIndex + 1}',
-        'title': module['title']?.toString() ?? 'Modulo ${moduleIndex + 1}',
-        'locked': locked,
-        'lessons': lessons,
-      };
-    }).toList();
-
-    final modulesOrFallback = modules.isEmpty
-        ? [
-            {
-              'id': 'module-1',
-              'title': 'Modulo 1',
-              'locked': false,
-              'lessons': [
-                {
-                  'id': 'lesson-1-1',
-                  'title': 'Leccion 1.1',
-                  'locked': false,
-                  'status': 'todo',
-                },
-              ],
-            },
-          ]
-        : modules;
-
-    outline['modules'] = modulesOrFallback;
-
-    final requestedHours = _parseHours(raw['estimated_hours']);
-    outline['estimated_hours'] =
-        requestedHours ?? _fallbackEstimatedHours(modulesOrFallback);
-
-    return outline;
-  }
-
-  static int? _parseHours(dynamic value) {
-    final number = double.tryParse(value?.toString() ?? '');
-    if (number == null || number <= 0) {
-      return null;
-    }
-    return number.round();
-  }
-
-  static int _fallbackEstimatedHours(List<dynamic> modules) {
-    final totalLessons = modules.fold<int>(0, (sum, module) {
-      final lessons = module is Map<String, dynamic>
-          ? module['lessons']
-          : module is Map
-          ? module['lessons']
-          : null;
-      if (lessons is List) {
-        return sum + lessons.length;
-      }
-      return sum;
-    });
-
-    if (totalLessons == 0) {
-      return 6;
+      return sanitized;
     }
 
-    return (totalLessons * 1.5).ceil();
+    // Si no hay env explÃ­cita y estamos en release â†’ error controlado
+    if (kReleaseMode) {
+      throw StateError(
+        'API_BASE_URL debe estar configurado en release (assets/env/.env.public).',
+      );
+    }
+
+    // Dev: Â¿usar emulador?
+    final useEmu =
+        (dotenv.env['USE_FUNCTIONS_EMULATOR'] ?? '').toLowerCase() == 'true';
+    if (useEmu) {
+      final project = (dotenv.env['FIREBASE_PROJECT_ID'] ?? '').trim();
+      // Host por plataforma (Android Emulator usa 10.0.2.2)
+      final host =
+          (dotenv.env['FUNCTIONS_EMULATOR_HOST'] ?? 'localhost').trim();
+      final port = (dotenv.env['FUNCTIONS_EMULATOR_PORT'] ?? '5001').trim();
+      if (project.isEmpty) {
+        throw StateError(
+          'FIREBASE_PROJECT_ID requerido cuando USE_FUNCTIONS_EMULATOR=true.',
+        );
+      }
+      return 'http://$host:$port/$project/us-east4';
+    }
+
+    // Dev: fallback a server local legacy (solo para compatibilidad)
+    return 'http://localhost:8787';
   }
 
-  static String _coerceStatus(dynamic value) {
-    final raw = value?.toString().toLowerCase().trim();
-    const allowed = {'todo', 'in_progress', 'done'};
-    return allowed.contains(raw) ? raw! : 'todo';
-  }
+  static Uri _uri(String path) => Uri.parse('$_baseUrl$path');
 
+  /// Llama a /outline con topic, depth y lang.
+  /// Devuelve un Map con `source` ('cache'|'fresh') y `outline` (List).
   static Future<Map<String, dynamic>> generateOutline({
     required String topic,
+    String depth = 'medium',
+    String lang = 'en',
+    Duration timeout = const Duration(seconds: 25),
+    int maxRetries = 3,
   }) async {
     final trimmedTopic = topic.trim();
     if (trimmedTopic.isEmpty) {
-      throw ArgumentError('topic requerido');
+      throw ArgumentError('Topic cannot be empty.');
     }
 
-    final response = await http.post(
-      _uri('/outline'),
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({'topic': trimmedTopic}),
-    );
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken();
 
-    if (response.statusCode != 200) {
-      final detail = response.body.isNotEmpty ? response.body : 'sin detalle';
-      throw Exception('outline_error (${response.statusCode}): $detail');
+    // Intentos con backoff exponencial para 429/5xx
+    int attempt = 0;
+    Object? lastError;
+    while (attempt <= maxRetries) {
+      try {
+        final res = await http
+            .post(
+              _uri('/outline'),
+              headers: {
+                'Content-Type': 'application/json',
+                if (idToken != null) 'Authorization': 'Bearer $idToken',
+                if (user != null) 'X-User-Id': user.uid,
+                'Accept': 'application/json',
+              },
+              body: jsonEncode({
+                'topic': trimmedTopic,
+                'depth': depth,
+                'lang': lang,
+              }),
+            )
+            .timeout(timeout);
+
+        // OK
+        if (res.statusCode == 200) {
+          final decoded = jsonDecode(res.body);
+          if (decoded is Map<String, dynamic>) {
+            return decoded;
+          }
+          throw const FormatException('Invalid response format from server.');
+        }
+
+        // Errores reintentarbles
+        if (res.statusCode == 429 ||
+            (res.statusCode >= 500 && res.statusCode < 600)) {
+          attempt++;
+          if (attempt > maxRetries) {
+            final detail = res.body.isNotEmpty ? res.body : 'No details';
+            throw Exception(
+              'Failed after retries (${res.statusCode}): $detail',
+            );
+          }
+          // Backoff exponencial con jitter
+          final delayMs = _backoffWithJitterMs(attempt);
+          await Future.delayed(Duration(milliseconds: delayMs));
+          continue;
+        }
+
+        // Errores no reintentarbles
+        final detail = res.body.isNotEmpty ? res.body : 'No details';
+        throw Exception(
+            'Failed to generate outline (${res.statusCode}): $detail');
+      } catch (e) {
+        lastError = e;
+        attempt++;
+        if (attempt > maxRetries) {
+          rethrow;
+        }
+        // Backoff ante excepciones de red/timeout
+        final delayMs = _backoffWithJitterMs(attempt);
+        await Future.delayed(Duration(milliseconds: delayMs));
+      }
     }
 
-    final decoded = jsonDecode(response.body);
-    final map = _asMap(decoded);
-    return _shapeOutline(map);
+    // No deberÃ­a llegar aquÃ­
+    throw Exception('Failed to generate outline. Last error: $lastError');
+  }
+
+  /// Backoff exponencial con jitter (ms).
+  static int _backoffWithJitterMs(int attempt) {
+    // base 400ms, cap ~3s
+    final base = 400;
+    final cap = 3000;
+    final expo = base * math.pow(2, attempt - 1).toInt();
+    final jitter = math.Random().nextInt(250); // +/- 250ms
+    return math.min(cap, expo + jitter);
   }
 }

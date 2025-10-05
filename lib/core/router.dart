@@ -1,55 +1,94 @@
 import 'package:flutter/material.dart';
-import 'package:learning_ia/features/auth/auth_gate.dart';
-import 'package:learning_ia/features/auth/login_screen.dart';
-import 'package:learning_ia/features/home/home_view.dart';
-import 'package:learning_ia/features/modules/module_outline_view.dart';
+
+import 'package:aelion/features/auth/auth.dart';
+import 'package:aelion/features/courses/course_entry_view.dart';
+import 'package:aelion/features/home/home_view.dart';
+import 'package:aelion/features/modules/module_outline_view.dart';
+import 'package:aelion/features/quiz/quiz_screen.dart';
+import 'package:aelion/features/topics/topic_search_view.dart';
+import 'package:aelion/widgets/not_found_view.dart';
 
 class AppRouter {
+  const AppRouter._();
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        return MaterialPageRoute(
-          builder: (_) => const AuthGate(child: HomeView()),
-          settings: const RouteSettings(name: '/'),
+        return _guarded(
+          const HomeView(),
+          const RouteSettings(name: HomeView.routeName),
         );
-      case LoginScreen.routeName:
-        return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-          settings: const RouteSettings(name: LoginScreen.routeName),
+      case SignInScreen.routeName:
+        return MaterialPageRoute<void>(
+          builder: (_) => const SignInScreen(),
+          settings: const RouteSettings(name: SignInScreen.routeName),
         );
       case HomeView.routeName:
-        return MaterialPageRoute(
-          builder: (_) => const AuthGate(child: HomeView()),
-          settings: const RouteSettings(name: HomeView.routeName),
+        return _guarded(
+          const HomeView(),
+          const RouteSettings(name: HomeView.routeName),
+        );
+      case CourseEntryView.routeName:
+        return _guarded(
+          const CourseEntryView(),
+          const RouteSettings(name: CourseEntryView.routeName),
+        );
+      case TopicSearchView.routeName:
+        return _guarded(
+          const TopicSearchView(),
+          RouteSettings(
+            name: TopicSearchView.routeName,
+            arguments: settings.arguments,
+          ),
         );
       case ModuleOutlineView.routeName:
-        final arg = settings.arguments;
-        final topic = (arg is String) ? arg : null;
-        return MaterialPageRoute(
-          builder: (_) => AuthGate(child: ModuleOutlineView(topic: topic)),
-          settings: settings,
+        final topic =
+            settings.arguments is String ? settings.arguments as String : null;
+        return _guarded(
+          ModuleOutlineView(topic: topic),
+          RouteSettings(
+            name: ModuleOutlineView.routeName,
+            arguments: topic,
+          ),
+        );
+      case QuizScreen.routeName:
+        final topic = settings.arguments;
+        if (topic is! String || topic.trim().isEmpty) {
+          return _invalidRoute(settings, 'QuizScreen requires a topic string');
+        }
+        return _guarded(
+          QuizScreen(topic: topic),
+          RouteSettings(
+            name: QuizScreen.routeName,
+            arguments: topic,
+          ),
         );
       default:
-        return MaterialPageRoute(
-          builder: (_) => const _NotFoundPage(),
-          settings: const RouteSettings(name: '/404'),
-        );
+        return onUnknownRoute(settings);
     }
   }
 
   static Route<dynamic> onUnknownRoute(RouteSettings settings) {
-    return MaterialPageRoute(
-      builder: (_) => const _NotFoundPage(),
-      settings: const RouteSettings(name: '/404'),
+    return MaterialPageRoute<void>(
+      builder: (context) => NotFoundView(routeName: settings.name),
+      settings: const RouteSettings(name: 'not-found'),
     );
   }
-}
 
-class _NotFoundPage extends StatelessWidget {
-  const _NotFoundPage();
+  static MaterialPageRoute<dynamic> _guarded(
+    Widget child,
+    RouteSettings settings,
+  ) {
+    return MaterialPageRoute<dynamic>(
+      builder: (_) => AuthGate(child: child),
+      settings: settings,
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Ruta no encontrada')));
+  static Route<dynamic> _invalidRoute(RouteSettings settings, String reason) {
+    return MaterialPageRoute<void>(
+      builder: (_) => NotFoundView(routeName: settings.name, reason: reason),
+      settings: RouteSettings(name: 'invalid-${settings.name ?? 'route'}'),
+    );
   }
 }

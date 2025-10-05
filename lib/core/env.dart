@@ -1,12 +1,12 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Env {
-  /// Devuelve el entorno configurado o 'desconocido' si no hay configuración.
+  /// Devuelve el entorno configurado o 'desconocido' si no hay configuraciÃ³n.
   static String get env => dotenv.isInitialized
       ? dotenv.env['AELION_ENV'] ?? 'desconocido'
       : 'desconocido';
 
-  /// Devuelve la URL base (BASE_URL) o una cadena vacía si no está configurada.
+  /// Devuelve la URL base (BASE_URL) o una cadena vacÃ­a si no estÃ¡ configurada.
   static String get baseUrl =>
       dotenv.isInitialized ? dotenv.env['BASE_URL'] ?? '' : '';
 

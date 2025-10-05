@@ -16,20 +16,20 @@ class CourseProgress {
   });
 
   Map<String, dynamic> toJson() => {
-    'topic': topic,
-    'unlockedSteps': unlockedSteps.toList(),
-    'lastStep': lastStep,
-    'completed': completed,
-  };
+        'topic': topic,
+        'unlockedSteps': unlockedSteps.toList(),
+        'lastStep': lastStep,
+        'completed': completed,
+      };
 
   factory CourseProgress.fromJson(Map<String, dynamic> json) => CourseProgress(
-    topic: json['topic'] as String,
-    unlockedSteps: Set<int>.from(
-      (json['unlockedSteps'] as List).map((e) => e as int),
-    ),
-    lastStep: json['lastStep'] as int,
-    completed: json['completed'] as bool,
-  );
+        topic: json['topic'] as String,
+        unlockedSteps: Set<int>.from(
+          (json['unlockedSteps'] as List).map((e) => e as int),
+        ),
+        lastStep: json['lastStep'] as int,
+        completed: json['completed'] as bool,
+      );
 }
 
 class ProgressService {

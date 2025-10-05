@@ -1,6 +1,21 @@
 runtime: nodejs20
-api:
+
+# Deja que App Hosting use su builder nativo. (Quitamos el bloque 'build')
+# build:
+#   builder: heroku/builder:22
+
+runConfig:
   entrypoint: node server/server.js
+
 env:
-  - name: OPENAI_API_KEY
-    value: ${projects.${PROJECT_ID}/secrets/OPENAI_API_KEY}
+  # Usa 'variable' en lugar de 'name'
+  # Limita ambas a RUNTIME para que NO se escriban durante BUILD
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+    availability:
+      - RUNTIME
+
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - RUNTIME
