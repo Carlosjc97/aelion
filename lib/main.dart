@@ -1,5 +1,5 @@
-// lib/main.dart
-import 'dart:async';
+﻿import 'dart:async';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -18,8 +18,9 @@ import 'firebase_options.dart';
 
 Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await _loadEnv();
+  await dotenv.load(fileName: 'assets/env/.env.public');
+  if (!kReleaseMode) { debugPrint('[Aelion][env] API_BASE_URL=' + (dotenv.env['API_BASE_URL'] ?? dotenv.env['BASE_URL'] ?? 'NULL')); }
+await _loadEnv();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -33,7 +34,7 @@ Future<void> _bootstrap() async {
   await ProgressService().init();
 }
 
-void main() {
+void main() async {
   runZonedGuarded(
     () async {
       await _bootstrap();
@@ -52,23 +53,22 @@ void main() {
 }
 
 Future<void> _loadEnv() async {
-  try {
-    await dotenv.load(fileName: 'env.public');
-    debugPrint(
-      '[Aelion] Cargado env.public (assets). API_BASE_URL=${dotenv.env['API_BASE_URL']}',
-    );
-    return;
-  } catch (_) {
-    // fallback below
-  }
+  const assetEnvFile = 'assets/env/.env.public';
 
   try {
-    await dotenv.load(fileName: '.env');
-    debugPrint(
-      '[Aelion] Cargado .env (filesystem). API_BASE_URL=${dotenv.env['API_BASE_URL']}',
-    );
+    await dotenv.load(fileName: assetEnvFile);
   } catch (_) {
-    debugPrint('[Aelion] No se pudo cargar env.public ni .env');
+    if (!kReleaseMode) {
+      try {
+        await dotenv.load(fileName: '.env');
+      } catch (_) {}
+    }
+  }
+
+  if (!kReleaseMode) {
+    final apiBase =
+        dotenv.env['API_BASE_URL'] ?? dotenv.env['BASE_URL'] ?? 'NULL';
+    debugPrint('[Aelion][env] API_BASE_URL=' + apiBase);
   }
 }
 
@@ -125,3 +125,5 @@ class AelionApp extends StatelessWidget {
     );
   }
 }
+
+
