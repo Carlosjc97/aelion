@@ -41,6 +41,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to: **'Learn faster with AI'**
   String get loginTitle;
 
+  /// In en, this message translates to: **'Your learning path in a few taps'**
+  String get loginSubtitle;
+
+  /// In en, this message translates to: **'Personalized outlines in minutes'**
+  String get loginHighlightPersonalized;
+
+  /// In en, this message translates to: **'Daily streaks keep you motivated'**
+  String get loginHighlightStreak;
+
+  /// In en, this message translates to: **'Sync across web and Android with your Google account'**
+  String get loginHighlightSync;
+
   /// In en, this message translates to: **'Sign in with Google'**
   String get loginButton;
 

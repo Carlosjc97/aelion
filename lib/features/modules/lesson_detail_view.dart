@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learning_ia/services/progress_service.dart';
+import 'package:aelion/services/progress_service.dart';
 
 class LessonDetailView extends StatefulWidget {
   final String courseId;
@@ -20,7 +20,7 @@ class LessonDetailView extends StatefulWidget {
 class _LessonDetailViewState extends State<LessonDetailView> {
   bool _saving = false;
 
-  /// Índice seleccionado (0=a, 1=b, 2=c, 3=d)
+  /// Ãndice seleccionado (0=a, 1=b, 2=c, 3=d)
   int? _selectedIndex;
 
   /// Estado del chequeo.
@@ -41,7 +41,8 @@ class _LessonDetailViewState extends State<LessonDetailView> {
       final nextXp = await ProgressService().addXp(50);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Lección completada! 🎉 XP total: $nextXp')),
+        SnackBar(
+            content: Text('Â¡LecciÃ³n completada! ðŸŽ‰ XP total: $nextXp')),
       );
       Navigator.pop(context, true);
     } finally {
@@ -68,17 +69,17 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     final quiz = lesson['quiz'] as Map<String, dynamic>?;
 
     return Scaffold(
-      appBar: AppBar(title: Text(lesson['title']?.toString() ?? 'Lección')),
+      appBar: AppBar(title: Text(lesson['title']?.toString() ?? 'LecciÃ³n')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Objetivo de la lección', style: theme.textTheme.titleLarge),
+            Text('Objetivo de la lecciÃ³n', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             const Text(
-              '• Comprender el concepto principal.\n'
-              '• Realizar una pequeña práctica.\n'
-              '• Pasar a la siguiente actividad cuando te sientas listo.',
+              'â€¢ Comprender el concepto principal.\n'
+              'â€¢ Realizar una pequeÃ±a prÃ¡ctica.\n'
+              'â€¢ Pasar a la siguiente actividad cuando te sientas listo.',
             ),
             const SizedBox(height: 16),
 
@@ -104,13 +105,13 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               ),
               const SizedBox(height: 12),
 
-              /// ✅ Nuevo patrón: RadioGroup ancestro controla estado (no deprecado)
+              /// âœ… Nuevo patrÃ³n: RadioGroup ancestro controla estado (no deprecado)
               RadioGroup<int>(
                 groupValue: _selectedIndex,
                 onChanged: (int? idx) {
                   setState(() {
                     _selectedIndex = idx;
-                    _checked = false; // reset al cambiar opción
+                    _checked = false; // reset al cambiar opciÃ³n
                   });
                 },
                 child: Column(
@@ -144,8 +145,8 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                 const SizedBox(height: 8),
                 Text(
                   _isCorrect
-                      ? '✅ ¡Correcto!'
-                      : '❌ Incorrecto. La respuesta era ${quiz['correct'].toString().toUpperCase()}.',
+                      ? 'âœ… Â¡Correcto!'
+                      : 'âŒ Incorrecto. La respuesta era ${quiz['correct'].toString().toUpperCase()}.',
                   style: TextStyle(
                     color: _isCorrect ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,
@@ -155,7 +156,7 @@ class _LessonDetailViewState extends State<LessonDetailView> {
               const SizedBox(height: 24),
             ],
 
-            // Botón de completar
+            // BotÃ³n de completar
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -167,12 +168,12 @@ class _LessonDetailViewState extends State<LessonDetailView> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.emoji_events_outlined),
-                label: const Text('Marcar lección como completada'),
+                label: const Text('Marcar lecciÃ³n como completada'),
               ),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Consejo: si algo no te queda claro, vuelve a leer y practica 2 minutos más antes de avanzar.',
+              'Consejo: si algo no te queda claro, vuelve a leer y practica 2 minutos mÃ¡s antes de avanzar.',
             ),
           ],
         ),

@@ -1,4 +1,4 @@
-// lib/widgets/course_card.dart
+﻿// lib/widgets/course_card.dart
 import 'package:flutter/material.dart';
 
 class Course {
@@ -124,7 +124,7 @@ class DecorationContainerA extends StatelessWidget {
             height: 120,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0x0F1565C0), // azul translúcido
+              color: Color(0x0F1565C0), // azul translÃºcido
             ),
           ),
         ),
@@ -138,6 +138,6 @@ class DecorationContainerB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink(); // sin decoración
+    return const SizedBox.shrink(); // sin decoraciÃ³n
   }
 }

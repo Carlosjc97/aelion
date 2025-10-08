@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:learning_ia/features/topics/topic_search_view.dart';
+import 'package:aelion/features/topics/topic_search_view.dart';
 
 void main() {
   testWidgets('TopicSearchView builds without errors', (widgetTester) async {

@@ -190,4 +190,9 @@ packages:
       name: shared_preferences
       sha256: "6e8bf70b7fef813df4e9a36f658ac46d107db4b4cfe1048b477d4e453a8159f5"
       url: "https://pub.dev"
-    source: ho
+    source: hosted
+    version: "2.5.3"
+
+sdks:
+  dart: ">=3.8.0 <4.0.0"
+  flutter: ">=3.29.0"

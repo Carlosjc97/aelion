@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:learning_ia/core/router.dart';
-import 'package:learning_ia/features/auth/login_screen.dart';
-import 'package:learning_ia/features/home/home_view.dart';
-import 'package:learning_ia/l10n/app_localizations.dart';
+import 'package:aelion/core/router.dart';
+import 'package:aelion/features/auth/sign_in_screen.dart';
+import 'package:aelion/features/home/home_view.dart';
+import 'package:aelion/l10n/app_localizations.dart';
 
 Widget _buildApp() => MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -21,6 +21,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(SignInScreen), findsOneWidget);
   });
 }

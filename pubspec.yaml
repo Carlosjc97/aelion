@@ -1,4 +1,4 @@
-name: learning_ia
+﻿name: aelion
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -15,7 +15,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.0
   flutter_dotenv: ^5.2.1
-  rename: ^3.1.0
+  rename:  ^3.1.0 
   flutter_tts: ^4.2.3
   shared_preferences: ^2.2.2
   firebase_core: ^4.1.1
@@ -26,6 +26,10 @@ dependencies:
   intl: ^0.20.2
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
+  mocktail: ^1.0.3
+
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
@@ -41,3 +45,4 @@ flutter:
     - assets/home/course.png
     - assets/home/language.png
     - assets/home/problem.png
+

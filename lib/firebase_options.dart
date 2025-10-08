@@ -66,5 +66,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'aelion-c90d2.firebasestorage.app',
     measurementId: 'G-3LR7T0VJFT',
   );
-
 }
