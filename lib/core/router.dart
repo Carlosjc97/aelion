@@ -42,13 +42,31 @@ class AppRouter {
           ),
         );
       case ModuleOutlineView.routeName:
-        final topic =
-            settings.arguments is String ? settings.arguments as String : null;
+        ModuleOutlineArgs? args;
+        final rawArgs = settings.arguments;
+        if (rawArgs is ModuleOutlineArgs) {
+          args = rawArgs;
+        } else if (rawArgs is String && rawArgs.trim().isNotEmpty) {
+          args = ModuleOutlineArgs(topic: rawArgs.trim());
+        }
+
+        if (args == null) {
+          return _invalidRoute(
+            settings,
+            'ModuleOutlineView requires a topic string',
+          );
+        }
+
         return _guarded(
-          ModuleOutlineView(topic: topic),
+          ModuleOutlineView(
+            topic: args.topic,
+            level: args.level,
+            language: args.language,
+            goal: args.goal,
+          ),
           RouteSettings(
             name: ModuleOutlineView.routeName,
-            arguments: topic,
+            arguments: args,
           ),
         );
       case QuizScreen.routeName:

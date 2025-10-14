@@ -40,7 +40,6 @@ flutter:
   generate: true
   assets:
     - assets/env/.env.public
-    - env.public
     - assets/home/course.png
     - assets/home/language.png
     - assets/home/problem.png
