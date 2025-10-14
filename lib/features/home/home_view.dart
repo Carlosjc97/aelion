@@ -42,10 +42,15 @@ class _HomeViewState extends State<HomeView> {
     setState(() => _loading = true);
     try {
       if (!mounted) return;
+      final languageCode = Localizations.localeOf(context).languageCode;
       await Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => ModuleOutlineView(topic: topic),
+          builder: (_) => ModuleOutlineView(
+            topic: topic,
+            goal: 'Build expertise in $topic',
+            language: languageCode,
+          ),
         ),
       );
     } finally {

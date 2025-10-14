@@ -49,10 +49,18 @@ class _TopicSearchViewState extends State<TopicSearchView> {
 
       if (!mounted) return;
       if (result is Map && result['quizPassed'] == true) {
+        final level =
+            result['level'] is String ? (result['level'] as String).trim() : '';
+        final languageCode = Localizations.localeOf(context).languageCode;
         await Navigator.pushNamed(
           context,
           ModuleOutlineView.routeName,
-          arguments: topic,
+          arguments: ModuleOutlineArgs(
+            topic: topic,
+            level: level.isEmpty ? null : level,
+            language: languageCode,
+            goal: 'Build expertise in $topic',
+          ),
         );
       }
     } finally {

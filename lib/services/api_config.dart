@@ -25,18 +25,16 @@ class AppConfig {
   }
 
   static String _resolveApiBaseUrl() {
-    final candidates = <String?>[
+    final envCandidates = <String?>[
       dotenv.env['API_BASE_URL'],
       dotenv.env['BASE_URL'],
-    ];
+    ].map(_sanitizeBaseUrl).whereType<String>();
 
-    for (final candidate in candidates) {
-      final sanitized = _sanitizeBaseUrl(candidate);
-      if (sanitized == null) continue;
-      if (kReleaseMode && _isLocalhost(sanitized)) {
+    for (final candidate in envCandidates) {
+      if (kReleaseMode && _isLocalhost(candidate)) {
         continue;
       }
-      return sanitized;
+      return candidate;
     }
 
     if (!kReleaseMode) {
@@ -51,12 +49,16 @@ class AppConfig {
   }
 
   static String? _sanitizeBaseUrl(String? raw) {
-    if (raw == null) return null;
+    if (raw == null) {
+      return null;
+    }
     final trimmed = raw.trim();
-    if (trimmed.isEmpty) return null;
-    return trimmed.endsWith('/')
-        ? trimmed.substring(0, trimmed.length - 1)
-        : trimmed;
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final withoutTrailingSlash =
+        trimmed.endsWith('/') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
+    return withoutTrailingSlash;
   }
 
   static bool _isLocalhost(String value) {

@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 
+import 'package:aelion/services/course_api_service.dart';
 import 'package:aelion/widgets/skeleton.dart';
 
+typedef QuizLoader = Future<List<QuizQuestionDto>> Function({
+  required String topic,
+  required int numQuestions,
+  required String language,
+});
+
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key, required this.topic});
+  const QuizScreen({super.key, required this.topic, this.quizLoader});
 
   static const routeName = '/quiz';
 
   final String topic;
+  final QuizLoader? quizLoader;
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -15,40 +23,58 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final PageController controller = PageController();
-  List<Map<String, Object>>? _questions;
-  late List<int?> _answers;
+  List<QuizQuestionDto>? _questions;
+  List<int?> _answers = const [];
   int index = 0;
   int? _selectedIndex;
   bool _loading = true;
+  String? _error;
+  bool _didInitialLoad = false;
 
   @override
-  void initState() {
-    super.initState();
-    _loadQuestions();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitialLoad) {
+      _didInitialLoad = true;
+      _loadQuestions();
+    }
   }
 
   Future<void> _loadQuestions() async {
-    setState(() => _loading = true);
-    final generated = List<Map<String, Object>>.generate(10, (i) {
-      final detail = i.isEven ? 'concepts' : 'practice';
-      return {
-        'question':
-            'Question ${i + 1} about ${widget.topic}: focus on $detail. Pick the best option.',
-        'options': <String>['Option A', 'Option B', 'Option C', 'Option D'],
-        'correct': i % 4,
-      };
-    });
-
-    await Future<void>.delayed(const Duration(milliseconds: 180));
-    if (!mounted) return;
-
     setState(() {
-      _questions = generated;
-      _answers = List<int?>.filled(generated.length, null);
-      _selectedIndex = _answers.first;
-      index = 0;
-      _loading = false;
+      _loading = true;
+      _error = null;
     });
+
+    try {
+      final localeLanguage = Localizations.localeOf(context).languageCode;
+      final loader = widget.quizLoader ?? CourseApiService.generateQuiz;
+      final questions = await loader(
+        topic: widget.topic,
+        numQuestions: 10,
+        language: localeLanguage,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _questions = questions;
+        _answers = List<int?>.filled(questions.length, null);
+        _selectedIndex = null;
+        index = 0;
+        _loading = false;
+      });
+
+      if (controller.hasClients) {
+        controller.jumpToPage(0);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _answers = const [];
+        _error = 'Failed to load quiz: ${error.toString()}';
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -83,8 +109,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
     final int score = List<int>.generate(total, (i) => i)
         .where((i) => _answers[i] != null)
-        .where((i) => _answers[i] == questions[i]['correct'])
-        .length;
+        .where((i) {
+      final correctIndex = questions[i].correctIndex;
+      if (correctIndex < 0) {
+        return false;
+      }
+      return _answers[i] == correctIndex;
+    }).length;
 
     final String level;
     if (score <= 3) {
@@ -141,21 +172,29 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final questions = _questions;
-    final total = questions?.length ?? 0;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    if (_loading || questions == null) {
+    if (_loading) {
       return const _QuizSkeleton();
     }
+
+    final questions = _questions;
+    if (_error != null || questions == null || questions.isEmpty) {
+      return _QuizError(
+        topic: widget.topic,
+        message: _error ?? 'Unable to load quiz questions.',
+        onRetry: _loadQuestions,
+      );
+    }
+
+    final total = questions.length;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: Text('Mini quiz - ${widget.topic}')),
       body: Column(
         children: [
           LinearProgressIndicator(
-            value: (index + 1) / total,
+            value: total == 0 ? 0 : (index + 1) / total,
             color: colorScheme.primary,
             backgroundColor: colorScheme.surfaceContainerHighest,
           ),
@@ -167,8 +206,7 @@ class _QuizScreenState extends State<QuizScreen> {
               itemCount: total,
               itemBuilder: (context, i) {
                 final question = questions[i];
-                final List<String> options =
-                    (question['options'] as List).cast<String>();
+                final options = question.options;
                 final int? selectedForPage =
                     i == index ? _selectedIndex : _answers[i];
 
@@ -178,7 +216,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        question['question'] as String,
+                        question.question,
                         style: theme.textTheme.titleLarge,
                       ),
                       const SizedBox(height: 12),
@@ -214,6 +252,49 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuizError extends StatelessWidget {
+  const _QuizError({
+    required this.topic,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String topic;
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text('Mini quiz - $topic')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
