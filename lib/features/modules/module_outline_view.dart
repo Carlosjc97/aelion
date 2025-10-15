@@ -1,14 +1,39 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:aelion/services/course_api_service.dart';
 import 'package:aelion/widgets/skeleton.dart';
 
+class ModuleOutlineArgs {
+  const ModuleOutlineArgs({
+    required this.topic,
+    this.level,
+    this.language,
+    this.goal,
+  });
+
+  final String topic;
+  final String? level;
+  final String? language;
+  final String? goal;
+}
+
 class ModuleOutlineView extends StatefulWidget {
   static const routeName = '/module';
-  final String? topic;
 
-  const ModuleOutlineView({super.key, this.topic});
+  const ModuleOutlineView({
+    super.key,
+    this.topic,
+    this.level,
+    this.language,
+    this.goal,
+  });
+
+  final String? topic;
+  final String? level;
+  final String? language;
+  final String? goal;
 
   @override
   State<ModuleOutlineView> createState() => _ModuleOutlineViewState();
@@ -17,8 +42,9 @@ class ModuleOutlineView extends StatefulWidget {
 class _ModuleOutlineViewState extends State<ModuleOutlineView> {
   bool _isLoading = true;
   String? _error;
-  Map<String, dynamic>? _outlineResponse; // Contains source and outline
+  Map<String, dynamic>? _outlineResponse;
   late String _courseId;
+  bool _didInitialLoad = false;
 
   @override
   void initState() {
@@ -26,7 +52,15 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
     _courseId = (widget.topic?.trim().isNotEmpty ?? false)
         ? widget.topic!.trim()
         : 'Default Topic';
-    _loadOutline();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitialLoad) {
+      _didInitialLoad = true;
+      unawaited(_loadOutline());
+    }
   }
 
   Future<void> _loadOutline({bool forceRefresh = false}) async {
@@ -36,15 +70,26 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
     setState(() => _error = null);
 
     try {
-      final response = await CourseApiService.generateOutline(topic: _courseId);
+      final localeLanguage = Localizations.localeOf(context).languageCode;
+      final preferredLanguage = (widget.language?.trim().isNotEmpty ?? false)
+          ? widget.language!.trim()
+          : localeLanguage;
+
+      final response = await CourseApiService.generateOutline(
+        topic: _courseId,
+        goal: widget.goal,
+        level: widget.level,
+        language: preferredLanguage,
+      );
+
       if (!mounted) return;
       setState(() {
         _outlineResponse = response;
       });
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = 'Error loading content: ${e.toString()}';
+        _error = 'Error loading content: ${error.toString()}';
       });
     } finally {
       if (mounted) {
@@ -58,6 +103,7 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
   @override
   Widget build(BuildContext context) {
     final title = widget.topic ?? 'Outline';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -81,76 +127,218 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
     if (_error != null) {
       return _ErrorState(errorMessage: _error!, onRetry: _loadOutline);
     }
-    final outlineList = _outlineResponse?['outline'] as List?;
-    if (outlineList == null || outlineList.isEmpty) {
+    final response = _outlineResponse;
+    if (response == null) {
       return _ErrorState(
-          errorMessage: 'No content available for this topic.',
-          onRetry: _loadOutline);
+        errorMessage: 'No outline available for this topic.',
+        onRetry: _loadOutline,
+      );
     }
-    return _OutlineContent(response: _outlineResponse!);
+
+    final modules = _parseModules(response['modules']);
+    if (modules.isEmpty) {
+      return _ErrorState(
+        errorMessage: 'No content available for this topic.',
+        onRetry: _loadOutline,
+      );
+    }
+
+    return _OutlineContent(response: response, modules: modules);
+  }
+
+  List<Map<String, dynamic>> _parseModules(dynamic raw) {
+    if (raw is! List) return <Map<String, dynamic>>[];
+    return raw
+        .whereType<Map>()
+        .map((module) => Map<String, dynamic>.from(module))
+        .toList(growable: false);
   }
 }
 
-// --- UI Widgets ---
-
 class _OutlineContent extends StatelessWidget {
+  const _OutlineContent({
+    required this.response,
+    required this.modules,
+  });
+
   final Map<String, dynamic> response;
-  const _OutlineContent({required this.response});
+  final List<Map<String, dynamic>> modules;
 
   @override
   Widget build(BuildContext context) {
-    final List<dynamic> outline = response['outline'] ?? [];
-    final String source = response['source'] ?? 'unknown';
+    final topic = response['topic']?.toString() ?? 'Course outline';
+    final goal = response['goal']?.toString();
+    final level = response['level']?.toString();
+    final language = response['language']?.toString();
+    final estimated = response['estimated_hours'];
+    final estimatedLabel =
+        estimated is num ? '${estimated.round()} hours' : null;
 
     return ListView(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(12),
       children: [
-        if (source == 'cache') const _FallbackBanner(),
-        ...outline.map((item) {
-          final section = Map<String, dynamic>.from(item);
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              leading: const Icon(Icons.article_outlined, size: 28),
-              title: Text(section['title'] ?? 'Untitled Section'),
-              subtitle: Text(section['description'] ?? 'No description.'),
-              trailing: Text('${section['duration_minutes'] ?? '?'} min'),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            ),
-          );
-        }),
+        _OutlineHeader(
+          topic: topic,
+          goal: goal,
+          level: level,
+          estimated: estimatedLabel,
+          language: language,
+        ),
+        ...modules.map(
+          (module) => _ModuleCard(
+            module: module,
+            courseLanguage: language,
+          ),
+        ),
       ],
     );
   }
 }
 
-class _FallbackBanner extends StatelessWidget {
-  const _FallbackBanner();
+class _OutlineHeader extends StatelessWidget {
+  const _OutlineHeader({
+    required this.topic,
+    this.goal,
+    this.level,
+    this.estimated,
+    this.language,
+  });
+
+  final String topic;
+  final String? goal;
+  final String? level;
+  final String? estimated;
+  final String? language;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final chips = <Widget>[
+      if (level != null && level!.isNotEmpty)
+        _OutlineMetaItem(
+          icon: Icons.school_outlined,
+          label: 'Level: ${level!}',
+        ),
+      if (estimated != null && estimated!.isNotEmpty)
+        _OutlineMetaItem(
+          icon: Icons.schedule_outlined,
+          label: estimated!,
+        ),
+      if (language != null && language!.isNotEmpty)
+        _OutlineMetaItem(
+          icon: Icons.translate,
+          label: language!,
+        ),
+    ];
+
     return Card(
-      color: Theme.of(context).colorScheme.secondaryContainer,
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline,
-                color: Theme.of(context).colorScheme.onSecondaryContainer),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Showing cached content. Tap Regenerate for the latest version.',
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer),
+            Text(topic, style: theme.textTheme.headlineSmall),
+            if (goal != null && goal!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(goal!, style: theme.textTheme.bodyMedium),
+            ],
+            if (chips.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: chips,
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
+  }
+}
+
+class _OutlineMetaItem extends StatelessWidget {
+  const _OutlineMetaItem({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: colorScheme.onSecondaryContainer),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(color: colorScheme.onSecondaryContainer),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModuleCard extends StatelessWidget {
+  const _ModuleCard({
+    required this.module,
+    this.courseLanguage,
+  });
+
+  final Map<String, dynamic> module;
+  final String? courseLanguage;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = module['title']?.toString() ?? 'Module';
+    final locked = module['locked'] == true;
+    final lessons = _parseLessons(module['lessons']);
+    final languageLabel = courseLanguage ?? '';
+
+    final leadingIcon =
+        locked ? Icons.lock_outline : Icons.check_circle_outline;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        initiallyExpanded: !locked,
+        leading: Icon(leadingIcon),
+        title: Text(title),
+        subtitle: Text('${lessons.length} lessons'),
+        children: lessons.map((lesson) {
+          final lessonTitle = lesson['title']?.toString() ?? 'Lesson';
+          final lessonLanguage =
+              lesson['language']?.toString() ?? languageLabel;
+          return ListTile(
+            leading: const Icon(Icons.menu_book_outlined),
+            title: Text(lessonTitle),
+            subtitle: lessonLanguage.isEmpty
+                ? null
+                : Text('Language: $lessonLanguage'),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _parseLessons(dynamic raw) {
+    if (raw is! List) return <Map<String, dynamic>>[];
+    return raw
+        .whereType<Map>()
+        .map((lesson) => Map<String, dynamic>.from(lesson))
+        .toList(growable: false);
   }
 }
 
@@ -161,16 +349,24 @@ class _OutlineSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.all(12.0),
-      itemCount: 5,
+      itemCount: 4,
       itemBuilder: (context, index) {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          child: const ListTile(
-            leading: Skeleton(height: 28, width: 28, cornerRadius: 14),
-            title: Skeleton(height: 16, width: 200),
-            subtitle: Skeleton(height: 14, width: double.infinity),
-            trailing: Skeleton(height: 16, width: 40),
-            contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          child: const Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Skeleton(height: 20, width: 200),
+                SizedBox(height: 12),
+                Skeleton(height: 16, width: 160),
+                SizedBox(height: 8),
+                Skeleton(height: 16, width: double.infinity),
+                SizedBox(height: 8),
+                Skeleton(height: 16, width: double.infinity),
+              ],
+            ),
           ),
         );
       },
@@ -179,10 +375,13 @@ class _OutlineSkeleton extends StatelessWidget {
 }
 
 class _ErrorState extends StatelessWidget {
+  const _ErrorState({
+    required this.errorMessage,
+    required this.onRetry,
+  });
+
   final String errorMessage;
   final VoidCallback onRetry;
-
-  const _ErrorState({required this.errorMessage, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {

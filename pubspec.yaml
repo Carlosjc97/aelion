@@ -1,4 +1,4 @@
-﻿name: aelion
+name: aelion
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -39,8 +39,7 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - env.public
+    - assets/env/.env.public
     - assets/home/course.png
     - assets/home/language.png
     - assets/home/problem.png
-

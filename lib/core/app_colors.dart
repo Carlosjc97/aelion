@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-/// Paleta Aelion â€” limpia, tranquila y premium
+/// Paleta Aelion — limpia, tranquila y premium
 class AppColors {
   // Brand
   static const primary = Color(0xFF2A6AF1); // azul elegante
   static const secondary = Color(0xFF0E1A2B); // azul muy oscuro (headers)
-  static const accent = Color(0xFFFFC857); // dorado suave (llamadas/Ã­conos)
+  static const accent = Color(0xFFFFC857); // dorado suave (llamadas/íconos)
 
   // Superficies
   static const background = Color(0xFFF7F8FA); // gris muy claro (fondo general)

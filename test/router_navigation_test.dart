@@ -20,7 +20,7 @@ void main() {
     final route = AppRouter.onGenerateRoute(
       const RouteSettings(
         name: ModuleOutlineView.routeName,
-        arguments: 'Introduccion a Flutter',
+        arguments: ModuleOutlineArgs(topic: 'Introduccion a Flutter'),
       ),
     );
     expect(route, isA<MaterialPageRoute>());
