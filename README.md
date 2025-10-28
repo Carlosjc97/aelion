@@ -1,186 +1,144 @@
-﻿# Aelion
+﻿# Aelion [![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml)
 
-Aplicación Flutter para explorar planes de estudio generados con IA.
-
----
-
-## 🚀 Estado del proyecto
-
-- ✅ CI/CD en verde (analyze, tests, build web).
-- ✅ Firebase Hosting configurado (`build/web` + rewrites a Functions).
-- ✅ App Hosting estable (`apphosting.yaml` corregido con `env.variable`).
-- ✅ Google Sign-In funcionando (Web Client ID en `google-services.json`).
-- ✅ Outline/Quiz activos.
-- 🔒 Punto de rollback seguro: tag `v0.9.0-mvp-ready`.
+Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Genâ€‘2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
 ---
 
-## 📦 Requisitos
+## Backend Quickstart (Firebase Functions)
 
-- **Flutter** canal stable (3.5+).
-- **Node.js** 20 (App Hosting runtime).
-- **Firebase CLI**.
-- Cuenta con clave de **OpenAI** (`OPENAI_API_KEY` en Secret Manager).
-
----
-
-## 🛠 Puesta en marcha rápida (desarrollo local)
-
-### 1. Configurar Firebase Auth (Google)
-
-Para que el inicio de sesión con Google funcione, necesitas configurar tu proyecto de Firebase:
-
-1.  **Ejecuta `flutterfire configure`**: Sigue los pasos para conectar tu app a Firebase. Esto generará `lib/firebase_options.dart`.
-2.  **Configura el `google-services.json`**: Asegúrate de que tu fichero `android/app/google-services.json` contiene la configuración `oauth_client` con `client_type` igual a 3. Esto es necesario para el login de Google en Android. Si no tienes este fichero, descárgalo desde la consola de Firebase.
-
-    ```json
-    "oauth_client": [
-      {
-        "client_id": "TU-WEB-CLIENT-ID.apps.googleusercontent.com",
-        "client_type": 3
-      }
-    ]
-    ```
-
-### 2. Backend (Emuladores de Firebase)
-
-La nueva API de `/outline` se ejecuta en Firebase Functions. Para desarrollo local, usamos el emulador de Firebase.
+**Prerequisites**
+- Node.js 20
+- Firebase CLI authenticated against the `aelion-c90d2` project
 
 ```bash
 cd functions
-npm install
-firebase emulators:start --only functions,firestore,auth
+npm ci
+npm run build
+firebase deploy --only functions:outline
 ```
 
-El emulador de Functions se ejecutará en `http://localhost:5001` y el de Auth en `http://localhost:9099`.
+### Smoke Test (Windows)
+```powershell
+$body = @{
+  topic = "Flutter crash course"
+  depth = "medium"
+  lang  = "en"
+} | ConvertTo-Json -Compress
+Invoke-RestMethod `
+  -Method POST `
+  -Uri "https://us-east4-aelion-c90d2.cloudfunctions.net/outline" `
+  -ContentType "application/json" `
+  -Body $body
+```
 
-### 3. App Flutter
+```powershell
+@'
+{"topic":"Flutter crash course","depth":"medium","lang":"en"}
+'@ | Out-File -Encoding utf8 payload.json
+curl.exe -sS -i -X POST ^
+  "https://us-east4-aelion-c90d2.cloudfunctions.net/outline" ^
+  -H "Content-Type: application/json" ^
+  --data-binary "@payload.json"
+```
 
-1.  **Crea `env.public`**: En la raíz del proyecto, crea un fichero `env.public` con la URL base de tu emulador de functions:
+### Logs & Diagnostics
+```bash
+firebase functions:log --only outline --project aelion-c90d2
+```
 
-    ```
-    # Para emulador local
-    API_BASE_URL=http://localhost:5001/<TU_PROJECT_ID>/us-central1
-    ```
-
-2.  **Ejecuta la app**:
-    ```bash
-    flutter pub get
-    flutter run -d chrome
-    ```
+### Behaviour Guarantees
+- Invalid or malformed JSON returns **400** with validation details (never a 500).
+- Firestore cache is resilient: expired or malformed documents are ignored and replaced automatically. TTL varies per `depth` (`intro`: 7d, `medium`: 3d, `deep`: 1d).
+- Observability documents record route, user, cache status, params, cost, and token metrics without impacting the response path.
 
 ---
 
-## 🚀 Arquitectura de Producción (Firebase)
+## Quiz de colocacion
 
-*   **Firebase Hosting**: Sirve el contenido web estático desde `build/web`.
-*   **Firebase Functions**:
-    *   `outline`: Nueva función HTTPS que genera el contenido del curso con cache en Firestore y TTL.
-*   **App Hosting**: El backend en `server/` se mantiene para desarrollo local o como referencia, pero ya no se usa en producción para el endpoint `/outline`.
+**Resumen**
+- `POST /placementQuizStart` crea una sesion de 10 preguntas. Responde `OPTIONS` con `204` y cabeceras CORS para navegadores.
+- `POST /placementQuizGrade` califica las respuestas, decide la banda sugerida y si hace falta regenerar el plan.
 
-### Consumir `/outline` desde Functions
+**Comandos rapidos (PowerShell)**
 
-El servicio `CourseApiService` ahora usa la variable `API_BASE_URL` de `env.public` para llamar a la función.
-
-```dart
-// lib/services/course_api_service.dart
-static Future<Map<String, dynamic>> generateOutline({
-  required String topic,
-  String depth = 'medium',
-}) async {
-  // ...
-  final response = await http.post(
-    _uri('/outline'), // -> https://<region>-<project>.cloudfunctions.net/outline
-    // ...
-  );
-  // ...
-}
+```powershell
+$URL_START = "https://us-east4-aelion-c90d2.cloudfunctions.net/placementQuizStart"
+$startBody = @{ topic = "Historia de Roma"; lang = "es" } | ConvertTo-Json -Compress
+$start = Invoke-RestMethod -Method POST -Uri $URL_START -ContentType "application/json" -Body $startBody
+$start | ConvertTo-Json -Depth 10
 ```
 
-### Skeletons de Carga y Fallback
+```powershell
+$URL_GRADE = "https://us-east4-aelion-c90d2.cloudfunctions.net/placementQuizGrade"
+$answers = $start.questions | ForEach-Object { @{ id = $_.id; choiceIndex = 0 } }
+$gradeBody = @{ quizId = $start.quizId; answers = $answers } | ConvertTo-Json -Compress
+Invoke-RestMethod -Method POST -Uri $URL_GRADE -ContentType "application/json" -Body $gradeBody
+```
 
-*   **Skeletons de carga**: La pantalla de `ModuleOutlineView` ahora muestra un esqueleto de la UI mientras se carga el contenido, mejorando la experiencia de usuario.
-*   **Modo demo / fallback**: Si el contenido se sirve desde la caché de la función (`source: 'cache'`), se muestra un banner indicando que el contenido puede no ser el más reciente. Si hay un error de red, se muestra un mensaje de error con un botón para reintentar.
+**Politica de costos y estabilidad**
+- Rate limit: maximo un `placementQuizStart` por usuario cada 5 minutos (`x-user-id`). Los excesos devuelven **429** con payload JSON.
+- TTL: la sesion expira en 60 minutos (`expiresAt`). La cache de outline se invalida con `expiresAt` o cuando falta el campo.
+- Regeneracion condicionada: solo se recalcula el outline si `recommendRegenerate` llega en `true`; de lo contrario se reutiliza el cache.
+- Fallback determinista: sin `OPENAI_API_KEY` se entrega un cuestionario generico estable, util para QA sin costo.
+- Observabilidad: los logs estructurados (`info` / `warn` / `error`) incluyen `message`, `code`, y nunca exponen `correctAnswerIndex` al cliente.
 
-firebase.json
-json
-Copiar código
-{
-  "hosting": {
-    "public": "build/web",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      { "source": "/api/**", "function": "api" },
-      { "source": "**", "destination": "/index.html" }
-    ]
-  },
-  "functions": { "source": "functions" }
-}
-apphosting.yaml
-yaml
-Copiar código
-runtime: nodejs20
+---
 
-runConfig:
-  entrypoint: node server/server.js
+## Frontend Quickstart (Flutter)
 
-env:
-  - variable: OPENAI_API_KEY
-    secret: OPENAI_API_KEY
-    availability: [RUNTIME]
+```bash
+flutter pub get
+flutter test
+flutter run -d chrome
+```
 
-  - variable: NODE_ENV
-    value: production
-    availability: [RUNTIME]
-env.public
-env
-Copiar código
-# URL para producción (ejemplo)
-API_BASE_URL=https://us-central1-aelion-c90d2.cloudfunctions.net
+### Key UX Notes
+- After any successful outline request, the app saves `topic`, raw JSON, and timestamp in `SharedPreferences`.
+- Home screen surfaces the cached outline card with a `View outline` action and a stale badge when data is older than 24 hours.
+- `ModuleOutlineView` hydrates immediately from the cached payload (if available), highlights the source (`fresh` vs `cache`), and regenerates on demand without blocking the user.
 
-# Otras variables
-AELION_ENV=production
-CV_STUDIO_API_KEY=changeme
-📊 QA y validación
-bash
-Copiar código
-flutter analyze
-flutter test --reporter expanded
-flutter build web --release
-firebase emulators:start --only hosting,functions
-Login con Google funciona con el Web Client ID.
+---
 
-Outline y Quiz generan contenido real.
+## Public Environment Variables (`env.public`)
 
-/health responde 200.
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `AELION_ENV` | Logical environment label used for analytics and feature toggles. | `production` |
+| `API_BASE_URL` | Base HTTPS URL for the deployed Functions instance. | `https://us-east4-aelion-c90d2.cloudfunctions.net` |
+| `BASE_URL` | Backwards-compatible alias for `API_BASE_URL`. | same as above |
+| `CV_STUDIO_API_KEY` | Optional integration token (leave blank for local). | `changeme` |
+| `USE_FUNCTIONS_EMULATOR` | When `true`, routes API calls to the local emulator. | `false` |
+| `FUNCTIONS_EMULATOR_HOST` / `PORT` | Host and port overrides for the emulator when enabled. | `localhost` / `5001` |
 
-📈 Flujo de trabajo
-Ramas:
+---
 
-main (protegida).
+## Troubleshooting
 
-feat/* (features).
+| Symptom | Cause | Resolution |
+|---------|-------|------------|
+| `SERVICE_DISABLED: Cloud Firestore API has not been used in project` | Firestore API disabled or project not provisioned. | Enable Cloud Firestore API from Google Cloud Console and initialise the database in region `nam5`. Re-run the outline request once the service is active. |
+| `SyntaxError: Unexpected token ...` when calling the function from PowerShell | Raw JSON string passed without proper escaping. | Pipe a PSCustomObject through `ConvertTo-Json -Compress` or use `curl.exe` with `--data-binary` as shown above. |
+| Cache document `NOT_FOUND` or malformed fields | Legacy data or TTL expiration. | Current function treats these as cache misses, regenerates the outline, and rewrites the cache safely. No manual cleanup required - trigger a fresh request. |
 
-fix/* (hotfixes).
+---
 
-release/* (estabilización).
+## CI/CD Overview
 
-CI/CD: GitHub Actions (analyze, test, build, gitleaks).
+Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+- `flutter analyze`, `flutter test`, and `flutter build web --release`
+- `npm ci` + `npm run build` for Firebase Functions under Node.js 20
+- Gitleaks SARIF reports for PRs and blocking scans on pushes to `main`
 
-Tags para releases estables:
+Badge at the top reflects the latest pipeline status for `main`.
 
-bash
-Copiar código
-git tag -a v0.9.0-mvp-ready -m "MVP estable"
-git push origin v0.9.0-mvp-ready
+---
 
+## Observability
 
-🧠 Notas
+Each outline invocation appends a document to the `observability` collection:
+- `route`, `ts`, `user`, `cached`
+- `params.topic`, `params.depth`, `params.lang`
+- `cost_usd`, `tokens_in`, `tokens_out`, `cache_key`, `outline_size`
 
-El endpoint /outline usa gpt-4o-mini.
+Failures to write observability data are logged but never impact the client response.
 
-La app Flutter guarda progreso en SharedPreferences.
-
-Android ya tiene network_security_config para HTTP en dev.
-
-Para rollback: Firebase Console → Hosting → Releases → Rollback o usar el tag en Git.

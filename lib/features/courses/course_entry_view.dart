@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import 'package:aelion/core/app_colors.dart';
 import 'package:aelion/features/quiz/quiz_screen.dart';
+import 'package:aelion/l10n/app_localizations.dart';
 import 'package:aelion/widgets/skeleton.dart';
 
 class CourseEntryView extends StatefulWidget {
@@ -17,12 +18,12 @@ class _CourseEntryViewState extends State<CourseEntryView> {
   final TextEditingController _controller = TextEditingController();
   bool _generating = false;
 
-  final List<String> _chips = const [
-    'Intro to Flutter',
-    'SQL for beginners',
-    'Data science 101',
-    'Logic fundamentals',
-  ];
+  List<String> _chipLabels(AppLocalizations l10n) => [
+        l10n.courseEntryExampleFlutter,
+        l10n.courseEntryExampleSql,
+        l10n.courseEntryExampleDataScience,
+        l10n.courseEntryExampleLogic,
+      ];
 
   @override
   void dispose() {
@@ -36,39 +37,32 @@ class _CourseEntryViewState extends State<CourseEntryView> {
 
     setState(() => _generating = true);
     try {
-      final result = await Navigator.push<Map<String, Object?>>(
-        context,
-        MaterialPageRoute<Map<String, Object?>>(
-          builder: (_) => QuizScreen(topic: trimmed),
+      final languageCode = Localizations.localeOf(context).languageCode;
+      await Navigator.of(context).pushNamed(
+        QuizScreen.routeName,
+        arguments: QuizScreenArgs(
+          topic: trimmed,
+          language: languageCode,
         ),
       );
-
-      if (!mounted || result == null) return;
-
-      final score = result['score'] as int? ?? 0;
-      final level = result['level'] as String? ?? 'unknown';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Quiz completed: $score/10 • level: $level')),
-      );
     } finally {
-      if (mounted) setState(() => _generating = false);
+      if (mounted) {
+        setState(() => _generating = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final body = ListView(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
       children: [
-        Text('Take a course', style: theme.textTheme.headlineLarge),
+        Text(l10n.courseEntryTitle, style: theme.textTheme.headlineLarge),
         const SizedBox(height: 8),
-        Text(
-          'Search a topic and launch a 10-question quiz to calibrate the outline.',
-          style: theme.textTheme.bodyLarge,
-        ),
+        Text(l10n.courseEntrySubtitle, style: theme.textTheme.bodyLarge),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(16),
@@ -90,10 +84,9 @@ class _CourseEntryViewState extends State<CourseEntryView> {
                 controller: _controller,
                 textInputAction: TextInputAction.search,
                 onSubmitted: _goToQuiz,
-                decoration: const InputDecoration(
-                  hintText:
-                      'Example: Flutter fundamentals, linear algebra, SQL... ',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  hintText: l10n.courseEntryHint,
+                  prefixIcon: const Icon(Icons.search),
                 ),
               ),
               const SizedBox(height: 16),
@@ -112,12 +105,12 @@ class _CourseEntryViewState extends State<CourseEntryView> {
                           padding: EdgeInsets.symmetric(vertical: 8),
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Generate quiz'),
+                      : Text(l10n.courseEntryStart),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'We keep quizzes short (10 questions) before generating the tailored outline.',
+                l10n.courseEntryFooter,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: const Color(0xFF64748B),
@@ -130,13 +123,15 @@ class _CourseEntryViewState extends State<CourseEntryView> {
         Wrap(
           spacing: 16,
           runSpacing: 16,
-          children: _chips.map((chip) {
-            return ActionChip(
-              label: Text(chip),
-              onPressed: () => _goToQuiz(chip),
-              backgroundColor: colorScheme.surfaceContainerHighest,
-            );
-          }).toList(),
+          children: _chipLabels(l10n)
+              .map(
+                (chip) => ActionChip(
+                  label: Text(chip),
+                  onPressed: () => _goToQuiz(chip),
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -180,3 +175,4 @@ class _CourseLoadingOverlay extends StatelessWidget {
     );
   }
 }
+

@@ -18,9 +18,15 @@ void main() {
   testWidgets('Module route envuelve ModuleOutlineView en AuthGate',
       (tester) async {
     final route = AppRouter.onGenerateRoute(
-      const RouteSettings(
+      RouteSettings(
         name: ModuleOutlineView.routeName,
-        arguments: ModuleOutlineArgs(topic: 'Introduccion a Flutter'),
+        arguments: ModuleOutlineArgs(
+          topic: 'Introduccion a Flutter',
+          initialOutline: const [
+            {'title': 'Intro', 'lessons': []},
+          ],
+          initialSource: 'cache',
+        ),
       ),
     );
     expect(route, isA<MaterialPageRoute>());
@@ -41,6 +47,9 @@ void main() {
     expect(built, isA<AuthGate>());
     final gate = built! as AuthGate;
     expect(gate.child, isA<ModuleOutlineView>());
+    final moduleView = gate.child as ModuleOutlineView;
+    expect(moduleView.initialOutline, isNotNull);
+    expect(moduleView.initialSource, 'cache');
   });
 
   testWidgets('Ruta inexistente construye pantalla de 404', (tester) async {

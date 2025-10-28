@@ -1,0 +1,110 @@
+﻿{
+    "quizId":  "7191b28b-84ca-480f-942a-b5a5c7508425",
+    "expiresAt":  1760918239788,
+    "policy":  {
+                   "maxMinutes":  15,
+                   "numQuestions":  10
+               },
+    "questions":  [
+                      {
+                          "id":  "static-1",
+                          "text":  "Pregunta 1 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-2",
+                          "text":  "Pregunta 2 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-3",
+                          "text":  "Pregunta 3 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-4",
+                          "text":  "Pregunta 4 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-5",
+                          "text":  "Pregunta 5 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-6",
+                          "text":  "Pregunta 6 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-7",
+                          "text":  "Pregunta 7 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-8",
+                          "text":  "Pregunta 8 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-9",
+                          "text":  "Pregunta 9 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      },
+                      {
+                          "id":  "static-10",
+                          "text":  "Pregunta 10 sobre Historia de Roma",
+                          "choices":  [
+                                          "Concepto clave para Historia de Roma (1)",
+                                          "Ejemplo practico para Historia de Roma (2)",
+                                          "Situacion real para Historia de Roma (3)",
+                                          "Definicion alternativa para Historia de Roma (4)"
+                                      ]
+                      }
+                  ]
+}

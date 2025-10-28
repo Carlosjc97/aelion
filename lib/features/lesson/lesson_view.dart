@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:aelion/l10n/app_localizations.dart';
 import 'package:aelion/services/progress_service.dart';
 
 class LessonView extends StatefulWidget {
@@ -34,6 +35,7 @@ class _LessonViewState extends State<LessonView>
   late final Animation<double> _xpOpacity;
   late final Animation<Offset> _xpOffset;
   int _lastXp = 0;
+  int _recentXpGain = 0;
   bool _showXp = false;
 
   @override
@@ -61,6 +63,7 @@ class _LessonViewState extends State<LessonView>
     setState(() => _completing = true);
 
     final svc = ProgressService();
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       await svc.markLessonCompleted(
@@ -72,6 +75,7 @@ class _LessonViewState extends State<LessonView>
       await svc.tickDailyStreak();
 
       const gained = 20;
+      _recentXpGain = gained;
       _lastXp = await svc.addXp(gained);
 
       HapticFeedback.lightImpact();
@@ -83,8 +87,11 @@ class _LessonViewState extends State<LessonView>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          content: Text('Lesson completed! XP total: $_lastXp'),
-          action: SnackBarAction(label: 'OK', onPressed: () {}),
+          content: Text(l10n.lessonCompleteToast(_lastXp)),
+          action: SnackBarAction(
+            label: l10n.commonOk,
+            onPressed: () {},
+          ),
         ),
       );
 
@@ -95,7 +102,7 @@ class _LessonViewState extends State<LessonView>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          content: Text('Could not update the lesson. Try again. ($e)'),
+          content: Text(l10n.lessonUpdateError),
         ),
       );
     } finally {
@@ -104,7 +111,10 @@ class _LessonViewState extends State<LessonView>
   }
 
   Future<void> _playXpToast(int gained) async {
-    setState(() => _showXp = true);
+    setState(() {
+      _showXp = true;
+      _recentXpGain = gained;
+    });
     _xpCtrl
       ..reset()
       ..forward();
@@ -117,6 +127,7 @@ class _LessonViewState extends State<LessonView>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final description = widget.description?.trim();
@@ -145,7 +156,7 @@ class _LessonViewState extends State<LessonView>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Premium content',
+                          l10n.lessonPremiumContent,
                           style: tt.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -154,12 +165,12 @@ class _LessonViewState extends State<LessonView>
                     ],
                   ),
                 ),
-              Text('Description', style: tt.titleMedium),
+              Text(l10n.lessonDescriptionTitle, style: tt.titleMedium),
               const SizedBox(height: 6),
               Text(
                 description?.isNotEmpty == true
                     ? description!
-                    : 'Content will be available soon.',
+                    : l10n.lessonContentComingSoon,
                 style: tt.bodyMedium,
               ),
               const SizedBox(height: 24),
@@ -173,7 +184,9 @@ class _LessonViewState extends State<LessonView>
                       )
                     : const Icon(Icons.emoji_events_outlined),
                 label: Text(
-                  _completing ? 'Saving...' : 'Mark lesson as completed',
+                  _completing
+                      ? l10n.commonSaving
+                      : l10n.lessonMarkCompleted,
                 ),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -181,7 +194,7 @@ class _LessonViewState extends State<LessonView>
               ),
               const SizedBox(height: 12),
               Text(
-                'Tip: take quick notes before moving on.',
+                l10n.lessonTipTakeNotes,
                 style: tt.bodySmall?.copyWith(
                   color: cs.onSurface.withValues(alpha: .7),
                 ),
@@ -219,7 +232,7 @@ class _LessonViewState extends State<LessonView>
                               const Icon(Icons.star, size: 18),
                               const SizedBox(width: 8),
                               Text(
-                                '+20 XP',
+                                l10n.lessonXpReward(_recentXpGain),
                                 style: tt.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w800,
                                 ),

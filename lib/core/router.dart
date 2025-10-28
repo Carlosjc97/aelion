@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:aelion/features/auth/auth.dart';
 import 'package:aelion/features/courses/course_entry_view.dart';
 import 'package:aelion/features/home/home_view.dart';
+import 'package:aelion/features/lesson/lesson_detail_page.dart';
 import 'package:aelion/features/modules/module_outline_view.dart';
 import 'package:aelion/features/quiz/quiz_screen.dart';
 import 'package:aelion/features/topics/topic_search_view.dart';
@@ -63,22 +64,60 @@ class AppRouter {
             level: args.level,
             language: args.language,
             goal: args.goal,
+            depth: args.depth,
+            preferredBand: args.preferredBand,
+            recommendRegenerate: args.recommendRegenerate,
+            initialOutline: args.initialOutline,
+            initialResponse: args.initialResponse,
+            initialSource: args.initialSource,
+            initialSavedAt: args.initialSavedAt,
           ),
           RouteSettings(
             name: ModuleOutlineView.routeName,
             arguments: args,
           ),
         );
-      case QuizScreen.routeName:
-        final topic = settings.arguments;
-        if (topic is! String || topic.trim().isEmpty) {
-          return _invalidRoute(settings, 'QuizScreen requires a topic string');
+      case LessonDetailPage.routeName:
+        final lessonArgs = settings.arguments;
+        if (lessonArgs is! LessonDetailArgs) {
+          return _invalidRoute(
+            settings,
+            'LessonDetailPage requires LessonDetailArgs.',
+          );
         }
         return _guarded(
-          QuizScreen(topic: topic),
+          LessonDetailPage(args: lessonArgs),
+          RouteSettings(
+            name: LessonDetailPage.routeName,
+            arguments: lessonArgs,
+          ),
+        );
+      case QuizScreen.routeName:
+        final rawArgs = settings.arguments;
+        QuizScreenArgs? args;
+        if (rawArgs is QuizScreenArgs) {
+          args = rawArgs;
+        } else if (rawArgs is String && rawArgs.trim().isNotEmpty) {
+          args = QuizScreenArgs(topic: rawArgs.trim(), language: 'en');
+        }
+
+        if (args == null) {
+          return _invalidRoute(
+            settings,
+            'QuizScreen requires a topic and language.',
+          );
+        }
+
+        return _guarded(
+          QuizScreen(
+            topic: args.topic,
+            language: args.language,
+            autoOpenOutline: args.autoOpenOutline,
+            outlineGenerator: args.outlineGenerator,
+          ),
           RouteSettings(
             name: QuizScreen.routeName,
-            arguments: topic,
+            arguments: args,
           ),
         );
       default:

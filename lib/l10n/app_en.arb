@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "en",
   "appTitle": "Aelion",
   "loginTitle": "Learn faster with AI",
@@ -14,6 +14,10 @@
   "authError": "We could not verify your session",
   "authRetry": "Try again",
   "homeGreeting": "What do you want to learn today?",
+  "homeGreetingNamedShort": "Hi {name} 👋",
+  "homeGreetingWave": "Hello 👋",
+  "homeMotivation": "Let's keep your learning streak going today.",
+  "homePromptTitle": "What plan should we craft next?",
   "homeInputHint": "Example: Algebra in 7 days, conversational English...",
   "homeSnackMissingTopic": "Write a topic to continue",
   "homeGenerate": "Generate AI learning plan",
@@ -34,5 +38,379 @@
   "homePrefillCourse": "Quick Flutter course",
   "homePrefillLanguage": "English in 1 month",
   "homePrefillProblem": "Solve integrals",
-  "notFoundRoute": "Route not found"
+  "notFoundRoute": "Route not found",
+  "commonRetry": "Retry",
+  "dialogContinue": "Continue",
+  "quizTitle": "Placement quiz",
+  "quizHeaderTitle": "Calibrate {topic}",
+  "quizIntroDescription": "Take 10 quick questions to calibrate your plan.",
+  "startQuiz": "Start",
+  "quizQuestionCounter": "Question {current} of {total}",
+  "quizTimeHint": "Approx. {minutes} min",
+  "quizAnswerAllPrompt": "Answer every question before continuing.",
+  "quizExitTitle": "Leave quiz?",
+  "quizExitMessage": "Your answers will be lost.",
+  "quizExitCancel": "Stay",
+  "quizExitConfirm": "Leave",
+  "submit": "Submit",
+  "next": "Next",
+  "quizResultTitle": "You are {band}",
+  "quizLevelChip": "Level: {band}",
+  "quizScorePercentage": "Score: {score}%",
+  "quizRecommendRefine": "We will refine your plan for the {band} level.",
+  "quizKeepCurrentPlan": "Your current plan already matches the {band} level.",
+  "quizDone": "Done",
+  "quizUnknownError": "We could not load the quiz. Try again.",
+  "quizBandBeginner": "Beginner",
+  "quizBandIntermediate": "Intermediate",
+  "quizBandAdvanced": "Advanced",
+  "courseEntryTitle": "Take a course",
+  "courseEntrySubtitle": "Search a topic and launch a quick placement quiz.",
+  "courseEntryHint": "Example: Flutter fundamentals, linear algebra, SQL...",
+  "courseEntryStart": "Start quiz",
+  "courseEntryFooter": "We keep placement quizzes short (10 questions).",
+  "courseEntryExampleFlutter": "Intro to Flutter",
+  "courseEntryExampleSql": "SQL for beginners",
+  "courseEntryExampleDataScience": "Data science 101",
+  "courseEntryExampleLogic": "Logic fundamentals",
+  "courseEntryResultSummary": "Score {score}% - level {band}",
+  "courseEntryResultActionUpdate": "Generating a new outline for the {band} level.",
+  "courseEntryResultActionReuse": "Reusing your existing {band} plan.",
+  "outlineFallbackTitle": "Outline",
+  "moduleOutlineFallbackTopic": "Default topic",
+  "outlineUpdatePlan": "Update plan",
+  "refinePlan": "Refine plan",
+  "outlineRefineRebuild": "New outline will match the {band} level.",
+  "outlineRefineNoChanges": "Current outline already matches the {band} level.",
+  "outlineSnackCached": "Loaded your saved plan.",
+  "outlineSnackUpdated": "Plan ready with the latest updates.",
+  "outlineRefineChangeDepthTitle": "Change depth",
+  "outlineRefineChangeDepthSubtitle": "Reuse or generate outlines for intro, medium, or deep levels.",
+  "takePlacementQuiz": "Take placement quiz",
+  "outlineRefinePlacementQuizSubtitle": "Answer 10 questions to calibrate your plan.",
+  "outlineErrorGeneric": "We could not load the outline.",
+  "outlineErrorEmpty": "No outline available for this topic.",
+  "outlineErrorNoContent": "No content available for this topic.",
+  "outlineSourceCached": "Cached outline",
+  "outlineSavedLabel": "Saved {timestamp}",
+  "outlineStaleBadge": "Stale",
+  "outlineMetaBand": "Level: {band}",
+  "outlineMetaLevel": "Level: {level}",
+  "outlineMetaHours": "{hours} hours",
+  "outlineMetaLanguage": "Language: {language}",
+  "outlineMetaDepth": "Depth: {depth}",
+  "outlineLessonCount": "{count} lessons",
+  "outlineLessonLanguage": "Language: {language}",
+  "outlineModuleFallback": "Module {index}",
+  "outlineLessonFallback": "Lesson {index}",
+  "homeGreetingNamed": "Hi {name}, what do you want to learn today?",
+  "homeRecentTitle": "Recent plans",
+  "homeRecentEmpty": "You have no saved plans yet.",
+  "homeRecentView": "View outline",
+  "homeRecentMoreCount": "+{count} more modules",
+  "homeRecentSaved": "Saved {timestamp}",
+  "homeUpdatedJustNow": "Updated just now",
+  "homeUpdatedMinutes": "Updated {minutes} min ago",
+  "homeUpdatedHours": "Updated {hours} h ago",
+  "homeUpdatedDays": "Updated {days} d ago",
+  "homeDepthIntro": "Intro level",
+  "homeDepthMedium": "Intermediate depth",
+  "homeDepthDeep": "Deep dive",
+  "@quizHeaderTitle": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizQuestionCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@quizTimeHint": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@quizResultTitle": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizLevelChip": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizScorePercentage": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "@quizRecommendRefine": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizKeepCurrentPlan": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@courseEntryResultSummary": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      },
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@courseEntryResultActionUpdate": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@courseEntryResultActionReuse": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineRefineRebuild": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineRefineNoChanges": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineSavedLabel": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaBand": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaLevel": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@outlineMetaLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaDepth": {
+    "placeholders": {
+      "depth": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineLessonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@outlineLessonLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineModuleFallback": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@outlineLessonFallback": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeGreetingNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeGreetingNamedShort": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeRecentMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeRecentSaved": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeUpdatedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeUpdatedHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeUpdatedDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "buildExpertiseIn": "Build expertise in {topic}",
+  "@buildExpertiseIn": {
+    "placeholders": {
+      "topic": {}
+    }
+  },
+  "depthIntro": "introductory",
+  "depthMedium": "intermediate",
+  "depthDeep": "advanced",
+  "calibratingPlan": "Calibrating your plan",
+  "planReady": "Plan ready",
+  "homeRecommendationsTitle": "Recommended",
+  "homeRecommendationsEmpty": "No recommendations yet.",
+  "homeRecommendationsError": "We could not load recommendations.",
+  "quizCooldownMinutes": "Please wait {minutes} more minute(s) before retaking the quiz.",
+  "@quizCooldownMinutes": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "quizCooldownSeconds": "Please wait a few seconds before retaking the quiz.",
+  "quizOpenPlan": "Open plan",
+  "quizApplyResults": "Apply results",
+  "quizResultsNoChanges": "Results saved without changes.",
+  "planAlreadyAligned": "Your plan is already aligned.",
+  "lessonCompleteToast": "Lesson completed! XP total: {xp}",
+  "lessonXpReward": "+{xp} XP",
+  "lessonUpdateError": "We couldn't update the lesson. Try again.",
+  "lessonPremiumContent": "Premium content",
+  "lessonDescriptionTitle": "Description",
+  "lessonMarkCompleted": "Mark lesson as completed",
+  "lessonTipTakeNotes": "Tip: take quick notes before moving on.",
+  "lessonFallbackTitle": "Lesson",
+  "lessonObjectiveTitle": "Lesson objective",
+  "lessonObjectiveSummary": "• Understand the core concept.\n• Complete a short practice.\n• Move on once you feel ready.",
+  "lessonQuizTitle": "Question",
+  "lessonQuizOption": "{letter}) {option}",
+  "lessonQuizCheck": "Check answer",
+  "lessonQuizCorrect": "✅ Correct!",
+  "lessonQuizIncorrect": "❌ Incorrect. The answer was {answer}.",
+  "lessonTipReview": "Tip: if something is unclear, reread and practice for 2 more minutes before moving on.",
+  "lessonContentComingSoon": "Content available soon.",
+  "commonOk": "OK",
+  "commonSaving": "Saving...",
+  "homeGenerateError": "We could not generate the plan. Try again.",
+  "topicSearchMissingTopic": "Type a topic to continue",
+  "topicSearchTitleFallback": "Search a topic",
+  "topicSearchHintFallback": "What do you want to learn?",
+  "topicSearchStartButton": "Take mini quiz",
+  "quizPlanCreated": "Plan created.",
+  "@lessonCompleteToast": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@lessonXpReward": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@lessonQuizOption": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      },
+      "option": {
+        "type": "String"
+      }
+    }
+  },
+  "@lessonQuizIncorrect": {
+    "placeholders": {
+      "answer": {
+        "type": "String"
+      }
+    }
+  }
 }
