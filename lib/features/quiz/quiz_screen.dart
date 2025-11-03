@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:aelion/features/modules/module_outline_view.dart';
+import 'package:aelion/services/analytics/analytics_service.dart';
 import 'package:aelion/l10n/app_localizations.dart';
 import 'package:aelion/services/course_api_service.dart';
 import 'package:aelion/services/local_outline_storage.dart';
@@ -100,10 +101,9 @@ class _QuizScreenState extends State<QuizScreen> {
       );
 
       await QuizAttemptStorage.instance.recordStart(
-        userId: (widget.firebaseAuth ?? FirebaseAuth.instance)
-                .currentUser
-                ?.uid ??
-            'anonymous',
+        userId:
+            (widget.firebaseAuth ?? FirebaseAuth.instance).currentUser?.uid ??
+                'anonymous',
         topic: widget.topic,
         language: quizLang,
       );
@@ -475,7 +475,8 @@ class _QuizScreenState extends State<QuizScreen> {
                           SizedBox(
                             width: 180,
                             child: FilledButton(
-                              key: ValueKey(isLast ? 'quiz-submit' : 'quiz-next'),
+                              key: ValueKey(
+                                  isLast ? 'quiz-submit' : 'quiz-next'),
                               onPressed: selected == null || _submitting
                                   ? null
                                   : _nextOrSubmit,
@@ -576,7 +577,8 @@ class _QuizScreenState extends State<QuizScreen> {
               const SizedBox(height: 12),
               TextButton(
                 key: const Key('quiz-result-done'),
-                onPressed: _submitting ? null : () => Navigator.of(context).maybePop(),
+                onPressed:
+                    _submitting ? null : () => Navigator.of(context).maybePop(),
                 child: Text(l10n.quizDone),
               ),
             ] else ...[
@@ -584,7 +586,8 @@ class _QuizScreenState extends State<QuizScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   key: const Key('quiz-apply-results'),
-                  onPressed: _submitting ? null : () => _returnResult(apply: true),
+                  onPressed:
+                      _submitting ? null : () => _returnResult(apply: true),
                   child: _submitting
                       ? const SizedBox(
                           width: 20,
@@ -597,7 +600,8 @@ class _QuizScreenState extends State<QuizScreen> {
               const SizedBox(height: 12),
               TextButton(
                 key: const Key('quiz-result-done'),
-                onPressed: _submitting ? null : () => _returnResult(apply: false),
+                onPressed:
+                    _submitting ? null : () => _returnResult(apply: false),
                 child: Text(l10n.quizDone),
               ),
             ],

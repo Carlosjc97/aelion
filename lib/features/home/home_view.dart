@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 
 import 'package:aelion/core/app_colors.dart';
 import 'package:aelion/features/modules/module_outline_view.dart';
+import 'package:aelion/features/settings/settings_view.dart';
+import 'package:aelion/features/support/help_support_screen.dart';
 import 'package:aelion/features/quiz/quiz_screen.dart';
 import 'package:aelion/l10n/app_localizations.dart';
+import 'package:aelion/services/analytics/analytics_service.dart';
 import 'package:aelion/services/course_api_service.dart';
 import 'package:aelion/services/google_sign_in_helper.dart';
 import 'package:aelion/services/local_outline_storage.dart';
@@ -25,9 +28,11 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
+enum _HomeMenuAction { settings, help }
+
 class _HomeViewState extends State<HomeView> {
   static const _maxRecommendationItems = 35;
-  static const _maxRecentOutlineItems = 35;
+  static const _maxRecentOutlineItems = 5;
 
   final TextEditingController _controller = TextEditingController();
   bool _loading = false;
@@ -54,6 +59,17 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  void _handleMenuSelection(_HomeMenuAction action) {
+    switch (action) {
+      case _HomeMenuAction.settings:
+        Navigator.of(context).pushNamed(SettingsView.routeName);
+        break;
+      case _HomeMenuAction.help:
+        Navigator.of(context).pushNamed(HelpSupportScreen.routeName);
+        break;
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -70,12 +86,11 @@ class _HomeViewState extends State<HomeView> {
       return;
     }
 
-    final sorted = metadata
-        .where((entry) => entry.id.trim().isNotEmpty)
-        .toList()
-      ..sort(
-        (a, b) => b.savedAt.compareTo(a.savedAt),
-      );
+    final sorted =
+        metadata.where((entry) => entry.id.trim().isNotEmpty).toList()
+          ..sort(
+            (a, b) => b.savedAt.compareTo(a.savedAt),
+          );
 
     final seen = <String>{};
     final limited = <RecentOutlineMetadata>[];
@@ -93,8 +108,7 @@ class _HomeViewState extends State<HomeView> {
     final items = await Future.wait(
       limited.map(
         (entry) async {
-          final cached =
-              await LocalOutlineStorage.instance.findById(entry.id);
+          final cached = await LocalOutlineStorage.instance.findById(entry.id);
           return _RecentOutlineItem(metadata: entry, cached: cached);
         },
       ),
@@ -123,15 +137,15 @@ class _HomeViewState extends State<HomeView> {
       ]);
 
       if (!mounted) return;
-      final trending = (results.first as List<TrendingTopic>)
-          .toList(growable: false)
-        ..sort((a, b) {
-          final countComparison = b.count.compareTo(a.count);
-          if (countComparison != 0) {
-            return countComparison;
-          }
-          return a.topic.toLowerCase().compareTo(b.topic.toLowerCase());
-        });
+      final trending =
+          (results.first as List<TrendingTopic>).toList(growable: false)
+            ..sort((a, b) {
+              final countComparison = b.count.compareTo(a.count);
+              if (countComparison != 0) {
+                return countComparison;
+              }
+              return a.topic.toLowerCase().compareTo(b.topic.toLowerCase());
+            });
 
       final recent = (results.last as List<RecentSearchEntry>)
           .toList(growable: false)
@@ -281,6 +295,7 @@ class _HomeViewState extends State<HomeView> {
       final auth = FirebaseAuth.instance;
       final userId = auth.currentUser?.uid ?? 'anonymous';
       final languageCode = Localizations.localeOf(context).languageCode;
+      final analytics = AnalyticsService();
 
       unawaited(
         CourseApiService.trackSearch(topic: rawTopic, language: languageCode)
@@ -437,6 +452,33 @@ class _HomeViewState extends State<HomeView> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          PopupMenuButton<_HomeMenuAction>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+            onSelected: _handleMenuSelection,
+            itemBuilder: (context) => [
+              PopupMenuItem<_HomeMenuAction>(
+                value: _HomeMenuAction.settings,
+                child: Row(
+                  children: [
+                    const Icon(Icons.settings_outlined),
+                    const SizedBox(width: 12),
+                    Text(l10n.settingsTitle),
+                  ],
+                ),
+              ),
+              PopupMenuItem<_HomeMenuAction>(
+                value: _HomeMenuAction.help,
+                child: Row(
+                  children: [
+                    const Icon(Icons.help_outline),
+                    const SizedBox(width: 12),
+                    Text(l10n.homeOverflowHelpSupport),
+                  ],
+                ),
+              ),
+            ],
+          ),
           IconButton(
             tooltip: l10n.homeLogoutTooltip,
             onPressed: _handleSignOut,
@@ -474,7 +516,8 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 const SizedBox(height: 24),
                 if (_recentOutlines.isNotEmpty) ...[
-                  Text(l10n.homeRecentTitle, style: theme.textTheme.titleMedium),
+                  Text(l10n.homeRecentTitle,
+                      style: theme.textTheme.titleMedium),
                   const SizedBox(height: 12),
                   for (final entry in _recentOutlines.asMap().entries)
                     Padding(
@@ -765,8 +808,7 @@ class _RecentOutlineCard extends StatelessWidget {
     final cached = item.cached;
 
     final chips = <Widget>[];
-    final bandEnum =
-        CourseApiService.tryPlacementBandFromString(metadata.band);
+    final bandEnum = CourseApiService.tryPlacementBandFromString(metadata.band);
     if (bandEnum != null) {
       chips.add(_InfoChip(
         icon: Icons.school_outlined,
@@ -786,9 +828,7 @@ class _RecentOutlineCard extends StatelessWidget {
     );
 
     final outline = cached?.outline ?? const <Map<String, dynamic>>[];
-    final previewModules = outline.length > 2
-        ? outline.sublist(0, 2)
-        : outline;
+    final previewModules = outline.length > 2 ? outline.sublist(0, 2) : outline;
     final remaining = outline.length - previewModules.length;
 
     return Card(
@@ -883,8 +923,7 @@ class _RecentOutlineItem {
 String _formatUpdatedLabel(AppLocalizations l10n, DateTime savedAt) {
   final now = DateTime.now();
   final difference = now.difference(savedAt.toLocal());
-  final safeDifference =
-      difference.isNegative ? Duration.zero : difference;
+  final safeDifference = difference.isNegative ? Duration.zero : difference;
 
   if (safeDifference.inMinutes < 1) {
     return l10n.homeUpdatedJustNow;

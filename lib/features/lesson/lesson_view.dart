@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:aelion/l10n/app_localizations.dart';
+import 'package:aelion/services/analytics/analytics_service.dart';
 import 'package:aelion/services/progress_service.dart';
 
 class LessonView extends StatefulWidget {
@@ -72,7 +74,20 @@ class _LessonViewState extends State<LessonView>
         lessonId: widget.lessonId,
       );
 
-      await svc.tickDailyStreak();
+      final streakUpdate = await svc.tickDailyStreak();
+      if (streakUpdate.incremented) {
+        unawaited(
+          AnalyticsService().track(
+            'return_day',
+            properties: <String, Object?>{
+              'day': streakUpdate.day,
+              'source': 'lesson_completion',
+              'streak_len': streakUpdate.streakLength,
+            },
+            targets: const {AnalyticsService.targetPosthog},
+          ),
+        );
+      }
 
       const gained = 20;
       _recentXpGain = gained;
@@ -184,9 +199,7 @@ class _LessonViewState extends State<LessonView>
                       )
                     : const Icon(Icons.emoji_events_outlined),
                 label: Text(
-                  _completing
-                      ? l10n.commonSaving
-                      : l10n.lessonMarkCompleted,
+                  _completing ? l10n.commonSaving : l10n.lessonMarkCompleted,
                 ),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),

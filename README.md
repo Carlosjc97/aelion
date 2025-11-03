@@ -1,6 +1,6 @@
-﻿# Aelion [![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml)
+# Aelion [![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml)
 
-Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Genâ€‘2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
+Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Gen‑2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
 ---
 
@@ -45,6 +45,13 @@ curl.exe -sS -i -X POST ^
 ```bash
 firebase functions:log --only outline --project aelion-c90d2
 ```
+
+### Firestore Rules
+
+- Production deployments ship with a fully closed `firestore.rules` file (`allow read, write: if false;`). All client requests must flow through Cloud Functions.
+- When you need permissive rules for local emulation only, create a throwaway file such as `firestore.rules.emulator` with `allow read, write: if true;` and start the emulator explicitly:  
+  `firebase emulators:start --only firestore --project aelion-c90d2 --rules firestore.rules.emulator`  
+  Never deploy these permissive rules to production.
 
 ### Behaviour Guarantees
 - Invalid or malformed JSON returns **400** with validation details (never a 500).
@@ -91,6 +98,10 @@ flutter pub get
 flutter test
 flutter run -d chrome
 ```
+
+### Analytics Debugging
+- **GA4 DebugView**: run the app with analytics debug mode enabled (Android: `adb shell setprop debug.firebase.analytics.app com.aelion.learning`; iOS: launch with `-FIRDebugEnabled`). Open *Google Analytics ? Configure ? DebugView* to inspect live events, filtered by the active device stream.
+- **PostHog Live Events**: open your PostHog project and select *Live events*. Events are tagged with `schema_ver="v1"` plus the shared context (platform, build type, locale) for quick filtering.
 
 ### Key UX Notes
 - After any successful outline request, the app saves `topic`, raw JSON, and timestamp in `SharedPreferences`.

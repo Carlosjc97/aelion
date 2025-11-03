@@ -12,6 +12,8 @@ import 'package:aelion/l10n/app_localizations.dart';
 
 import 'package:aelion/features/lesson/lesson_detail_page.dart';
 
+import 'package:aelion/services/analytics/analytics_service.dart';
+
 import 'package:aelion/features/quiz/quiz_screen.dart';
 
 import 'package:aelion/services/course_api_service.dart';
@@ -191,6 +193,8 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
 
   String? _activeLanguage;
 
+  final Set<String> _reportedModuleStarts = <String>{};
+
 
 
   @override
@@ -319,6 +323,84 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
 
 
 
+  void _handleModuleExpansion(
+
+    Map<String, dynamic> module,
+
+    int moduleIndex,
+
+    bool expanded,
+
+  ) {
+
+    if (!expanded) {
+
+      return;
+
+    }
+
+
+
+    final String rawId = module['id']?.toString() ?? '';
+
+    final String moduleId = rawId.trim().isNotEmpty
+
+        ? rawId.trim()
+
+        : 'module-$moduleIndex';
+
+
+
+    if (!_reportedModuleStarts.add(moduleId)) {
+
+      return;
+
+    }
+
+
+
+    final String? band = module['band']?.toString() ?? _preferredBand;
+
+    final int lessonCount = _lessonCount(module);
+
+
+
+    unawaited(
+
+      AnalyticsService().trackModuleStarted(
+
+        moduleId: moduleId,
+
+        topic: _courseId,
+
+        band: band,
+
+        lessonCount: lessonCount,
+
+      ),
+
+    );
+
+  }
+
+
+
+  int _lessonCount(Map<String, dynamic> module) {
+
+    final dynamic lessons = module['lessons'];
+
+    if (lessons is List) {
+
+      return lessons.length;
+
+    }
+
+    return 0;
+
+  }
+
+
+
   Future<void> _loadOutline({
 
     bool forceRefresh = false,
@@ -342,6 +424,10 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
     }
 
     setState(() => _error = null);
+
+    final AnalyticsService analytics = AnalyticsService();
+
+    DateTime? requestStartedAt;
 
 
 
@@ -370,6 +456,16 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
               ? CourseApiService.depthForBand(bandEnum)
 
               : widget.depth ?? 'medium');
+
+
+
+      final Map<String, Object?> outlineRequestProps = <String, Object?>{
+
+        'topic': _courseId,
+
+        'depth': resolvedDepth,
+
+      };
 
 
 
@@ -403,6 +499,30 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
 
           _applyCachedOutline(cached);
 
+
+
+          unawaited(
+
+            analytics.track(
+
+              'outline_rendered',
+
+              properties: <String, Object?>{
+
+                ...outlineRequestProps,
+
+                'cache_hit': true,
+
+                'latency_ms': 0,
+
+              },
+
+              targets: const {AnalyticsService.targetGa4},
+
+            ),
+
+          );
+
           if (notify && mounted) {
 
             _notifyPlanReady(fromCache: true);
@@ -414,6 +534,26 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         }
 
       }
+
+
+
+      requestStartedAt = DateTime.now();
+
+
+
+      unawaited(
+
+        analytics.track(
+
+          'outline_requested',
+
+          properties: outlineRequestProps,
+
+          targets: const {AnalyticsService.targetGa4},
+
+        ),
+
+      );
 
 
 
@@ -508,6 +648,50 @@ class _ModuleOutlineViewState extends State<ModuleOutlineView> {
         _activeLanguage = responseLanguage;
 
       });
+
+
+
+      final int latencyMs = requestStartedAt == null
+
+          ? 0
+
+          : (DateTime.now()
+
+                  .difference(requestStartedAt!)
+
+                  .inMilliseconds)
+
+              .clamp(0, 600000) as int;
+
+
+
+      final bool cacheHit =
+
+          (response['source']?.toString().toLowerCase() ?? '') == 'cache';
+
+
+
+      unawaited(
+
+        analytics.track(
+
+          'outline_rendered',
+
+          properties: <String, Object?>{
+
+            ...outlineRequestProps,
+
+            'cache_hit': cacheHit,
+
+            'latency_ms': latencyMs,
+
+          },
+
+          targets: const {AnalyticsService.targetGa4},
+
+        ),
+
+      );
 
 
 
@@ -1265,21 +1449,35 @@ class _OutlineContent extends StatelessWidget {
 
       ...modules.asMap().entries.map(
 
-            (entry) => _ModuleCard(
+            (entry) {
 
-              key: Key('module-${entry.key}'),
+              final Map<String, dynamic> moduleData =
 
-              courseId: courseId,
+                  Map<String, dynamic>.from(entry.value as Map);
 
-              moduleIndex: entry.key,
 
-              module: entry.value,
 
-              courseLanguage: language,
+              return _ModuleCard(
 
-              l10n: l10n,
+                key: Key('module-${entry.key}'),
 
-            ),
+                courseId: courseId,
+
+                moduleIndex: entry.key,
+
+                module: moduleData,
+
+                courseLanguage: language,
+
+                l10n: l10n,
+
+                onExpansionChanged: (expanded) =>
+
+                    _handleModuleExpansion(moduleData, entry.key, expanded),
+
+              );
+
+            },
 
           ),
 
@@ -1593,6 +1791,8 @@ class _ModuleCard extends StatelessWidget {
 
     this.courseLanguage,
 
+    this.onExpansionChanged,
+
   });
 
 
@@ -1606,6 +1806,8 @@ class _ModuleCard extends StatelessWidget {
   final AppLocalizations l10n;
 
   final String? courseLanguage;
+
+  final ValueChanged<bool>? onExpansionChanged;
 
 
 
@@ -1641,17 +1843,19 @@ class _ModuleCard extends StatelessWidget {
 
       child: ExpansionTile(
 
-        key: Key('module-$moduleIndex-tile'),
+          key: Key('module-$moduleIndex-tile'),
 
-        initiallyExpanded: !locked,
+          initiallyExpanded: !locked,
 
-        leading: Icon(leadingIcon),
+          leading: Icon(leadingIcon),
 
-        title: Text(title),
+          title: Text(title),
 
-        subtitle: Text(lessonCountLabel),
+          subtitle: Text(lessonCountLabel),
 
-        children: lessons.asMap().entries.map((entry) {
+          onExpansionChanged: onExpansionChanged,
+
+          children: lessons.asMap().entries.map((entry) {
 
           final lessonIndex = entry.key;
 
@@ -1934,4 +2138,3 @@ String _formatUpdatedLabel(AppLocalizations l10n, DateTime savedAt) {
   return l10n.homeUpdatedDays(safeDifference.inDays);
 
 }
-
