@@ -51,7 +51,6 @@ firebase-debug.log
 # Firebase / Data Connect caches
 .firebase/
 dataconnect/
-lib/dataconnect_generated/
 
 # GitHub Actions self-hosted runner
 actions-runner/

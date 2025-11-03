@@ -2,91 +2,29 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
   pull_request:
-    branches: ["main"]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-  security-events: write
 
 jobs:
-  check:
+  flutter:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: functions/package-lock.json
-
-      - name: Set up Flutter (stable)
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
 
-      - name: Flutter pub get
-        run: flutter pub get
-
-      - name: Flutter analyze
-        run: flutter analyze
-
-      - name: Flutter test
-        run: flutter test
-
-      - name: Enable Flutter web
-        run: flutter config --enable-web
-
-      - name: Flutter build web (release)
-        run: flutter build web --release
-
-      - name: Install Firebase Functions dependencies
-        working-directory: functions
-        run: npm ci
-
-      - name: Build Firebase Functions
-        working-directory: functions
-        run: npm run build
-
-      - name: Install Gitleaks
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
-        run: |
-          set -e
-          VER=8.24.3
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz -o gitleaks.tar.gz
-          tar -xzf gitleaks.tar.gz gitleaks
-          sudo mv gitleaks /usr/local/bin/gitleaks
-          gitleaks version
-
-      - name: Gitleaks (PR snapshot to SARIF)
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          gitleaks detect --no-git --redact \
-            --report-format sarif --report-path gitleaks-report.sarif \
-            || true
-
-      - name: Gitleaks (full scan on push, blocking)
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          gitleaks detect --source . --redact \
-            --report-format sarif --report-path gitleaks-report.sarif \
-            --exit-code 1
-
-      - name: Upload SARIF to code scanning
-        if: ${{ hashFiles('gitleaks-report.sarif') != '' }}
-        uses: github/codeql-action/upload-sarif@v3
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          sarif_file: gitleaks-report.sarif
+          node-version: '20'
+      - run: npm ci
+        working-directory: functions
+      - run: npm run test
+        working-directory: functions

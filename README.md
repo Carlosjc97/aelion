@@ -162,3 +162,12 @@ Each outline invocation appends a document to the `observability` collection:
 
 Failures to write observability data are logged but never impact the client response.
 
+
+
+## UI Preview
+
+![Sign-in Screen](docs/assets/ui-signin.png)
+![Home Screen](docs/assets/ui-home.png)
+![Home Screen (Plan suggestions)](docs/assets/ui-home2.png)
+![Placement Quiz](docs/assets/ui-quiz.png)
+
