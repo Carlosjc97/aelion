@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "es",
   "appTitle": "Aelion",
   "loginTitle": "Aprende mas rapido con IA",
@@ -14,6 +14,10 @@
   "authError": "No fue posible validar la sesion",
   "authRetry": "Reintentar",
   "homeGreeting": "Que quieres aprender hoy?",
+  "homeGreetingNamedShort": "Hola {name}",
+  "homeGreetingWave": "Hola",
+  "homeMotivation": "Sigue con tu impulso de aprendizaje hoy.",
+  "homePromptTitle": "Que plan generamos hoy?",
   "homeInputHint": "Ejemplo: Algebra en 7 dias, ingles conversacional...",
   "homeSnackMissingTopic": "Escribe un tema para continuar",
   "homeGenerate": "Generar plan con IA",
@@ -34,5 +38,528 @@
   "homePrefillCourse": "Curso rapido de Flutter",
   "homePrefillLanguage": "Ingles en 1 mes",
   "homePrefillProblem": "Resolver integrales",
-  "notFoundRoute": "Ruta no encontrada"
+  "notFoundRoute": "Ruta no encontrada",
+  "commonRetry": "Reintentar",
+  "dialogContinue": "Continuar",
+  "quizTitle": "Quiz de colocaciÃ³n",
+  "quizHeaderTitle": "Calibra {topic}",
+  "quizIntroDescription": "Responde 10 preguntas rapidas para calibrar tu plan.",
+  "startQuiz": "Comenzar",
+  "quizQuestionCounter": "Pregunta {current} de {total}",
+  "quizTimeHint": "Aprox. {minutes} min",
+  "quizAnswerAllPrompt": "Responde todas las preguntas antes de continuar.",
+  "quizExitTitle": "Salir del quiz?",
+  "quizExitMessage": "Perderas tus respuestas.",
+  "quizExitCancel": "Quedarme",
+  "quizExitConfirm": "Salir",
+  "submit": "Enviar",
+  "next": "Siguiente",
+  "quizResultTitle": "Nivel {band}",
+  "quizLevelChip": "Nivel: {band}",
+  "quizScorePercentage": "Puntaje: {score}%",
+  "quizRecommendRefine": "Refinaremos tu plan para el nivel {band}.",
+  "quizKeepCurrentPlan": "Tu plan actual ya coincide con el nivel {band}.",
+  "quizDone": "Listo",
+  "quizUnknownError": "No pudimos cargar el quiz. Intenta de nuevo.",
+  "quizBandBeginner": "Principiante",
+  "quizBandIntermediate": "Intermedio",
+  "quizBandAdvanced": "Avanzado",
+  "courseEntryTitle": "Tomar un curso",
+  "courseEntrySubtitle": "Busca un tema y lanza un quiz de colocaciÃ³n rÃ¡pido.",
+  "courseEntryHint": "Ejemplo: Fundamentos de Flutter, Ã¡lgebra lineal, SQL...",
+  "courseEntryStart": "Iniciar quiz",
+  "courseEntryFooter": "Los quizzes de colocaciÃ³n tienen solo 10 preguntas.",
+  "courseEntryExampleFlutter": "Introducción a Flutter",
+  "courseEntryExampleSql": "SQL para principiantes",
+  "courseEntryExampleDataScience": "Ciencia de datos 101",
+  "courseEntryExampleLogic": "Fundamentos de lógica",
+  "courseEntryResultSummary": "Puntaje {score}% - nivel {band}",
+  "courseEntryResultActionUpdate": "Generando un nuevo plan para el nivel {band}.",
+  "courseEntryResultActionReuse": "Usando tu plan {band} ya existente.",
+  "outlineFallbackTitle": "Plan",
+  "moduleOutlineFallbackTopic": "Tema predeterminado",
+  "outlineUpdatePlan": "Actualizar plan",
+  "refinePlan": "Refinar plan",
+  "outlineRefineRebuild": "El nuevo plan usarÃ¡ el nivel {band}.",
+  "outlineRefineNoChanges": "El plan actual ya corresponde al nivel {band}.",
+  "outlineErrorGeneric": "No pudimos cargar el plan.",
+  "outlineErrorEmpty": "No hay un plan disponible para este tema.",
+  "outlineErrorNoContent": "No hay contenido disponible para este tema.",
+  "outlineSourceCached": "Plan en cachÃ©",
+  "outlineSavedLabel": "Guardado {timestamp}",
+  "outlineStaleBadge": "Caducado",
+  "outlineMetaBand": "Nivel: {band}",
+  "outlineMetaLevel": "Nivel: {level}",
+  "outlineMetaHours": "{hours} horas",
+  "outlineMetaLanguage": "Idioma: {language}",
+  "outlineMetaDepth": "Profundidad: {depth}",
+  "outlineLessonCount": "{count} lecciones",
+  "outlineLessonLanguage": "Idioma: {language}",
+  "outlineModuleFallback": "MÃ³dulo {index}",
+  "outlineLessonFallback": "LecciÃ³n {index}",
+  "homeGreetingNamed": "Hola {name}, Â¿quÃ© quieres aprender hoy?",
+  "homeRecentTitle": "Planes recientes",
+  "homeRecentEmpty": "AÃºn no tienes planes guardados.",
+  "homeRecentView": "Ver plan",
+  "homeRecentMoreCount": "+{count} mÃ³dulos mÃ¡s",
+  "homeRecentSaved": "Guardado {timestamp}",
+  "homeDepthIntro": "Nivel introductorio",
+  "homeDepthMedium": "Profundidad intermedia",
+  "homeDepthDeep": "Profundidad avanzada",
+  "homeUpdatedJustNow": "Actualizado hace un instante",
+  "homeUpdatedMinutes": "Actualizado hace {minutes} min",
+  "homeUpdatedHours": "Actualizado hace {hours} h",
+  "homeUpdatedDays": "Actualizado hace {days} d",
+  "outlineRefineChangeDepthTitle": "Cambiar profundidad",
+  "outlineRefineChangeDepthSubtitle": "Reutiliza o genera planes para niveles intro, intermedio o profundo.",
+  "takePlacementQuiz": "Tomar quiz de colocación",
+  "outlineRefinePlacementQuizSubtitle": "Responde 10 preguntas para calibrar tu plan.",
+  "outlineSnackCached": "Se cargo tu plan guardado.",
+  "outlineSnackUpdated": "Plan actualizado con los ultimos cambios.",
+  "@quizHeaderTitle": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizQuestionCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@quizTimeHint": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@quizResultTitle": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizLevelChip": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizScorePercentage": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "@quizRecommendRefine": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizKeepCurrentPlan": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@courseEntryResultSummary": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      },
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@courseEntryResultActionUpdate": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@courseEntryResultActionReuse": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineRefineRebuild": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineRefineNoChanges": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineSavedLabel": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaBand": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaLevel": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@outlineMetaLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineMetaDepth": {
+    "placeholders": {
+      "depth": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineLessonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@outlineLessonLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@outlineModuleFallback": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@outlineLessonFallback": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeGreetingNamedShort": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeGreetingNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeRecentMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeRecentSaved": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      }
+    }
+  },
+  "@homeUpdatedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeUpdatedHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@homeUpdatedDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "buildExpertiseIn": "Desarrolla experiencia en {topic}",
+  "@buildExpertiseIn": {
+    "placeholders": {
+      "topic": {}
+    }
+  },
+  "depthIntro": "introductoria",
+  "depthMedium": "intermedia",
+  "depthDeep": "profunda",
+  "calibratingPlan": "Calibrando tu plan",
+  "planReady": "Plan creado",
+  "homeRecommendationsTitle": "Recomendados",
+  "homeRecommendationsEmpty": "Sin recomendaciones por ahora.",
+  "homeRecommendationsError": "No pudimos cargar las recomendaciones.",
+  "quizCooldownMinutes": "Espera {minutes} minuto(s) antes de rehacer el quiz.",
+  "@quizCooldownMinutes": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "quizCooldownSeconds": "Espera unos segundos antes de rehacer el quiz.",
+  "quizOpenPlan": "Abrir plan",
+  "quizApplyResults": "Aplicar resultados",
+  "quizResultsNoChanges": "Resultados guardados sin cambios.",
+  "planAlreadyAligned": "Tu plan ya está alineado.",
+  "lessonCompleteToast": "¡Lección completada! XP total: {xp}",
+  "lessonXpReward": "+{xp} XP",
+  "lessonUpdateError": "No pudimos actualizar la lección. Intenta de nuevo.",
+  "lessonPremiumContent": "Contenido premium",
+  "lessonDescriptionTitle": "Descripción",
+  "lessonMarkCompleted": "Marcar lección como completada",
+  "lessonTipTakeNotes": "Consejo: toma notas rápidas antes de continuar.",
+  "lessonFallbackTitle": "Lección",
+  "lessonObjectiveTitle": "Objetivo de la lección",
+  "lessonObjectiveSummary": "• Comprende el concepto principal.\n• Realiza una práctica breve.\n• Avanza cuando te sientas listo.",
+  "lessonQuizTitle": "Pregunta",
+  "lessonQuizOption": "{letter}) {option}",
+  "lessonQuizCheck": "Comprobar respuesta",
+  "lessonQuizCorrect": "✅ ¡Correcto!",
+  "lessonQuizIncorrect": "❌ Incorrecto. La respuesta era {answer}.",
+  "lessonTipReview": "Consejo: si algo no queda claro, vuelve a leer y practica 2 minutos más antes de avanzar.",
+  "lessonContentComingSoon": "Contenido disponible pronto.",
+  "commonOk": "Aceptar",
+  "commonSaving": "Guardando...",
+  "homeGenerateError": "No pudimos generar el plan. Intenta de nuevo.",
+  "topicSearchMissingTopic": "Escribe un tema para continuar",
+  "topicSearchTitleFallback": "Buscar un tema",
+  "topicSearchHintFallback": "¿Qué quieres aprender?",
+  "topicSearchStartButton": "Tomar mini quiz",
+  "quizPlanCreated": "Plan creado.",
+  "@lessonCompleteToast": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@lessonXpReward": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "@lessonQuizOption": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      },
+      "option": {
+        "type": "String"
+      }
+    }
+  },
+  "@lessonQuizIncorrect": {
+    "placeholders": {
+      "answer": {
+        "type": "String"
+      }
+    }
+  },
+  "helpSupportTitle": "Ayuda y soporte",
+  "helpSupportSubtitle": "Respuestas, formas de contacto y enlaces a la comunidad.",
+  "helpFaqSectionTitle": "Preguntas frecuentes",
+  "helpCommunitySectionTitle": "Comunidad",
+  "helpContactSectionTitle": "Opciones de contacto",
+  "helpJoinCommunity": "Unirte a la comunidad",
+  "helpJoinCommunityDescription": "Elige cómo conectarte con otros estudiantes.",
+  "helpJoinCommunityDialogTitle": "Abrir Telegram",
+  "helpJoinCommunityChannel": "Canal de noticias",
+  "helpJoinCommunityGroup": "Chat de la comunidad",
+  "helpContactSpanish": "Correo de soporte (ES)",
+  "helpContactSpanishDescription": "Escríbenos en español; respondemos rápido.",
+  "helpContactEnglish": "Correo de soporte (EN)",
+  "helpContactEnglishDescription": "Recibe ayuda en inglés del equipo principal.",
+  "helpReportBug": "Reportar un error",
+  "helpReportBugDescription": "Incluye capturas o pasos si es posible.",
+  "helpAboutTitle": "Acerca de esta app",
+  "helpAboutDescription": "Creada con Flutter y Firebase; todo el contenido se genera mediante Cloud Functions seguras.",
+  "helpPrivacyPolicy": "Política de privacidad",
+  "helpTermsOfService": "Términos de servicio",
+  "helpLaunchError": "No pudimos abrir el enlace. Intenta de nuevo.",
+  "homeOverflowHelpSupport": "Ayuda y soporte",
+  "settingsTitle": "Configuración",
+  "settingsGeneralSection": "General",
+  "settingsHelpSupport": "Ayuda y soporte",
+  "settingsHelpSupportSubtitle": "Preguntas, contacto y políticas",
+  "helpEmailSubject": "Solicitud de soporte {appName} (v{version} · {device})",
+  "helpBugReportSubject": "Reporte de bug {appName} (v{version} · {device})",
+  "helpBugReportBody": "Marca de tiempo: {timestamp}\nLocalización: {locale}\nVersión: {version}\nDispositivo: {device}\n\nPasos para reproducir:\n- ",
+  "helpAboutVersion": "Versión {version}",
+  "helpFaqQuestion1": "¿Cómo genero mi primer plan de aprendizaje?",
+  "helpFaqAnswer1": "En la pantalla Inicio, escribe un tema y toca Generar plan con IA.",
+  "helpFaqQuestion2": "¿Dónde encuentro mis planes recientes?",
+  "helpFaqAnswer2": "Desplázate a Recientes en Inicio; cada tarjeta abre el plan guardado.",
+  "helpFaqQuestion3": "¿Cómo se eligen los temas en tendencia?",
+  "helpFaqAnswer3": "Combinamos tus últimas búsquedas con solicitudes populares en tu idioma.",
+  "helpFaqQuestion4": "¿Qué es un quiz de colocación?",
+  "helpFaqAnswer4": "Es una calibración de 10 preguntas que define el nivel adecuado antes del plan.",
+  "helpFaqQuestion5": "¿Puedo cambiar la profundidad del plan después?",
+  "helpFaqAnswer5": "Abre el plan, toca Refinar plan y elige la profundidad que se ajuste a tu meta.",
+  "helpFaqQuestion6": "¿Cómo cambio el idioma del plan?",
+  "helpFaqAnswer6": "Genera nuevamente tras elegir tu idioma preferido en el quiz o en el prompt.",
+  "helpFaqQuestion7": "¿Qué sucede si pierdo la conexión?",
+  "helpFaqAnswer7": "Los planes y recientes en caché siguen disponibles; las nuevas generaciones esperan a que vuelvas a estar en línea.",
+  "helpFaqQuestion8": "¿Cómo se guarda mi progreso?",
+  "helpFaqAnswer8": "Guardamos metadatos y planes en caché de forma segura en tu dispositivo con SharedPreferences.",
+  "helpFaqQuestion9": "¿Cómo cierro sesión de forma segura?",
+  "helpFaqAnswer9": "Usa el icono de salida en la barra superior; cierra sesión en Firebase y en Google en móviles.",
+  "helpFaqQuestion10": "¿Cómo cambio de cuenta de Google?",
+  "helpFaqAnswer10": "Cierra sesión y elige la otra cuenta cuando aparezca la hoja de inicio de sesión de Google.",
+  "helpFaqQuestion11": "¿Cómo borro mis búsquedas recientes?",
+  "helpFaqAnswer11": "El historial se limita a las últimas entradas por cuenta y se limpia automáticamente al cerrar sesión.",
+  "helpFaqQuestion12": "¿Qué datos guardan en Firestore?",
+  "helpFaqAnswer12": "Solo registros anonimizados de planes en caché y métricas de observabilidad creadas por Functions.",
+  "helpFaqQuestion13": "¿Cómo reporto contenido incorrecto?",
+  "helpFaqAnswer13": "Usa el botón Reportar un error y describe lo que debemos corregir.",
+  "helpFaqQuestion14": "¿De dónde salen las recomendaciones?",
+  "helpFaqAnswer14": "Mezclan demanda agregada con tu actividad reciente para mostrar temas relevantes.",
+  "helpFaqQuestion15": "¿Puedo regenerar un plan después del quiz?",
+  "helpFaqAnswer15": "Sí. Al aplicar los resultados se reconstruye el plan con el nuevo nivel.",
+  "helpFaqQuestion16": "¿Cuánto tiempo se conservan los planes en caché?",
+  "helpFaqAnswer16": "Permanecen hasta que los reemplazas o borras la memoria; la etiqueta Caducado aparece tras 24 horas.",
+  "helpFaqQuestion17": "¿Por qué me piden rehacer el quiz?",
+  "helpFaqAnswer17": "Lo sugerimos cuando tu nivel parece desactualizado o la caché supera su ventana de vigencia.",
+  "helpFaqQuestion18": "¿Puedo usar la app en varios dispositivos?",
+  "helpFaqAnswer18": "Sí. Inicia sesión con la misma cuenta de Google en web o Android para mantener la sincronización.",
+  "helpFaqQuestion19": "¿La app soporta modo oscuro?",
+  "helpFaqAnswer19": "Seguimos el tema del sistema y mantenemos el contraste dentro de las guías de accesibilidad.",
+  "helpFaqQuestion20": "¿Cómo reinicio mi racha de aprendizaje?",
+  "helpFaqAnswer20": "Borra los datos locales desde los ajustes del sistema o inicia sesión con una cuenta nueva.",
+  "helpFaqQuestion21": "¿Cómo solicito una nueva función?",
+  "helpFaqAnswer21": "Envía tu idea por el correo de soporte en inglés y añade 'Feature idea' en el mensaje.",
+  "helpFaqQuestion22": "¿Necesito una cuenta para usar la app?",
+  "helpFaqAnswer22": "Sí, usamos autenticación de Google para proteger tu contenido y personalización.",
+  "helpFaqQuestion23": "¿Qué pasa si cierro la app durante un quiz?",
+  "helpFaqAnswer23": "Puedes reiniciar el quiz cuando quieras; el progreso se reinicia para calibrar correctamente.",
+  "helpFaqQuestion24": "¿Cómo elimino los planes en caché?",
+  "helpFaqAnswer24": "Los planes en caché viven en tu dispositivo; desinstala o borra los datos de la app para quitarlos.",
+  "helpFaqQuestion25": "¿Comparten mis datos personales con terceros?",
+  "helpFaqAnswer25": "No. Solo usamos telemetría agregada para confiabilidad y nunca vendemos información personal.",
+  "helpFaqQuestion26": "¿Puedo usar la app sin Firebase Functions?",
+  "helpFaqAnswer26": "No. El acceso directo a Firestore está bloqueado; todas las solicitudes pasan por Functions seguras.",
+  "helpFaqQuestion27": "¿Por qué veo la etiqueta Caducado?",
+  "helpFaqAnswer27": "Indica que el plan en caché pasó el umbral de frescura y conviene regenerarlo.",
+  "helpFaqQuestion28": "¿Cómo me uno a la comunidad?",
+  "helpFaqAnswer28": "Toca Unirte a la comunidad para abrir el canal o el chat en Telegram.",
+  "helpFaqQuestion29": "¿Cómo reviso la versión de la app?",
+  "helpFaqAnswer29": "Abre Ayuda y soporte y desplázate a Acerca de; ahí verás el número de versión.",
+  "helpFaqQuestion30": "¿Puedo ejecutar la app con emuladores locales?",
+  "helpFaqAnswer30": "Sí. Ajusta USE_FUNCTIONS_EMULATOR=true en env.public y arranca los emuladores de Firebase.",
+  "helpFaqQuestion31": "¿Cómo contacto soporte en español?",
+  "helpFaqAnswer31": "Usa el botón de correo en español; llega directo a nuestro equipo hispanohablante.",
+  "helpFaqQuestion32": "¿Cuánto tardan en responder?",
+  "helpFaqAnswer32": "Buscamos responder en un día hábil y normalmente lo hacemos antes.",
+  "helpFaqQuestion33": "¿Qué datos ayudan en un reporte de errores?",
+  "helpFaqAnswer33": "Incluye la marca de tiempo, tu localidad, versión de la app, dispositivo y pasos para reproducir.",
+  "helpFaqQuestion34": "¿Cómo obtengo la versión más reciente?",
+  "helpFaqAnswer34": "Actualiza desde tu tienda de apps o haz pull de la rama main si contribuyes al proyecto.",
+  "helpFaqQuestion35": "¿Dónde leo la política de privacidad y los términos?",
+  "helpFaqAnswer35": "Sigue los enlaces de Política de privacidad y Términos de servicio en la sección Acerca de.",
+  "@helpEmailSubject": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@helpBugReportSubject": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@helpBugReportBody": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      },
+      "locale": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@helpAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }

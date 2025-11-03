@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/widgets/skeleton.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/widgets/skeleton.dart';
 
 class TopicSearchArgs {
   const TopicSearchArgs({required this.originLabel, required this.placeholder});
@@ -31,38 +31,27 @@ class _TopicSearchViewState extends State<TopicSearchView> {
   }
 
   Future<void> _startQuiz() async {
+    final l10n = AppLocalizations.of(context)!;
     final topic = controller.text.trim();
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Type a topic to continue')));
+        SnackBar(content: Text(l10n.topicSearchMissingTopic)),
+      );
       return;
     }
     if (busy) return;
 
     setState(() => busy = true);
     try {
-      final result = await Navigator.pushNamed(
+      final languageCode = Localizations.localeOf(context).languageCode;
+      await Navigator.pushNamed(
         context,
         QuizScreen.routeName,
-        arguments: topic,
+        arguments: QuizScreenArgs(
+          topic: topic,
+          language: languageCode,
+        ),
       );
-
-      if (!mounted) return;
-      if (result is Map && result['quizPassed'] == true) {
-        final level =
-            result['level'] is String ? (result['level'] as String).trim() : '';
-        final languageCode = Localizations.localeOf(context).languageCode;
-        await Navigator.pushNamed(
-          context,
-          ModuleOutlineView.routeName,
-          arguments: ModuleOutlineArgs(
-            topic: topic,
-            level: level.isEmpty ? null : level,
-            language: languageCode,
-            goal: 'Build expertise in $topic',
-          ),
-        );
-      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -70,9 +59,10 @@ class _TopicSearchViewState extends State<TopicSearchView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final args = ModalRoute.of(context)?.settings.arguments as TopicSearchArgs?;
-    final title = args?.originLabel ?? 'Search a topic';
-    final hint = args?.placeholder ?? 'What do you want to learn?';
+    final title = args?.originLabel ?? l10n.topicSearchTitleFallback;
+    final hint = args?.placeholder ?? l10n.topicSearchHintFallback;
 
     final body = Padding(
       padding: const EdgeInsets.all(16),
@@ -92,7 +82,7 @@ class _TopicSearchViewState extends State<TopicSearchView> {
           FilledButton.icon(
             onPressed: busy ? null : _startQuiz,
             icon: const Icon(Icons.quiz_outlined),
-            label: const Text('Take mini quiz'),
+            label: Text(l10n.topicSearchStartButton),
           ),
         ],
       ),
@@ -135,3 +125,4 @@ class _TopicLoadingOverlay extends StatelessWidget {
     );
   }
 }
+

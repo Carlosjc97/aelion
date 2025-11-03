@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/core/router.dart';
-import 'package:aelion/features/auth/auth_gate.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/core/router.dart';
+import 'package:edaptia/features/auth/auth_gate.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 Widget _app({Locale locale = const Locale('es')}) => MaterialApp(
       locale: locale,
@@ -18,9 +18,15 @@ void main() {
   testWidgets('Module route envuelve ModuleOutlineView en AuthGate',
       (tester) async {
     final route = AppRouter.onGenerateRoute(
-      const RouteSettings(
+      RouteSettings(
         name: ModuleOutlineView.routeName,
-        arguments: ModuleOutlineArgs(topic: 'Introduccion a Flutter'),
+        arguments: ModuleOutlineArgs(
+          topic: 'Introduccion a Flutter',
+          initialOutline: const [
+            {'title': 'Intro', 'lessons': []},
+          ],
+          initialSource: 'cache',
+        ),
       ),
     );
     expect(route, isA<MaterialPageRoute>());
@@ -41,6 +47,9 @@ void main() {
     expect(built, isA<AuthGate>());
     final gate = built! as AuthGate;
     expect(gate.child, isA<ModuleOutlineView>());
+    final moduleView = gate.child as ModuleOutlineView;
+    expect(moduleView.initialOutline, isNotNull);
+    expect(moduleView.initialSource, 'cache');
   });
 
   testWidgets('Ruta inexistente construye pantalla de 404', (tester) async {
@@ -57,3 +66,4 @@ void main() {
     );
   });
 }
+

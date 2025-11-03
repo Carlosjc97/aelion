@@ -1,6 +1,8 @@
 // lib/services/progress_service.dart
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 
 class CourseProgress {
   final String topic;
@@ -30,6 +32,18 @@ class CourseProgress {
         lastStep: json['lastStep'] as int,
         completed: json['completed'] as bool,
       );
+}
+
+class StreakUpdate {
+  const StreakUpdate({
+    required this.incremented,
+    required this.streakLength,
+  });
+
+  final bool incremented;
+  final int streakLength;
+
+  int get day => streakLength;
 }
 
 class ProgressService {
@@ -77,26 +91,31 @@ class ProgressService {
 
   int get streakCount => _prefs?.getInt(_kStreakCount) ?? 0;
 
-  Future<void> tickDailyStreak() async {
+  Future<StreakUpdate> tickDailyStreak() async {
     final today = DateTime.now();
     final startIso = _prefs?.getString(_kStreakStart);
     final start = _parseDate(startIso);
     if (start == null) {
       await _prefs?.setString(_kStreakStart, today.toIso8601String());
       await _prefs?.setInt(_kStreakCount, 1);
-      return;
+      return const StreakUpdate(incremented: true, streakLength: 1);
     }
     final sameDay = DateTime(start.year, start.month, start.day);
     final nowDay = DateTime(today.year, today.month, today.day);
     final diff = nowDay.difference(sameDay).inDays;
-    if (diff == 0) return;
+    final current = streakCount;
+    if (diff == 0) {
+      return StreakUpdate(incremented: false, streakLength: current);
+    }
     if (diff == 1) {
       await _prefs?.setString(_kStreakStart, today.toIso8601String());
-      await _prefs?.setInt(_kStreakCount, streakCount + 1);
-    } else {
-      await _prefs?.setString(_kStreakStart, today.toIso8601String());
-      await _prefs?.setInt(_kStreakCount, 1);
+      final next = current + 1;
+      await _prefs?.setInt(_kStreakCount, next);
+      return StreakUpdate(incremented: true, streakLength: next);
     }
+    await _prefs?.setString(_kStreakStart, today.toIso8601String());
+    await _prefs?.setInt(_kStreakCount, 1);
+    return const StreakUpdate(incremented: true, streakLength: 1);
   }
 
   Future<CourseProgress> getCourseProgress(String topic) async {
@@ -166,6 +185,13 @@ class ProgressService {
         .toList();
   }
 
+  bool _areLessonsComplete(List<Map<String, dynamic>> lessons) {
+    return lessons.every((lesson) {
+      final status = lesson['status']?.toString().toLowerCase();
+      return status == 'done';
+    });
+  }
+
   Future<Map<String, dynamic>?> markLessonCompleted({
     required String courseId,
     required String moduleId,
@@ -185,6 +211,9 @@ class ProgressService {
     final module = modules[mIndex];
     final lessons = _asMapList(module['lessons']);
     if (lessons.isEmpty) return outline;
+
+    final lessonCount = lessons.length;
+    final wasModuleComplete = _areLessonsComplete(lessons);
 
     final lIndex = lessons.indexWhere(
       (lesson) => lesson['id']?.toString() == lessonId,
@@ -213,7 +242,22 @@ class ProgressService {
     modules[mIndex] = module;
     outline['modules'] = modules;
 
+    final isModuleComplete = _areLessonsComplete(lessons);
+    if (!wasModuleComplete && isModuleComplete) {
+      final moduleBand =
+          module['band']?.toString() ?? outline['band']?.toString();
+      unawaited(
+        AnalyticsService().trackModuleCompleted(
+          moduleId: moduleId,
+          topic: courseId,
+          band: moduleBand,
+          lessonCount: lessonCount,
+        ),
+      );
+    }
+
     await save(courseId, outline);
     return outline;
   }
 }
+

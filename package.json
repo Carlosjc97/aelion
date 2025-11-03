@@ -7,10 +7,12 @@
     "node": "^20"
   },
   "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated",
+    "@edaptia/dataconnect-generated": "file:src/dataconnect-generated",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "node-fetch": "^3.3.2",
-    "firebase": "^12.3.0"
+    "firebase": "^12.3.0",
+    "node-fetch": "^3.3.2"
   }
 }

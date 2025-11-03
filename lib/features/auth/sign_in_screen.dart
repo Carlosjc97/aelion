@@ -3,9 +3,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/google_sign_in_helper.dart';
-import 'package:aelion/widgets/a11y_button.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
+import 'package:edaptia/services/analytics/guest_id.dart';
+import 'package:edaptia/services/google_sign_in_helper.dart';
+import 'package:edaptia/widgets/a11y_button.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -29,7 +31,8 @@ class _SignInScreenState extends State<SignInScreen> {
       if (kIsWeb) {
         final provider = GoogleAuthProvider()
           ..setCustomParameters(<String, String>{'prompt': 'select_account'});
-        await FirebaseAuth.instance.signInWithPopup(provider);
+        final credential = await FirebaseAuth.instance.signInWithPopup(provider);
+        await _handleLoginSuccess(credential);
         return;
       }
 
@@ -72,7 +75,9 @@ class _SignInScreenState extends State<SignInScreen> {
         accessToken: authorization.accessToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      await _handleLoginSuccess(userCredential);
     } on GoogleSignInException catch (error) {
       debugPrint(
           '[SignInScreen] GoogleSignInException: ${error.code} ${error.description}');
@@ -88,6 +93,18 @@ class _SignInScreenState extends State<SignInScreen> {
           l10n?.loginError ?? 'We could not complete the sign-in. Try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleLoginSuccess(UserCredential credential) async {
+    final uid = credential.user?.uid;
+    if (uid == null) return;
+    try {
+      final guestId = await GuestIdStore().getOrCreate();
+      await AnalyticsService().aliasAndIdentify(uid, guestId);
+    } catch (error, stackTrace) {
+      debugPrint('[SignInScreen] Analytics identify failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
@@ -239,3 +256,4 @@ class _HighlightsCard extends StatelessWidget {
     );
   }
 }
+

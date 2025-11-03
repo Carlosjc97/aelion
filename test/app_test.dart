@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:aelion/core/router.dart';
-import 'package:aelion/features/auth/sign_in_screen.dart';
-import 'package:aelion/features/home/home_view.dart';
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/core/router.dart';
+import 'package:edaptia/features/auth/sign_in_screen.dart';
+import 'package:edaptia/features/home/home_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 Widget _buildApp() => MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -23,3 +23,4 @@ void main() {
     expect(find.byType(SignInScreen), findsOneWidget);
   });
 }
+

@@ -1,6 +1,3 @@
-## 📄 3. `.github/pull_request_template.md`
-
-```markdown
 # 🚀 Pull Request – Aelion
 
 ## 📋 Descripción
@@ -21,7 +18,7 @@
 ## 🔀 Tipo de cambio
 - [ ] 🚀 Feature (nueva funcionalidad)
 - [ ] 🐛 Fix (corrección de bug)
-- [ ] 🛠 Chore (infraestructura/configuración)
+- [ ] ⚙️ Chore (infraestructura/configuración)
 - [ ] 📖 Docs (solo documentación)
 
 ---

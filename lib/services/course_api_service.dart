@@ -1,66 +1,133 @@
-import 'dart:convert';
-import 'dart:math' as math;
-
-import 'package:aelion/services/api_config.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
-/// HTTP client for the learning backend.
+import 'course/course_api_client.dart';
+import 'course/models.dart';
+import 'course/outline_service.dart' as outline_service;
+import 'course/placement_band.dart' as band_utils;
+import 'course/placement_band.dart';
+import 'course/quiz_service.dart' as quiz_service;
+import 'course/search_service.dart' as search_service;
+import 'course/trending_service.dart' as trending_service;
+
+export 'course/models.dart'
+    show
+        OutlinePlan,
+        OutlineModule,
+        OutlineLesson,
+        TrendingTopic,
+        QuizQuestionDto,
+        PlacementQuizQuestion,
+        PlacementQuizAnswer;
+export 'course/placement_band.dart' show PlacementBand;
+
+typedef PlacementQuizStartResponse = PlacementQuizStart;
+typedef PlacementQuizGradeResponse = PlacementQuizGrade;
+typedef OutlineFetcher = outline_service.OutlineFetcher;
+
+/// Backwards compatible façade over the modular course services.
 class CourseApiService {
   CourseApiService._();
 
-  static const _timeout = Duration(seconds: 25);
+  static http.Client get httpClient => CourseApiClient.httpClient;
+  static set httpClient(http.Client client) =>
+      CourseApiClient.httpClient = client;
 
-  static Uri _uri(String path) => Uri.parse('${AppConfig.apiBaseUrl}$path');
+  static const Duration _timeout = CourseApiClient.defaultTimeout;
 
-  /// Calls `/outline` and returns the normalized payload.
+  static PlacementBand placementBandFromString(String raw) =>
+      band_utils.placementBandFromString(raw);
+
+  static String placementBandToString(PlacementBand band) =>
+      band_utils.placementBandToString(band);
+
+  static String depthForBand(PlacementBand band) =>
+      band_utils.depthForBand(band);
+
+  static PlacementBand bandForDepth(String depth) =>
+      band_utils.bandForDepth(depth);
+
+  static PlacementBand placementBandForScore(num score) =>
+      band_utils.placementBandForScore(score);
+
+  static PlacementBand? tryPlacementBandFromString(String? raw) =>
+      band_utils.tryPlacementBandFromString(raw);
+
   static Future<Map<String, dynamic>> generateOutline({
     required String topic,
     String? goal,
     String? level,
     String language = 'en',
+    String depth = 'medium',
+    PlacementBand? band,
     Duration timeout = _timeout,
     int maxRetries = 3,
-  }) async {
-    final cleanedTopic = topic.trim();
-    if (cleanedTopic.isEmpty) {
-      throw ArgumentError('Topic cannot be empty.');
-    }
-
-    final payload = <String, dynamic>{
-      'topic': cleanedTopic,
-      'goal': (goal?.trim().isNotEmpty ?? false)
-          ? goal!.trim()
-          : 'Master $cleanedTopic',
-      'language': _normalizeLanguage(language),
-    };
-
-    final normalizedLevel = level?.trim();
-    if (normalizedLevel != null && normalizedLevel.isNotEmpty) {
-      payload['level'] = normalizedLevel.toLowerCase();
-    }
-
-    final response = await _postJsonWithRetry(
-      path: '/outline',
-      body: payload,
+  }) {
+    return outline_service.OutlineService.generateOutlineMap(
+      topic: topic,
+      goal: goal,
+      level: level,
+      language: language,
+      depth: depth,
+      band: band,
       timeout: timeout,
       maxRetries: maxRetries,
     );
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map) {
-      throw const FormatException('Invalid outline response payload.');
-    }
-    final map = Map<String, dynamic>.from(decoded);
-
-    if (map['modules'] is! List) {
-      throw const FormatException('Outline response is missing "modules".');
-    }
-
-    return map;
   }
 
-  /// Calls `/quiz` and returns the list of deterministic questions.
+  static Future<PlacementQuizStartResponse> startPlacementQuiz({
+    required String topic,
+    String language = 'en',
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return quiz_service.QuizService.startPlacementQuiz(
+      topic: topic,
+      language: language,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<PlacementQuizGradeResponse> gradePlacementQuiz({
+    required String quizId,
+    required List<PlacementQuizAnswer> answers,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return quiz_service.QuizService.gradePlacementQuiz(
+      quizId: quizId,
+      answers: answers,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<void> trackSearch({
+    required String topic,
+    required String language,
+    Duration timeout = const Duration(seconds: 8),
+    int maxRetries = 0,
+  }) {
+    return search_service.SearchService.trackSearch(
+      topic: topic,
+      language: language,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<List<TrendingTopic>> fetchTrending({
+    required String language,
+    Duration timeout = const Duration(seconds: 12),
+    int maxRetries = 1,
+  }) {
+    return trending_service.TrendingService.fetchTrending(
+      language: language,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
   static Future<List<QuizQuestionDto>> generateQuiz({
     required String topic,
     int numQuestions = 10,
@@ -68,179 +135,14 @@ class CourseApiService {
     String? moduleTitle,
     Duration timeout = _timeout,
     int maxRetries = 2,
-  }) async {
-    final trimmedTopic = topic.trim();
-    final trimmedModule = moduleTitle?.trim() ?? '';
-
-    if (trimmedTopic.isEmpty && trimmedModule.isEmpty) {
-      throw ArgumentError('A topic or moduleTitle must be provided.');
-    }
-
-    if (numQuestions <= 0) {
-      throw ArgumentError('numQuestions must be greater than zero.');
-    }
-
-    final payload = <String, dynamic>{
-      'numQuestions': numQuestions,
-      'language': _normalizeLanguage(language),
-    };
-
-    if (trimmedTopic.isNotEmpty) {
-      payload['topic'] = trimmedTopic;
-    }
-
-    if (trimmedModule.isNotEmpty) {
-      payload['moduleTitle'] = trimmedModule;
-    }
-
-    final response = await _postJsonWithRetry(
-      path: '/quiz',
-      body: payload,
+  }) {
+    return quiz_service.QuizService.generateQuiz(
+      topic: topic,
+      numQuestions: numQuestions,
+      language: language,
+      moduleTitle: moduleTitle,
       timeout: timeout,
       maxRetries: maxRetries,
-    );
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map) {
-      throw const FormatException('Invalid quiz response payload.');
-    }
-
-    final map = Map<String, dynamic>.from(decoded);
-    final rawQuestions = map['questions'];
-    if (rawQuestions is! List) {
-      throw const FormatException('Quiz response is missing "questions".');
-    }
-
-    return rawQuestions.map((item) {
-      if (item is! Map) {
-        throw const FormatException('Quiz question must be an object.');
-      }
-      return QuizQuestionDto.fromMap(Map<String, dynamic>.from(item));
-    }).toList(growable: false);
-  }
-
-  static Future<http.Response> _postJsonWithRetry({
-    required String path,
-    required Map<String, dynamic> body,
-    required Duration timeout,
-    required int maxRetries,
-  }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final idToken = await user?.getIdToken();
-
-    int attempt = 0;
-    Object? lastError;
-    while (attempt <= maxRetries) {
-      try {
-        final response = await http
-            .post(
-              _uri(path),
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                if (idToken != null) 'Authorization': 'Bearer $idToken',
-                if (user != null) 'X-User-Id': user.uid,
-              },
-              body: jsonEncode(body),
-            )
-            .timeout(timeout);
-
-        if (response.statusCode == 200) {
-          return response;
-        }
-
-        if (response.statusCode == 429 ||
-            (response.statusCode >= 500 && response.statusCode < 600)) {
-          attempt++;
-          if (attempt > maxRetries) {
-            final detail =
-                response.body.isNotEmpty ? response.body : 'No details';
-            throw Exception(
-              'Failed after retries (${response.statusCode}): $detail',
-            );
-          }
-          final delayMs = _backoffWithJitterMs(attempt);
-          await Future.delayed(Duration(milliseconds: delayMs));
-          continue;
-        }
-
-        final detail = response.body.isNotEmpty ? response.body : 'No details';
-        throw Exception(
-          'Request to $path failed (${response.statusCode}): $detail',
-        );
-      } catch (error) {
-        lastError = error;
-        attempt++;
-        if (attempt > maxRetries) {
-          rethrow;
-        }
-        final delayMs = _backoffWithJitterMs(attempt);
-        await Future.delayed(Duration(milliseconds: delayMs));
-      }
-    }
-
-    throw Exception('Request to $path failed. Last error: $lastError');
-  }
-
-  static String _normalizeLanguage(String raw) {
-    final trimmed = raw.trim();
-    if (trimmed.isEmpty) {
-      return 'en';
-    }
-    return trimmed;
-  }
-
-  static int _backoffWithJitterMs(int attempt) {
-    const base = 400;
-    const cap = 3000;
-    final expo = base * math.pow(2, attempt - 1).toInt();
-    final jitter = math.Random().nextInt(250);
-    return math.min(cap, expo + jitter);
-  }
-}
-
-class QuizQuestionDto {
-  const QuizQuestionDto({
-    required this.question,
-    required this.options,
-    required this.answer,
-  });
-
-  final String question;
-  final List<String> options;
-  final String answer;
-
-  int get correctIndex => options.indexOf(answer);
-
-  factory QuizQuestionDto.fromMap(Map<String, dynamic> map) {
-    final question = map['question']?.toString().trim() ?? '';
-    final answer = map['answer']?.toString().trim() ?? '';
-    final rawOptions = map['options'];
-
-    final options = rawOptions is List
-        ? rawOptions.map((option) => option.toString()).toList(growable: false)
-        : <String>[];
-
-    if (question.isEmpty) {
-      throw const FormatException('Quiz question is missing "question".');
-    }
-
-    if (options.length != 4) {
-      throw const FormatException(
-        'Quiz question must include exactly 4 options.',
-      );
-    }
-
-    if (answer.isEmpty || !options.contains(answer)) {
-      throw const FormatException(
-        'Quiz question "answer" must match one of the options.',
-      );
-    }
-
-    return QuizQuestionDto(
-      question: question,
-      options: options,
-      answer: answer,
     );
   }
 }

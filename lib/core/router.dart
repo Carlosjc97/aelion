@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:aelion/features/auth/auth.dart';
-import 'package:aelion/features/courses/course_entry_view.dart';
-import 'package:aelion/features/home/home_view.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/features/topics/topic_search_view.dart';
-import 'package:aelion/widgets/not_found_view.dart';
+import 'package:edaptia/features/auth/auth.dart';
+import 'package:edaptia/features/courses/course_entry_view.dart';
+import 'package:edaptia/features/home/home_view.dart';
+import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/features/settings/settings_view.dart';
+import 'package:edaptia/features/support/help_support_screen.dart';
+import 'package:edaptia/features/topics/topic_search_view.dart';
+import 'package:edaptia/widgets/not_found_view.dart';
 
 class AppRouter {
   const AppRouter._();
@@ -63,23 +66,76 @@ class AppRouter {
             level: args.level,
             language: args.language,
             goal: args.goal,
+            depth: args.depth,
+            preferredBand: args.preferredBand,
+            recommendRegenerate: args.recommendRegenerate,
+            initialOutline: args.initialOutline,
+            initialResponse: args.initialResponse,
+            initialSource: args.initialSource,
+            initialSavedAt: args.initialSavedAt,
           ),
           RouteSettings(
             name: ModuleOutlineView.routeName,
             arguments: args,
           ),
         );
-      case QuizScreen.routeName:
-        final topic = settings.arguments;
-        if (topic is! String || topic.trim().isEmpty) {
-          return _invalidRoute(settings, 'QuizScreen requires a topic string');
+      case LessonDetailPage.routeName:
+        final lessonArgs = settings.arguments;
+        if (lessonArgs is! LessonDetailArgs) {
+          return _invalidRoute(
+            settings,
+            'LessonDetailPage requires LessonDetailArgs.',
+          );
         }
         return _guarded(
-          QuizScreen(topic: topic),
+          LessonDetailPage(args: lessonArgs),
+          RouteSettings(
+            name: LessonDetailPage.routeName,
+            arguments: lessonArgs,
+          ),
+        );
+      case QuizScreen.routeName:
+        final rawArgs = settings.arguments;
+        QuizScreenArgs? args;
+        if (rawArgs is QuizScreenArgs) {
+          args = rawArgs;
+        } else if (rawArgs is String && rawArgs.trim().isNotEmpty) {
+          args = QuizScreenArgs(topic: rawArgs.trim(), language: 'en');
+        }
+
+        if (args == null) {
+          return _invalidRoute(
+            settings,
+            'QuizScreen requires a topic and language.',
+          );
+        }
+
+        return _guarded(
+          QuizScreen(
+            topic: args.topic,
+            language: args.language,
+            autoOpenOutline: args.autoOpenOutline,
+            outlineGenerator: args.outlineGenerator,
+          ),
           RouteSettings(
             name: QuizScreen.routeName,
-            arguments: topic,
+            arguments: args,
           ),
+        );
+      case SettingsView.routeName:
+        return _guarded(
+          const SettingsView(),
+          const RouteSettings(name: SettingsView.routeName),
+        );
+      case HelpSupportScreen.routeName:
+        return _guarded(
+          const HelpSupportScreen(),
+          const RouteSettings(name: HelpSupportScreen.routeName),
+        );
+      case LessonsPage.routeName:
+        return _guarded(
+          const LessonsPage(),
+          const RouteSettings(name: LessonsPage.routeName),
         );
       default:
         return onUnknownRoute(settings);
@@ -110,3 +166,9 @@ class AppRouter {
     );
   }
 }
+
+
+
+
+
+

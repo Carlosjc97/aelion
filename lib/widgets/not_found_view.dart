@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 class NotFoundView extends StatelessWidget {
   const NotFoundView({super.key, this.routeName, this.reason});

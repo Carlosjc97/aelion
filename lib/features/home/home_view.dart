@@ -1,12 +1,22 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import 'package:aelion/core/app_colors.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/google_sign_in_helper.dart';
-import 'package:aelion/widgets/skeleton.dart';
+import 'package:edaptia/core/app_colors.dart';
+import 'package:edaptia/features/home/home_controller.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/settings/settings_view.dart';
+import 'package:edaptia/features/support/help_support_screen.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/dataconnect_generated/courses.dart';
+import 'package:edaptia/services/google_sign_in_helper.dart';
+import 'package:edaptia/services/local_outline_storage.dart';
+import 'package:edaptia/services/recent_outlines_storage.dart';
+import 'package:edaptia/widgets/skeleton.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -17,23 +27,83 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
+enum _HomeMenuAction { settings, help, catalog }
+
 class _HomeViewState extends State<HomeView> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  late final HomeController _controller;
   bool _loading = false;
+  bool _initializedRecommendations = false;
+
+  FirebaseAuth? _safeAuth() {
+    try {
+      return FirebaseAuth.instance;
+    } catch (error, stackTrace) {
+      debugPrint('[HomeView] FirebaseAuth unavailable: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = HomeController();
+    _controller.addListener(_onControllerChanged);
+    unawaited(_controller.loadRecents());
+  }
+
+  void _onControllerChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedRecommendations) {
+      _initializedRecommendations = true;
+      final languageCode = Localizations.localeOf(context).languageCode;
+      final userId = _safeAuth()?.currentUser?.uid ?? 'anonymous';
+      unawaited(
+        _controller.loadRecommendations(
+          languageCode: languageCode,
+          userId: userId,
+        ),
+      );
+    }
+  }
+
+  void _handleMenuSelection(_HomeMenuAction action) {
+    switch (action) {
+      case _HomeMenuAction.settings:
+        Navigator.of(context).pushNamed(SettingsView.routeName);
+        break;
+      case _HomeMenuAction.help:
+        Navigator.of(context).pushNamed(HelpSupportScreen.routeName);
+        break;
+      case _HomeMenuAction.catalog:
+        Navigator.of(context).pushNamed(LessonsPage.routeName);
+        break;
+    }
+  }
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    final topic = _controller.text.trim();
+  Future<void> _startFlow({String? presetTopic}) async {
     final l10n = AppLocalizations.of(context)!;
+    final rawTopic = (presetTopic ?? _searchController.text).trim();
 
-    if (topic.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.homeSnackMissingTopic)));
+    if (rawTopic.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeSnackMissingTopic)),
+      );
       return;
     }
 
@@ -41,27 +111,163 @@ class _HomeViewState extends State<HomeView> {
 
     setState(() => _loading = true);
     try {
-      if (!mounted) return;
+      final auth = _safeAuth();
+      final userId = auth?.currentUser?.uid ?? 'anonymous';
       final languageCode = Localizations.localeOf(context).languageCode;
-      await Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (_) => ModuleOutlineView(
-            topic: topic,
-            goal: 'Build expertise in $topic',
+
+      unawaited(
+        CourseApiService.trackSearch(topic: rawTopic, language: languageCode)
+            .catchError((error) {
+          debugPrint('[HomeView] trackSearch failed: $error');
+          return null;
+        }),
+      );
+
+      await _controller.recordSearch(
+        userId: userId,
+        topic: rawTopic,
+        language: languageCode,
+      );
+
+      final cachedBand = await _controller.cachedBand(
+        userId: userId,
+        topic: rawTopic,
+        language: languageCode,
+      );
+
+      if (!mounted) return;
+
+      if (cachedBand == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.calibratingPlan)),
+        );
+
+        unawaited(
+          _controller.trackQuizOpen(
+            topic: rawTopic,
             language: languageCode,
           ),
-        ),
+        );
+
+        if (!mounted) return;
+
+        assert(() {
+          debugPrint('[HomeView] navigating to QuizScreen');
+          return true;
+        }());
+        await Navigator.of(context).pushNamed(
+          QuizScreen.routeName,
+          arguments: QuizScreenArgs(
+            topic: rawTopic,
+            language: languageCode,
+          ),
+        );
+      } else {
+        final outlineResponse = await CourseApiService.generateOutline(
+          topic: rawTopic,
+          language: languageCode,
+          band: cachedBand,
+        );
+
+        final now = DateTime.now();
+        await LocalOutlineStorage.instance.save(
+          topic: rawTopic,
+          payload: outlineResponse,
+        );
+
+        final responseBand = outlineResponse['band']?.toString();
+        final responseDepth = outlineResponse['depth']?.toString() ??
+            CourseApiService.depthForBand(cachedBand);
+        final responseLanguage =
+            outlineResponse['language']?.toString() ?? languageCode;
+        final outlineList = _extractOutlineList(outlineResponse['outline']);
+
+        unawaited(
+          _controller.trackOutlineGenerated(
+            topic: rawTopic,
+            language: responseLanguage,
+            band: responseBand ?? 'unknown',
+            depth: responseDepth,
+            source: outlineResponse['source']?.toString() ?? 'api',
+            cachedBand: CourseApiService.placementBandToString(cachedBand),
+          ),
+        );
+
+        final metadata = RecentOutlineMetadata(
+          id: RecentOutlineMetadata.buildId(
+            topic: rawTopic,
+            language: responseLanguage,
+            band: responseBand,
+            depth: responseBand == null || responseBand.isEmpty
+                ? responseDepth
+                : null,
+          ),
+          topic: rawTopic,
+          language: responseLanguage,
+          band: responseBand?.isNotEmpty == true ? responseBand : null,
+          depth: responseDepth,
+          savedAt: now,
+        );
+        await RecentOutlinesStorage.instance.upsert(metadata);
+
+        if (!mounted) return;
+        assert(() {
+          debugPrint('[HomeView] navigating to ModuleOutlineView (cached path)');
+          return true;
+        }());
+        await Navigator.of(context).pushNamed(
+          ModuleOutlineView.routeName,
+          arguments: ModuleOutlineArgs(
+            topic: rawTopic,
+            language: responseLanguage,
+            depth: responseDepth,
+            preferredBand: responseBand,
+            initialOutline: outlineList,
+            initialResponse: outlineResponse,
+            initialSource: outlineResponse['source']?.toString(),
+            initialSavedAt: now,
+          ),
+        );
+      }
+
+      await _controller.loadRecents();
+      await _controller.loadRecommendations(
+        languageCode: languageCode,
+        userId: userId,
       );
+    } catch (error) {
+      debugPrint('[HomeView] Failed to generate plan: $error');
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.homeGenerateError),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
+  void _handleRecommendationTap(String topic) {
+    final normalized = topic.trim();
+    if (normalized.isEmpty) {
+      return;
+    }
+    setState(() {
+      _searchController.text = normalized;
+    });
+    unawaited(_startFlow(presetTopic: normalized));
+  }
+
   Future<void> _handleSignOut() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await FirebaseAuth.instance.signOut();
+      final auth = _safeAuth();
+      if (auth != null) {
+        await auth.signOut();
+      }
       if (!kIsWeb) {
         final helper = await GoogleSignInHelper.instance();
         await helper.signOut();
@@ -74,89 +280,69 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  String _buildGreeting(AppLocalizations l10n, User? user) {
+    final displayName = user?.displayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      final firstName = displayName.split(RegExp('\\s+')).first;
+      return l10n.homeGreetingNamedShort(firstName);
+    }
+    return l10n.homeGreetingWave;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _safeAuth()?.currentUser;
 
-    final content = ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        if (user != null) _UserCard(user: user, l10n: l10n),
-        _PromptCard(
-          controller: _controller,
-          generateLabel: l10n.homeGenerate,
-          loading: _loading,
-          onSubmit: _submit,
-          hintText: l10n.homeInputHint,
-        ),
-        const SizedBox(height: 24),
-        Wrap(
-          spacing: 8,
-          children: [
-            _SuggestionChip(
-              label: l10n.homeSuggestionMath,
-              onTap: () {
-                _controller.text = l10n.homeSuggestionMath;
-                _submit();
-              },
-            ),
-            _SuggestionChip(
-              label: l10n.homeSuggestionEnglish,
-              onTap: () {
-                _controller.text = l10n.homeSuggestionEnglish;
-                _submit();
-              },
-            ),
-            _SuggestionChip(
-              label: l10n.homeSuggestionHistory,
-              onTap: () {
-                _controller.text = l10n.homeSuggestionHistory;
-                _submit();
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Text(l10n.homeShortcuts, style: theme.textTheme.titleMedium),
-        const SizedBox(height: 12),
-        _ShortcutCard(
-          icon: Icons.menu_book,
-          title: l10n.homeShortcutCourse,
-          subtitle: l10n.homeShortcutCourseSubtitle,
-          onTap: () {
-            _controller.text = l10n.homePrefillCourse;
-            _submit();
-          },
-        ),
-        const SizedBox(height: 12),
-        _ShortcutCard(
-          icon: Icons.language,
-          title: l10n.homeShortcutLanguage,
-          subtitle: l10n.homeShortcutLanguageSubtitle,
-          onTap: () {
-            _controller.text = l10n.homePrefillLanguage;
-            _submit();
-          },
-        ),
-        const SizedBox(height: 12),
-        _ShortcutCard(
-          icon: Icons.lightbulb_outline,
-          title: l10n.homeShortcutProblem,
-          subtitle: l10n.homeShortcutProblemSubtitle,
-          onTap: () {
-            _controller.text = l10n.homePrefillProblem;
-            _submit();
-          },
-        ),
-      ],
-    );
+    final recommendations = _controller.buildRecommendationItems();
+    final userId = user?.uid ?? 'anonymous';
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final greeting = _buildGreeting(l10n, user);
+    final motivation = l10n.homeMotivation;
+
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+      PopupMenuButton<_HomeMenuAction>(
+        icon: const Icon(Icons.more_vert),
+        tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+        onSelected: _handleMenuSelection,
+        itemBuilder: (context) => [
+          PopupMenuItem<_HomeMenuAction>(
+            value: _HomeMenuAction.settings,
+            child: Row(
+              children: [
+                const Icon(Icons.settings_outlined),
+                const SizedBox(width: 12),
+                Text(l10n.settingsTitle),
+              ],
+            ),
+          ),
+          PopupMenuItem<_HomeMenuAction>(
+            value: _HomeMenuAction.catalog,
+            child: Row(
+              children: [
+                const Icon(Icons.menu_book_outlined),
+                const SizedBox(width: 12),
+                Text(l10n.homeShortcutCourse),
+              ],
+            ),
+          ),
+          PopupMenuItem<_HomeMenuAction>(
+            value: _HomeMenuAction.help,
+            child: Row(
+              children: [
+                const Icon(Icons.help_outline),
+                    const SizedBox(width: 12),
+                    Text(l10n.homeOverflowHelpSupport),
+                  ],
+                ),
+              ),
+            ],
+          ),
           IconButton(
             tooltip: l10n.homeLogoutTooltip,
             onPressed: _handleSignOut,
@@ -167,47 +353,231 @@ class _HomeViewState extends State<HomeView> {
       body: SafeArea(
         child: Stack(
           children: [
-            content,
+            ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _GreetingCard(
+                  greeting: greeting,
+                  motivation: motivation,
+                ),
+                const SizedBox(height: 16),
+                _PromptCard(
+                  controller: _searchController,
+                  generateLabel: l10n.homeGenerate,
+                  loading: _loading,
+                  onSubmit: () => _startFlow(),
+                  hintText: l10n.homeInputHint,
+                  title: l10n.homePromptTitle,
+                ),
+                const SizedBox(height: 24),
+                _RecommendationsSection(
+                  l10n: l10n,
+                  loading: _controller.loadingRecommendations,
+                  error: _controller.recommendationsError,
+                  recommendations: recommendations,
+                  onRetry: () => _controller.loadRecommendations(
+                    languageCode: languageCode,
+                    userId: userId,
+                  ),
+                  onSelected: _handleRecommendationTap,
+                ),
+                const SizedBox(height: 24),
+                if (_controller.recentOutlines.isNotEmpty) ...[
+                  Text(l10n.homeRecentTitle,
+                      style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  for (final entry in _controller.recentOutlines.asMap().entries)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _RecentOutlineCard(
+                        key: ValueKey('recent-${entry.key}'),
+                        item: entry.value,
+                        l10n: l10n,
+                        onViewPressed: () => _openCachedOutline(entry.value),
+                      ),
+                    ),
+                ] else
+                  _RecentEmptyCard(message: l10n.homeRecentEmpty),
+              ],
+            ),
             if (_loading) const _HomeLoadingOverlay(),
           ],
         ),
       ),
     );
   }
+
+  Future<void> _openCachedOutline(HomeRecentOutline item) async {
+    if (!mounted) return;
+    final meta = item.metadata;
+    final cached =
+        item.cached ?? await LocalOutlineStorage.instance.findById(meta.id);
+    if (!mounted) return;
+
+    final args = ModuleOutlineArgs(
+      topic: meta.topic,
+      language: cached?.lang ?? meta.language,
+      depth: cached?.depth ?? meta.depth,
+      preferredBand: cached?.band ?? meta.band,
+      recommendRegenerate: false,
+      initialOutline: cached?.outline,
+      initialResponse: cached?.rawResponse,
+      initialSource: cached?.source,
+      initialSavedAt: cached?.savedAt,
+    );
+
+    await Navigator.of(context).pushNamed(
+      ModuleOutlineView.routeName,
+      arguments: args,
+    );
+    await _controller.loadRecents();
+  }
+
+  static List<Map<String, dynamic>> _extractOutlineList(dynamic raw) {
+    if (raw is! List) return <Map<String, dynamic>>[];
+    return raw
+        .whereType<Map>()
+        .map((module) => Map<String, dynamic>.from(module))
+        .toList(growable: false);
+  }
 }
 
-class _UserCard extends StatelessWidget {
-  const _UserCard({required this.user, required this.l10n});
+class _RecommendationsSection extends StatelessWidget {
+  const _RecommendationsSection({
+    required this.l10n,
+    required this.loading,
+    required this.error,
+    required this.recommendations,
+    required this.onRetry,
+    required this.onSelected,
+  });
 
-  final User user;
   final AppLocalizations l10n;
+  final bool loading;
+  final bool error;
+  final List<HomeRecommendation> recommendations;
+  final Future<void> Function() onRetry;
+  final void Function(String topic) onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading: CircleAvatar(
-          child: Text(
-            _initialFor(user) ?? '?',
-          ),
+    final theme = Theme.of(context);
+    if (loading) {
+      return const _RecommendationSkeleton();
+    }
+
+    if (error) {
+      return _RecommendationError(l10n: l10n, onRetry: onRetry);
+    }
+
+    if (recommendations.isEmpty) {
+      return Text(l10n.homeRecommendationsEmpty);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.homeRecommendationsTitle, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: recommendations.map((item) {
+            return ChoiceChip(
+              label: Text(item.label),
+              avatar: Icon(
+                item.source == HomeRecommendationSource.trending
+                    ? Icons.trending_up_outlined
+                    : Icons.history_outlined,
+                size: 16,
+              ),
+              selected: false,
+              onSelected: (_) => onSelected(item.label),
+            );
+          }).toList(growable: false),
         ),
-        title: Text(
-          user.displayName?.isNotEmpty == true
-              ? user.displayName!
-              : l10n.homeUserFallback,
-        ),
-        subtitle: Text(user.email ?? l10n.homeUserNoEmail),
-      ),
+      ],
     );
   }
+}
 
-  String? _initialFor(User user) {
-    final displayName = user.displayName?.trim();
-    if (displayName?.isNotEmpty == true) return displayName![0].toUpperCase();
-    final mail = user.email?.trim();
-    if (mail?.isNotEmpty == true) return mail![0].toUpperCase();
-    return null;
+class _RecommendationSkeleton extends StatelessWidget {
+  const _RecommendationSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: const [
+        Skeleton(height: 32, width: 100),
+        Skeleton(height: 32, width: 120),
+        Skeleton(height: 32, width: 90),
+      ],
+    );
+  }
+}
+
+class _RecommendationError extends StatelessWidget {
+  const _RecommendationError({required this.l10n, required this.onRetry});
+
+  final AppLocalizations l10n;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            l10n.homeRecommendationsError,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            onRetry();
+          },
+          child: Text(l10n.commonRetry),
+        ),
+      ],
+    );
+  }
+}
+
+
+class _GreetingCard extends StatelessWidget {
+  const _GreetingCard({
+    required this.greeting,
+    required this.motivation,
+  });
+
+  final String greeting;
+  final String motivation;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              greeting,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(motivation, style: theme.textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -218,6 +588,7 @@ class _PromptCard extends StatelessWidget {
     required this.loading,
     required this.onSubmit,
     required this.hintText,
+    required this.title,
   });
 
   final TextEditingController controller;
@@ -225,6 +596,7 @@ class _PromptCard extends StatelessWidget {
   final bool loading;
   final VoidCallback onSubmit;
   final String hintText;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -240,8 +612,8 @@ class _PromptCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.homeGreeting,
-            style: theme.textTheme.headlineMedium?.copyWith(
+            title,
+            style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -277,63 +649,190 @@ class _PromptCard extends StatelessWidget {
   }
 }
 
-class _SuggestionChip extends StatelessWidget {
-  const _SuggestionChip({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ActionChip(label: Text(label), onPressed: onTap);
-  }
-}
-
-class _ShortcutCard extends StatelessWidget {
-  const _ShortcutCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
+class _RecentOutlineCard extends StatelessWidget {
+  const _RecentOutlineCard({
+    super.key,
+    required this.item,
+    required this.l10n,
+    required this.onViewPressed,
   });
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
+  final HomeRecentOutline item;
+  final AppLocalizations l10n;
+  final VoidCallback onViewPressed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
+    final metadata = item.metadata;
+    final cached = item.cached;
+
+    final chips = <Widget>[];
+    final bandEnum = CourseApiService.tryPlacementBandFromString(metadata.band);
+    if (bandEnum != null) {
+      chips.add(_InfoChip(
+        icon: Icons.school_outlined,
+        label: _bandLabel(l10n, bandEnum),
+      ));
+    } else if (metadata.depth?.isNotEmpty == true) {
+      chips.add(_InfoChip(
+        icon: Icons.layers_outlined,
+        label: _depthLabel(l10n, metadata.depth!),
+      ));
+    }
+    chips.add(
+      _InfoChip(
+        icon: Icons.language_outlined,
+        label: metadata.language.toUpperCase(),
+      ),
+    );
+
+    final outline = cached?.outline ?? const <Map<String, dynamic>>[];
+    final previewModules = outline.length > 2 ? outline.sublist(0, 2) : outline;
+    final remaining = outline.length - previewModules.length;
+
+    return Card(
+      child: Padding(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.neutral),
-        ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 32, color: theme.colorScheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: theme.textTheme.bodySmall),
-                ],
+            Text(
+              metadata.topic,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const Icon(Icons.chevron_right),
+            const SizedBox(height: 4),
+            Text(
+              _formatUpdatedLabel(l10n, metadata.savedAt),
+              style: theme.textTheme.bodySmall,
+            ),
+            if (chips.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: chips,
+              ),
+            ],
+            if (previewModules.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              ...previewModules.asMap().entries.map((entry) {
+                final index = entry.key;
+                final module = entry.value;
+                final rawTitle = module['title']?.toString();
+                final resolvedTitle = (rawTitle?.isNotEmpty ?? false)
+                    ? rawTitle!
+                    : l10n.outlineModuleFallback(index + 1);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    '- $resolvedTitle',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                );
+              }),
+              if (remaining > 0)
+                Text(
+                  l10n.homeRecentMoreCount(remaining),
+                  style: theme.textTheme.bodySmall,
+                ),
+            ],
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.tonalIcon(
+                onPressed: onViewPressed,
+                icon: const Icon(Icons.visibility_outlined),
+                label: Text(l10n.homeRecentView),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+    );
+  }
+}
+
+
+String _formatUpdatedLabel(AppLocalizations l10n, DateTime savedAt) {
+  final now = DateTime.now();
+  final difference = now.difference(savedAt.toLocal());
+  final safeDifference = difference.isNegative ? Duration.zero : difference;
+
+  if (safeDifference.inMinutes < 1) {
+    return l10n.homeUpdatedJustNow;
+  }
+  if (safeDifference.inHours < 1) {
+    return l10n.homeUpdatedMinutes(safeDifference.inMinutes);
+  }
+  if (safeDifference.inDays < 1) {
+    return l10n.homeUpdatedHours(safeDifference.inHours);
+  }
+  return l10n.homeUpdatedDays(safeDifference.inDays);
+}
+
+String _depthLabel(AppLocalizations l10n, String depth) {
+  switch (depth.trim().toLowerCase()) {
+    case 'intro':
+      return l10n.depthIntro;
+    case 'medium':
+      return l10n.depthMedium;
+    case 'deep':
+      return l10n.depthDeep;
+    default:
+      return depth;
+  }
+}
+
+String _bandLabel(AppLocalizations l10n, PlacementBand band) {
+  switch (band) {
+    case PlacementBand.beginner:
+      return l10n.quizBandBeginner;
+    case PlacementBand.intermediate:
+      return l10n.quizBandIntermediate;
+    case PlacementBand.advanced:
+      return l10n.quizBandAdvanced;
+  }
+}
+
+class _RecentEmptyCard extends StatelessWidget {
+  const _RecentEmptyCard({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const Icon(Icons.history, color: Colors.grey),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
           ],
         ),
       ),
@@ -366,3 +865,215 @@ class _HomeLoadingOverlay extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+class LessonsPage extends StatefulWidget {
+  const LessonsPage({super.key});
+
+  static const routeName = '/lessons';
+
+  @override
+  State<LessonsPage> createState() => _LessonsPageState();
+}
+
+class _LessonsPageState extends State<LessonsPage> {
+  bool _initialized = false;
+  bool _loading = false;
+  String? _errorMessage;
+  GetCourseOutlineCourses? _course;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final catalogResult = await CoursesConnector.instance
+          .getCourseCatalog(language: languageCode)
+          .limit(10)
+          .execute();
+
+      final catalog = catalogResult.data.courses;
+      if (catalog.isEmpty) {
+        setState(() {
+          _course = null;
+          _errorMessage = 'No hay cursos publicados todavia.';
+        });
+        return;
+      }
+
+      final selectedSlug = catalog.first.slug;
+      final outlineResult = await CoursesConnector.instance
+          .getCourseOutline(slug: selectedSlug)
+          .execute();
+
+      final outlineCourses = outlineResult.data.courses;
+      setState(() {
+        _course = outlineCourses.isNotEmpty ? outlineCourses.first : null;
+        _errorMessage = outlineCourses.isEmpty
+            ? 'No se encontro el detalle del curso seleccionado.'
+            : null;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('[LessonsPage] Failed to load courses: $error\n$stackTrace');
+      setState(() {
+        _errorMessage = 'No se pudo cargar el catalogo.';
+        _course = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Catalogo de cursos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loading ? null : _loadData,
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _buildBody(theme),
+      ),
+    );
+  }
+
+  Widget _buildBody(ThemeData theme) {
+    if (_loading && _course == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return _ErrorView(message: _errorMessage!, onRetry: _loadData);
+    }
+
+    final course = _course;
+    if (course == null) {
+      return const Center(child: Text('Sin contenido disponible.'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          Text(course.title, style: theme.textTheme.headlineSmall),
+          if (course.subtitle?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Text(course.subtitle!, style: theme.textTheme.titleMedium),
+          ],
+          if (course.summary?.isNotEmpty == true) ...[
+            const SizedBox(height: 12),
+            Text(course.summary!, style: theme.textTheme.bodyMedium),
+          ],
+          const SizedBox(height: 20),
+          for (final module in course.modules)
+            _ModuleTile(module: module),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModuleTile extends StatelessWidget {
+  const _ModuleTile({required this.module});
+
+  final GetCourseOutlineCoursesModules module;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ExpansionTile(
+        key: PageStorageKey(module.id),
+        title: Text(module.title, style: theme.textTheme.titleMedium),
+        subtitle: module.summary?.isNotEmpty == true
+            ? Text(module.summary!, style: theme.textTheme.bodySmall)
+            : null,
+        children: [
+          for (final lesson in module.lessons)
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: Text(lesson.title),
+              subtitle: lesson.summary?.isNotEmpty == true
+                  ? Text(
+                      lesson.summary!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : null,
+              trailing: lesson.durationMinutes != null
+                  ? Text('${lesson.durationMinutes} min')
+                  : null,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+

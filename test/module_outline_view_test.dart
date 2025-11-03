@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/core/router.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
+import 'package:edaptia/core/router.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 void main() {
-  testWidgets('ModuleOutlineView muestra el topic en el AppBar',
-      (tester) async {
+  testWidgets('ModuleOutlineView muestra el topic en el AppBar', (tester) async {
     final app = MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       onGenerateRoute: AppRouter.onGenerateRoute,
       initialRoute: ModuleOutlineView.routeName,
       onGenerateInitialRoutes: (initialRoute) => [
@@ -29,3 +31,4 @@ void main() {
     expect(find.textContaining('Curso de Prueba'), findsWidgets);
   });
 }
+
