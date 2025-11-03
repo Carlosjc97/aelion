@@ -21,6 +21,7 @@ import {
   issueServerTimestamp,
   requireSignedTimestamp,
 } from './security.js';
+import { requireFirebaseAuth } from './auth_middleware.js';
 
 dotenv.config();
 
@@ -192,15 +193,19 @@ function buildBypassQuiz(numQuestions, topic, language) {
   });
 }
 
-app.post('/assessment/start', requireSignedTimestamp, async (req, res) => {
+// Assessment endpoints - protected by Firebase Auth + HMAC + Rate Limiting
+app.post('/assessment/start', requireFirebaseAuth, requireSignedTimestamp, async (req, res) => {
   try {
-    enforceRateLimits(req, { userId: req.body?.userId });
+    enforceRateLimits(req, { userId: req.firebaseUser.uid });
   } catch (error) {
     return handleRateLimitError(res, error, '/assessment/start');
   }
 
   try {
-    const session = await startAssessmentSession(req.body ?? {});
+    const session = await startAssessmentSession({
+      ...req.body,
+      userId: req.firebaseUser.uid,
+    });
     const snapshot = getSessionState(session);
     res.status(201).json({
       sessionId: snapshot.sessionId,
@@ -220,14 +225,19 @@ app.post('/assessment/start', requireSignedTimestamp, async (req, res) => {
   }
 });
 
-app.get('/assessment/:sessionId/state', requireSignedTimestamp, async (req, res) => {
+app.get('/assessment/:sessionId/state', requireFirebaseAuth, requireSignedTimestamp, async (req, res) => {
   const session = await getSession(req.params.sessionId);
   if (!session) {
     return res.status(404).json({ error: 'session_not_found' });
   }
 
+  // Verify session belongs to authenticated user
+  if (session.userId && session.userId !== req.firebaseUser.uid) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
   try {
-    enforceRateLimits(req, { session });
+    enforceRateLimits(req, { session, userId: req.firebaseUser.uid });
   } catch (error) {
     return handleRateLimitError(res, error, '/assessment/state');
   }
@@ -235,14 +245,19 @@ app.get('/assessment/:sessionId/state', requireSignedTimestamp, async (req, res)
   res.json(getSessionState(session));
 });
 
-app.get('/assessment/:sessionId/next', requireSignedTimestamp, async (req, res) => {
+app.get('/assessment/:sessionId/next', requireFirebaseAuth, requireSignedTimestamp, async (req, res) => {
   const session = await getSession(req.params.sessionId);
   if (!session) {
     return res.status(404).json({ error: 'session_not_found' });
   }
 
+  // Verify session belongs to authenticated user
+  if (session.userId && session.userId !== req.firebaseUser.uid) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
   try {
-    enforceRateLimits(req, { session });
+    enforceRateLimits(req, { session, userId: req.firebaseUser.uid });
   } catch (error) {
     return handleRateLimitError(res, error, '/assessment/next');
   }
@@ -275,14 +290,19 @@ app.get('/assessment/:sessionId/next', requireSignedTimestamp, async (req, res) 
   }
 });
 
-app.post('/assessment/:sessionId/answer', requireSignedTimestamp, async (req, res) => {
+app.post('/assessment/:sessionId/answer', requireFirebaseAuth, requireSignedTimestamp, async (req, res) => {
   const session = await getSession(req.params.sessionId);
   if (!session) {
     return res.status(404).json({ error: 'session_not_found' });
   }
 
+  // Verify session belongs to authenticated user
+  if (session.userId && session.userId !== req.firebaseUser.uid) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
   try {
-    enforceRateLimits(req, { session });
+    enforceRateLimits(req, { session, userId: req.firebaseUser.uid });
   } catch (error) {
     return handleRateLimitError(res, error, '/assessment/answer');
   }
@@ -300,14 +320,19 @@ app.post('/assessment/:sessionId/answer', requireSignedTimestamp, async (req, re
   }
 });
 
-app.post('/assessment/:sessionId/finish', requireSignedTimestamp, async (req, res) => {
+app.post('/assessment/:sessionId/finish', requireFirebaseAuth, requireSignedTimestamp, async (req, res) => {
   const session = await getSession(req.params.sessionId);
   if (!session) {
     return res.status(404).json({ error: 'session_not_found' });
   }
 
+  // Verify session belongs to authenticated user
+  if (session.userId && session.userId !== req.firebaseUser.uid) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
   try {
-    enforceRateLimits(req, { session });
+    enforceRateLimits(req, { session, userId: req.firebaseUser.uid });
   } catch (error) {
     return handleRateLimitError(res, error, '/assessment/finish');
   }
@@ -321,6 +346,7 @@ app.post('/assessment/:sessionId/finish', requireSignedTimestamp, async (req, re
   res.json(buildSummary(session));
 });
 
+// Public endpoints (no auth required)
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
@@ -330,7 +356,8 @@ app.get('/server/timestamp', (_req, res) => {
   res.json(payload);
 });
 
-app.post('/outline', (req, res) => {
+// Content generation endpoints - protected by Firebase Auth only
+app.post('/outline', requireFirebaseAuth, (req, res) => {
   const { topic, goal, language, level } = req.body ?? {};
 
   if (
@@ -364,6 +391,8 @@ app.post('/outline', (req, res) => {
       ? 4
       : 3;
 
+  console.log(`[/outline] Generated for user ${req.firebaseUser.uid}: ${cleanedTopic}`);
+
   res.json({
     topic: cleanedTopic,
     level: normalizedLevel,
@@ -374,7 +403,7 @@ app.post('/outline', (req, res) => {
   });
 });
 
-app.post('/quiz', async (req, res) => {
+app.post('/quiz', requireFirebaseAuth, async (req, res) => {
   const { topic, moduleTitle, numQuestions, language } = req.body ?? {};
 
   const chosenTopic =
@@ -397,6 +426,8 @@ app.post('/quiz', async (req, res) => {
 
   const numericQuestions = Math.floor(numQuestions);
   const cleanedLanguage = language.trim();
+
+  console.log(`[/quiz] Generating ${numericQuestions} questions for user ${req.firebaseUser.uid}: ${chosenTopic}`);
 
   try {
     if (process.env.LLM_BYPASS === '1') {
