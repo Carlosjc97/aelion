@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:aelion/services/analytics/analytics_service.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 
 class CourseProgress {
   final String topic;
@@ -260,3 +260,4 @@ class ProgressService {
     return outline;
   }
 }
+

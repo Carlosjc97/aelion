@@ -14,7 +14,16 @@ Modern learning companion built with Flutter and Firebase. The `outline` HTTPS F
 cd functions
 npm ci
 npm run build
+npm run test
 firebase deploy --only functions:outline
+```
+
+### CI / Smoke Checks
+
+Use the shared CI helper to run linting, tests and the Functions build in one go:
+
+```bash
+./tool/ci.sh
 ```
 
 ### Smoke Test (Windows)

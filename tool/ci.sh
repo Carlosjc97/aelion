@@ -3,4 +3,4 @@ set -euo pipefail
 
 flutter analyze
 flutter test
-npm --prefix functions run build
+npm --prefix functions run test

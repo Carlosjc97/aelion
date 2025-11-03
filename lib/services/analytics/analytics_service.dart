@@ -6,12 +6,11 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:meta/meta.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
-import 'package:aelion/config/env.dart';
-import 'package:aelion/services/remote_config_service.dart';
+import 'package:edaptia/config/env.dart';
+import 'package:edaptia/services/remote_config_service.dart';
 
 class AnalyticsService {
   AnalyticsService._();
@@ -170,7 +169,7 @@ class AnalyticsService {
     final int durationSeconds = startedAt == null
         ? 0
         : (DateTime.now().difference(startedAt).inSeconds)
-            .clamp(0, const Duration(hours: 8).inSeconds) as int;
+            .clamp(0, const Duration(hours: 8).inSeconds).toInt();
     await track(
       'module_completed',
       properties: <String, Object?>{
@@ -534,3 +533,5 @@ class _ModuleSession {
   final int lessonCount;
   final DateTime startedAt;
 }
+
+

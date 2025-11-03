@@ -1,4 +1,4 @@
-import 'package:aelion/services/course_api_service.dart';
+import 'package:edaptia/services/course_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -36,3 +36,4 @@ void main() {
     });
   });
 }
+

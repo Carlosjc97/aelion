@@ -4,20 +4,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import 'package:aelion/core/app_colors.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/features/settings/settings_view.dart';
-import 'package:aelion/features/support/help_support_screen.dart';
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/analytics/analytics_service.dart';
-import 'package:aelion/services/course_api_service.dart';
-import 'package:aelion/services/google_sign_in_helper.dart';
-import 'package:aelion/services/local_outline_storage.dart';
-import 'package:aelion/services/recent_outlines_storage.dart';
-import 'package:aelion/services/recent_search_storage.dart';
-import 'package:aelion/services/topic_band_cache.dart';
-import 'package:aelion/widgets/skeleton.dart';
+import 'package:edaptia/core/app_colors.dart';
+import 'package:edaptia/features/home/home_controller.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/settings/settings_view.dart';
+import 'package:edaptia/features/support/help_support_screen.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/dataconnect_generated/courses.dart';
+import 'package:edaptia/services/google_sign_in_helper.dart';
+import 'package:edaptia/services/local_outline_storage.dart';
+import 'package:edaptia/services/recent_outlines_storage.dart';
+import 'package:edaptia/widgets/skeleton.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -28,26 +27,35 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-enum _HomeMenuAction { settings, help }
+enum _HomeMenuAction { settings, help, catalog }
 
 class _HomeViewState extends State<HomeView> {
-  static const _maxRecommendationItems = 35;
-  static const _maxRecentOutlineItems = 5;
-
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  late final HomeController _controller;
   bool _loading = false;
-  bool _loadingRecommendations = false;
-  bool _recommendationsError = false;
   bool _initializedRecommendations = false;
 
-  List<_RecentOutlineItem> _recentOutlines = const [];
-  List<TrendingTopic> _trendingTopics = const [];
-  List<RecentSearchEntry> _recentSearches = const [];
+  FirebaseAuth? _safeAuth() {
+    try {
+      return FirebaseAuth.instance;
+    } catch (error, stackTrace) {
+      debugPrint('[HomeView] FirebaseAuth unavailable: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return null;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadRecents();
+    _controller = HomeController();
+    _controller.addListener(_onControllerChanged);
+    unawaited(_controller.loadRecents());
+  }
+
+  void _onControllerChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
@@ -55,7 +63,14 @@ class _HomeViewState extends State<HomeView> {
     super.didChangeDependencies();
     if (!_initializedRecommendations) {
       _initializedRecommendations = true;
-      unawaited(_loadRecommendations());
+      final languageCode = Localizations.localeOf(context).languageCode;
+      final userId = _safeAuth()?.currentUser?.uid ?? 'anonymous';
+      unawaited(
+        _controller.loadRecommendations(
+          languageCode: languageCode,
+          userId: userId,
+        ),
+      );
     }
   }
 
@@ -67,219 +82,23 @@ class _HomeViewState extends State<HomeView> {
       case _HomeMenuAction.help:
         Navigator.of(context).pushNamed(HelpSupportScreen.routeName);
         break;
+      case _HomeMenuAction.catalog:
+        Navigator.of(context).pushNamed(LessonsPage.routeName);
+        break;
     }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadRecents() async {
-    final metadata = await RecentOutlinesStorage.instance.readAll();
-    if (metadata.isEmpty) {
-      if (!mounted) return;
-      setState(() {
-        _recentOutlines = const [];
-      });
-      return;
-    }
-
-    final sorted =
-        metadata.where((entry) => entry.id.trim().isNotEmpty).toList()
-          ..sort(
-            (a, b) => b.savedAt.compareTo(a.savedAt),
-          );
-
-    final seen = <String>{};
-    final limited = <RecentOutlineMetadata>[];
-    for (final entry in sorted) {
-      final key = entry.id.trim();
-      if (key.isEmpty || !seen.add(key)) {
-        continue;
-      }
-      limited.add(entry);
-      if (limited.length >= _maxRecentOutlineItems) {
-        break;
-      }
-    }
-
-    final items = await Future.wait(
-      limited.map(
-        (entry) async {
-          final cached = await LocalOutlineStorage.instance.findById(entry.id);
-          return _RecentOutlineItem(metadata: entry, cached: cached);
-        },
-      ),
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _recentOutlines = items;
-    });
-  }
-
-  Future<void> _loadRecommendations() async {
-    if (!mounted) return;
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
-    final languageCode = Localizations.localeOf(context).languageCode;
-
-    setState(() {
-      _loadingRecommendations = true;
-      _recommendationsError = false;
-    });
-
-    try {
-      final results = await Future.wait<dynamic>([
-        CourseApiService.fetchTrending(language: languageCode),
-        RecentSearchStorage.instance.readForUser(userId),
-      ]);
-
-      if (!mounted) return;
-      final trending =
-          (results.first as List<TrendingTopic>).toList(growable: false)
-            ..sort((a, b) {
-              final countComparison = b.count.compareTo(a.count);
-              if (countComparison != 0) {
-                return countComparison;
-              }
-              return a.topic.toLowerCase().compareTo(b.topic.toLowerCase());
-            });
-
-      final recent = (results.last as List<RecentSearchEntry>)
-          .toList(growable: false)
-        ..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-
-      setState(() {
-        _trendingTopics =
-            trending.take(_maxRecommendationItems).toList(growable: false);
-        _recentSearches =
-            recent.take(_maxRecommendationItems).toList(growable: false);
-        _recommendationsError = false;
-      });
-    } catch (error) {
-      debugPrint('[HomeView] Failed to load recommendations: $error');
-      if (!mounted) return;
-      setState(() {
-        _recommendationsError = true;
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loadingRecommendations = false;
-        });
-      }
-    }
-  }
-
-  List<_RecommendationItem> _buildRecommendationItems() {
-    const replacements = <String, String>{
-      'á': 'a',
-      'à': 'a',
-      'ä': 'a',
-      'â': 'a',
-      'ã': 'a',
-      'å': 'a',
-      'é': 'e',
-      'è': 'e',
-      'ë': 'e',
-      'ê': 'e',
-      'í': 'i',
-      'ì': 'i',
-      'ï': 'i',
-      'î': 'i',
-      'ó': 'o',
-      'ò': 'o',
-      'ö': 'o',
-      'ô': 'o',
-      'õ': 'o',
-      'ú': 'u',
-      'ù': 'u',
-      'ü': 'u',
-      'û': 'u',
-      'ñ': 'n',
-      'ç': 'c',
-    };
-
-    final allowedAlphaNumeric = RegExp(r'[a-z0-9]');
-
-    String normalizeKey({String? label, String? topicKey}) {
-      final preferred = topicKey?.trim();
-      if (preferred != null && preferred.isNotEmpty) {
-        return preferred.toLowerCase();
-      }
-
-      final raw = label?.toLowerCase().trim() ?? '';
-      if (raw.isEmpty) {
-        return '';
-      }
-
-      final buffer = StringBuffer();
-      for (final rune in raw.runes) {
-        final char = String.fromCharCode(rune);
-        final replacement = replacements[char];
-        if (replacement != null) {
-          buffer.write(replacement);
-          continue;
-        }
-        if (allowedAlphaNumeric.hasMatch(char)) {
-          buffer.write(char);
-        } else if (char.trim().isEmpty) {
-          buffer.write(' ');
-        }
-      }
-
-      final normalized =
-          buffer.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
-      return normalized;
-    }
-
-    final seen = <String>{};
-    final items = <_RecommendationItem>[];
-
-    for (final topic in _trendingTopics) {
-      final label = topic.topic.trim();
-      if (label.isEmpty) continue;
-      final key = normalizeKey(label: label, topicKey: topic.topicKey);
-      if (key.isEmpty || !seen.add(key)) {
-        continue;
-      }
-      items.add(_RecommendationItem(
-        label: label,
-        source: _RecommendationSource.trending,
-      ));
-      if (items.length >= _maxRecommendationItems) {
-        return items;
-      }
-    }
-
-    for (final recent in _recentSearches) {
-      if (items.length >= _maxRecommendationItems) {
-        break;
-      }
-      final label = recent.topic.trim();
-      if (label.isEmpty) continue;
-      final key = normalizeKey(label: label);
-      if (key.isEmpty || !seen.add(key)) {
-        continue;
-      }
-      items.add(_RecommendationItem(
-        label: label,
-        source: _RecommendationSource.recent,
-      ));
-    }
-
-    if (items.length <= _maxRecommendationItems) {
-      return items;
-    }
-
-    return items.take(_maxRecommendationItems).toList(growable: false);
   }
 
   Future<void> _startFlow({String? presetTopic}) async {
     final l10n = AppLocalizations.of(context)!;
-    final rawTopic = (presetTopic ?? _controller.text).trim();
+    final rawTopic = (presetTopic ?? _searchController.text).trim();
 
     if (rawTopic.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -292,10 +111,9 @@ class _HomeViewState extends State<HomeView> {
 
     setState(() => _loading = true);
     try {
-      final auth = FirebaseAuth.instance;
-      final userId = auth.currentUser?.uid ?? 'anonymous';
+      final auth = _safeAuth();
+      final userId = auth?.currentUser?.uid ?? 'anonymous';
       final languageCode = Localizations.localeOf(context).languageCode;
-      final analytics = AnalyticsService();
 
       unawaited(
         CourseApiService.trackSearch(topic: rawTopic, language: languageCode)
@@ -305,13 +123,13 @@ class _HomeViewState extends State<HomeView> {
         }),
       );
 
-      await RecentSearchStorage.instance.add(
+      await _controller.recordSearch(
         userId: userId,
         topic: rawTopic,
         language: languageCode,
       );
 
-      final cachedBand = await TopicBandCache.instance.getBand(
+      final cachedBand = await _controller.cachedBand(
         userId: userId,
         topic: rawTopic,
         language: languageCode,
@@ -324,6 +142,19 @@ class _HomeViewState extends State<HomeView> {
           SnackBar(content: Text(l10n.calibratingPlan)),
         );
 
+        unawaited(
+          _controller.trackQuizOpen(
+            topic: rawTopic,
+            language: languageCode,
+          ),
+        );
+
+        if (!mounted) return;
+
+        assert(() {
+          debugPrint('[HomeView] navigating to QuizScreen');
+          return true;
+        }());
         await Navigator.of(context).pushNamed(
           QuizScreen.routeName,
           arguments: QuizScreenArgs(
@@ -351,6 +182,17 @@ class _HomeViewState extends State<HomeView> {
             outlineResponse['language']?.toString() ?? languageCode;
         final outlineList = _extractOutlineList(outlineResponse['outline']);
 
+        unawaited(
+          _controller.trackOutlineGenerated(
+            topic: rawTopic,
+            language: responseLanguage,
+            band: responseBand ?? 'unknown',
+            depth: responseDepth,
+            source: outlineResponse['source']?.toString() ?? 'api',
+            cachedBand: CourseApiService.placementBandToString(cachedBand),
+          ),
+        );
+
         final metadata = RecentOutlineMetadata(
           id: RecentOutlineMetadata.buildId(
             topic: rawTopic,
@@ -369,6 +211,10 @@ class _HomeViewState extends State<HomeView> {
         await RecentOutlinesStorage.instance.upsert(metadata);
 
         if (!mounted) return;
+        assert(() {
+          debugPrint('[HomeView] navigating to ModuleOutlineView (cached path)');
+          return true;
+        }());
         await Navigator.of(context).pushNamed(
           ModuleOutlineView.routeName,
           arguments: ModuleOutlineArgs(
@@ -384,8 +230,11 @@ class _HomeViewState extends State<HomeView> {
         );
       }
 
-      await _loadRecents();
-      await _loadRecommendations();
+      await _controller.loadRecents();
+      await _controller.loadRecommendations(
+        languageCode: languageCode,
+        userId: userId,
+      );
     } catch (error) {
       debugPrint('[HomeView] Failed to generate plan: $error');
       if (mounted) {
@@ -407,7 +256,7 @@ class _HomeViewState extends State<HomeView> {
       return;
     }
     setState(() {
-      _controller.text = normalized;
+      _searchController.text = normalized;
     });
     unawaited(_startFlow(presetTopic: normalized));
   }
@@ -415,7 +264,10 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _handleSignOut() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await FirebaseAuth.instance.signOut();
+      final auth = _safeAuth();
+      if (auth != null) {
+        await auth.signOut();
+      }
       if (!kIsWeb) {
         final helper = await GoogleSignInHelper.instance();
         await helper.signOut();
@@ -441,37 +293,49 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _safeAuth()?.currentUser;
 
+    final recommendations = _controller.buildRecommendationItems();
+    final userId = user?.uid ?? 'anonymous';
+    final languageCode = Localizations.localeOf(context).languageCode;
     final greeting = _buildGreeting(l10n, user);
     final motivation = l10n.homeMotivation;
 
-    final recommendations = _buildRecommendationItems();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
-          PopupMenuButton<_HomeMenuAction>(
-            icon: const Icon(Icons.more_vert),
-            tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-            onSelected: _handleMenuSelection,
-            itemBuilder: (context) => [
-              PopupMenuItem<_HomeMenuAction>(
-                value: _HomeMenuAction.settings,
-                child: Row(
-                  children: [
-                    const Icon(Icons.settings_outlined),
-                    const SizedBox(width: 12),
-                    Text(l10n.settingsTitle),
-                  ],
-                ),
-              ),
-              PopupMenuItem<_HomeMenuAction>(
-                value: _HomeMenuAction.help,
-                child: Row(
-                  children: [
-                    const Icon(Icons.help_outline),
+      PopupMenuButton<_HomeMenuAction>(
+        icon: const Icon(Icons.more_vert),
+        tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+        onSelected: _handleMenuSelection,
+        itemBuilder: (context) => [
+          PopupMenuItem<_HomeMenuAction>(
+            value: _HomeMenuAction.settings,
+            child: Row(
+              children: [
+                const Icon(Icons.settings_outlined),
+                const SizedBox(width: 12),
+                Text(l10n.settingsTitle),
+              ],
+            ),
+          ),
+          PopupMenuItem<_HomeMenuAction>(
+            value: _HomeMenuAction.catalog,
+            child: Row(
+              children: [
+                const Icon(Icons.menu_book_outlined),
+                const SizedBox(width: 12),
+                Text(l10n.homeShortcutCourse),
+              ],
+            ),
+          ),
+          PopupMenuItem<_HomeMenuAction>(
+            value: _HomeMenuAction.help,
+            child: Row(
+              children: [
+                const Icon(Icons.help_outline),
                     const SizedBox(width: 12),
                     Text(l10n.homeOverflowHelpSupport),
                   ],
@@ -498,7 +362,7 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 const SizedBox(height: 16),
                 _PromptCard(
-                  controller: _controller,
+                  controller: _searchController,
                   generateLabel: l10n.homeGenerate,
                   loading: _loading,
                   onSubmit: () => _startFlow(),
@@ -508,18 +372,21 @@ class _HomeViewState extends State<HomeView> {
                 const SizedBox(height: 24),
                 _RecommendationsSection(
                   l10n: l10n,
-                  loading: _loadingRecommendations,
-                  error: _recommendationsError,
+                  loading: _controller.loadingRecommendations,
+                  error: _controller.recommendationsError,
                   recommendations: recommendations,
-                  onRetry: _loadRecommendations,
+                  onRetry: () => _controller.loadRecommendations(
+                    languageCode: languageCode,
+                    userId: userId,
+                  ),
                   onSelected: _handleRecommendationTap,
                 ),
                 const SizedBox(height: 24),
-                if (_recentOutlines.isNotEmpty) ...[
+                if (_controller.recentOutlines.isNotEmpty) ...[
                   Text(l10n.homeRecentTitle,
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 12),
-                  for (final entry in _recentOutlines.asMap().entries)
+                  for (final entry in _controller.recentOutlines.asMap().entries)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: _RecentOutlineCard(
@@ -540,7 +407,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Future<void> _openCachedOutline(_RecentOutlineItem item) async {
+  Future<void> _openCachedOutline(HomeRecentOutline item) async {
     if (!mounted) return;
     final meta = item.metadata;
     final cached =
@@ -563,7 +430,7 @@ class _HomeViewState extends State<HomeView> {
       ModuleOutlineView.routeName,
       arguments: args,
     );
-    await _loadRecents();
+    await _controller.loadRecents();
   }
 
   static List<Map<String, dynamic>> _extractOutlineList(dynamic raw) {
@@ -588,43 +455,47 @@ class _RecommendationsSection extends StatelessWidget {
   final AppLocalizations l10n;
   final bool loading;
   final bool error;
-  final List<_RecommendationItem> recommendations;
+  final List<HomeRecommendation> recommendations;
   final Future<void> Function() onRetry;
   final void Function(String topic) onSelected;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (loading) {
+      return const _RecommendationSkeleton();
+    }
+
+    if (error) {
+      return _RecommendationError(l10n: l10n, onRetry: onRetry);
+    }
+
+    if (recommendations.isEmpty) {
+      return Text(l10n.homeRecommendationsEmpty);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.homeRecommendationsTitle, style: theme.textTheme.titleMedium),
         const SizedBox(height: 12),
-        if (loading)
-          const _RecommendationSkeleton()
-        else if (error)
-          _RecommendationError(l10n: l10n, onRetry: onRetry)
-        else if (recommendations.isEmpty)
-          Text(l10n.homeRecommendationsEmpty)
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: recommendations
-                .map(
-                  (item) => ActionChip(
-                    label: Text(item.label),
-                    avatar: Icon(
-                      item.source == _RecommendationSource.trending
-                          ? Icons.trending_up_outlined
-                          : Icons.history_outlined,
-                      size: 16,
-                    ),
-                    onPressed: () => onSelected(item.label),
-                  ),
-                )
-                .toList(growable: false),
-          ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: recommendations.map((item) {
+            return ChoiceChip(
+              label: Text(item.label),
+              avatar: Icon(
+                item.source == HomeRecommendationSource.trending
+                    ? Icons.trending_up_outlined
+                    : Icons.history_outlined,
+                size: 16,
+              ),
+              selected: false,
+              onSelected: (_) => onSelected(item.label),
+            );
+          }).toList(growable: false),
+        ),
       ],
     );
   }
@@ -676,17 +547,6 @@ class _RecommendationError extends StatelessWidget {
   }
 }
 
-class _RecommendationItem {
-  const _RecommendationItem({
-    required this.label,
-    required this.source,
-  });
-
-  final String label;
-  final _RecommendationSource source;
-}
-
-enum _RecommendationSource { trending, recent }
 
 class _GreetingCard extends StatelessWidget {
   const _GreetingCard({
@@ -797,7 +657,7 @@ class _RecentOutlineCard extends StatelessWidget {
     required this.onViewPressed,
   });
 
-  final _RecentOutlineItem item;
+  final HomeRecentOutline item;
   final AppLocalizations l10n;
   final VoidCallback onViewPressed;
 
@@ -910,15 +770,6 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _RecentOutlineItem {
-  const _RecentOutlineItem({
-    required this.metadata,
-    this.cached,
-  });
-
-  final RecentOutlineMetadata metadata;
-  final StoredOutline? cached;
-}
 
 String _formatUpdatedLabel(AppLocalizations l10n, DateTime savedAt) {
   final now = DateTime.now();
@@ -1014,3 +865,215 @@ class _HomeLoadingOverlay extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+class LessonsPage extends StatefulWidget {
+  const LessonsPage({super.key});
+
+  static const routeName = '/lessons';
+
+  @override
+  State<LessonsPage> createState() => _LessonsPageState();
+}
+
+class _LessonsPageState extends State<LessonsPage> {
+  bool _initialized = false;
+  bool _loading = false;
+  String? _errorMessage;
+  GetCourseOutlineCourses? _course;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final catalogResult = await CoursesConnector.instance
+          .getCourseCatalog(language: languageCode)
+          .limit(10)
+          .execute();
+
+      final catalog = catalogResult.data.courses;
+      if (catalog.isEmpty) {
+        setState(() {
+          _course = null;
+          _errorMessage = 'No hay cursos publicados todavia.';
+        });
+        return;
+      }
+
+      final selectedSlug = catalog.first.slug;
+      final outlineResult = await CoursesConnector.instance
+          .getCourseOutline(slug: selectedSlug)
+          .execute();
+
+      final outlineCourses = outlineResult.data.courses;
+      setState(() {
+        _course = outlineCourses.isNotEmpty ? outlineCourses.first : null;
+        _errorMessage = outlineCourses.isEmpty
+            ? 'No se encontro el detalle del curso seleccionado.'
+            : null;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('[LessonsPage] Failed to load courses: $error\n$stackTrace');
+      setState(() {
+        _errorMessage = 'No se pudo cargar el catalogo.';
+        _course = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Catalogo de cursos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loading ? null : _loadData,
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _buildBody(theme),
+      ),
+    );
+  }
+
+  Widget _buildBody(ThemeData theme) {
+    if (_loading && _course == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return _ErrorView(message: _errorMessage!, onRetry: _loadData);
+    }
+
+    final course = _course;
+    if (course == null) {
+      return const Center(child: Text('Sin contenido disponible.'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          Text(course.title, style: theme.textTheme.headlineSmall),
+          if (course.subtitle?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Text(course.subtitle!, style: theme.textTheme.titleMedium),
+          ],
+          if (course.summary?.isNotEmpty == true) ...[
+            const SizedBox(height: 12),
+            Text(course.summary!, style: theme.textTheme.bodyMedium),
+          ],
+          const SizedBox(height: 20),
+          for (final module in course.modules)
+            _ModuleTile(module: module),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModuleTile extends StatelessWidget {
+  const _ModuleTile({required this.module});
+
+  final GetCourseOutlineCoursesModules module;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ExpansionTile(
+        key: PageStorageKey(module.id),
+        title: Text(module.title, style: theme.textTheme.titleMedium),
+        subtitle: module.summary?.isNotEmpty == true
+            ? Text(module.summary!, style: theme.textTheme.bodySmall)
+            : null,
+        children: [
+          for (final lesson in module.lessons)
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: Text(lesson.title),
+              subtitle: lesson.summary?.isNotEmpty == true
+                  ? Text(
+                      lesson.summary!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : null,
+              trailing: lesson.durationMinutes != null
+                  ? Text('${lesson.durationMinutes} min')
+                  : null,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+

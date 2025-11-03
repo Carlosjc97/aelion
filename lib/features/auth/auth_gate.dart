@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/features/auth/sign_in_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/features/auth/sign_in_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key, required this.child});

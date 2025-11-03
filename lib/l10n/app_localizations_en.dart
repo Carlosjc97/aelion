@@ -53,11 +53,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String homeGreetingNamedShort(String name) {
-    return 'Hi $name 👋';
+    return 'Hi $name';
   }
 
   @override
-  String get homeGreetingWave => 'Hello 👋';
+  String get homeGreetingWave => 'Hello';
 
   @override
   String get homeMotivation => 'Let\'s keep your learning streak going today.';
@@ -558,4 +558,359 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quizPlanCreated => 'Plan created.';
+
+  @override
+  String get helpSupportTitle => 'Help & Support';
+
+  @override
+  String get helpSupportSubtitle =>
+      'Answers, contact options, and community links.';
+
+  @override
+  String get helpFaqSectionTitle => 'Frequently asked questions';
+
+  @override
+  String get helpCommunitySectionTitle => 'Community';
+
+  @override
+  String get helpContactSectionTitle => 'Contact options';
+
+  @override
+  String get helpJoinCommunity => 'Join Community';
+
+  @override
+  String get helpJoinCommunityDescription =>
+      'Choose how you want to connect with other learners.';
+
+  @override
+  String get helpJoinCommunityDialogTitle => 'Open Telegram';
+
+  @override
+  String get helpJoinCommunityChannel => 'News channel';
+
+  @override
+  String get helpJoinCommunityGroup => 'Community chat';
+
+  @override
+  String get helpContactSpanish => 'Email support (ES)';
+
+  @override
+  String get helpContactSpanishDescription =>
+      'Reach our Spanish-speaking agents.';
+
+  @override
+  String get helpContactEnglish => 'Email support (EN)';
+
+  @override
+  String get helpContactEnglishDescription =>
+      'Get help in English from the core team.';
+
+  @override
+  String get helpReportBug => 'Report a bug';
+
+  @override
+  String get helpReportBugDescription =>
+      'Include screenshots or steps if possible.';
+
+  @override
+  String get helpAboutTitle => 'About this app';
+
+  @override
+  String get helpAboutDescription =>
+      'Built with Flutter and Firebase; all content is generated via secure Cloud Functions.';
+
+  @override
+  String get helpPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get helpTermsOfService => 'Terms of Service';
+
+  @override
+  String get helpLaunchError => 'We couldn\'t open the link. Please try again.';
+
+  @override
+  String get homeOverflowHelpSupport => 'Help & Support';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsGeneralSection => 'General';
+
+  @override
+  String get settingsHelpSupport => 'Help & Support';
+
+  @override
+  String get settingsHelpSupportSubtitle => 'FAQs, contact, and policies';
+
+  @override
+  String helpEmailSubject(String appName, String version, String device) {
+    return '$appName support request (v$version · $device)';
+  }
+
+  @override
+  String helpBugReportSubject(String appName, String version, String device) {
+    return '$appName bug report (v$version · $device)';
+  }
+
+  @override
+  String helpBugReportBody(
+      String timestamp, String locale, String version, String device) {
+    return 'Timestamp: $timestamp\nLocale: $locale\nVersion: $version\nDevice: $device\n\nSteps to reproduce:\n- ';
+  }
+
+  @override
+  String helpAboutVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get helpFaqQuestion1 => 'How do I generate my first learning plan?';
+
+  @override
+  String get helpFaqAnswer1 =>
+      'On the Home screen, enter a topic and tap Generate AI learning plan.';
+
+  @override
+  String get helpFaqQuestion2 => 'Where can I find my recent outlines?';
+
+  @override
+  String get helpFaqAnswer2 =>
+      'Scroll to the Recents section on Home; each card reopens the saved outline instantly.';
+
+  @override
+  String get helpFaqQuestion3 => 'How are trending topics selected?';
+
+  @override
+  String get helpFaqAnswer3 =>
+      'We mix your latest searches with popular requests in your language to suggest new ideas.';
+
+  @override
+  String get helpFaqQuestion4 => 'What is a placement quiz?';
+
+  @override
+  String get helpFaqAnswer4 =>
+      'It is a 10-question calibration that sets the right level before we build a tailored plan.';
+
+  @override
+  String get helpFaqQuestion5 => 'Can I change the depth of a plan later?';
+
+  @override
+  String get helpFaqAnswer5 =>
+      'Open the outline, tap Refine plan, and select the depth that matches your goal.';
+
+  @override
+  String get helpFaqQuestion6 => 'How do I switch the outline language?';
+
+  @override
+  String get helpFaqAnswer6 =>
+      'Generate again after choosing your preferred language in the quiz or topic prompt.';
+
+  @override
+  String get helpFaqQuestion7 => 'What happens if I lose connection?';
+
+  @override
+  String get helpFaqAnswer7 =>
+      'Cached outlines and recents stay available offline; new generations wait until you are online.';
+
+  @override
+  String get helpFaqQuestion8 => 'How is my progress saved?';
+
+  @override
+  String get helpFaqAnswer8 =>
+      'Metadata and cached outlines are stored securely on your device via SharedPreferences.';
+
+  @override
+  String get helpFaqQuestion9 => 'How do I sign out safely?';
+
+  @override
+  String get helpFaqAnswer9 =>
+      'Use the logout icon on the Home app bar; it signs you out of Firebase and Google on mobile.';
+
+  @override
+  String get helpFaqQuestion10 => 'How do I switch Google accounts?';
+
+  @override
+  String get helpFaqAnswer10 =>
+      'Sign out first, then pick the other account when the Google sign-in sheet appears.';
+
+  @override
+  String get helpFaqQuestion11 => 'How can I clear my recent searches?';
+
+  @override
+  String get helpFaqAnswer11 =>
+      'Search history is capped to the latest entries per account and is cleared automatically when you sign out.';
+
+  @override
+  String get helpFaqQuestion12 => 'What data do you store in Firestore?';
+
+  @override
+  String get helpFaqAnswer12 =>
+      'Only anonymized outline cache entries and observability metrics generated by Cloud Functions.';
+
+  @override
+  String get helpFaqQuestion13 => 'How do I report incorrect content?';
+
+  @override
+  String get helpFaqAnswer13 =>
+      'Use the Report a bug button below and describe what needs to be fixed.';
+
+  @override
+  String get helpFaqQuestion14 => 'Where do recommendations come from?';
+
+  @override
+  String get helpFaqAnswer14 =>
+      'They combine aggregated demand with your recent activity to surface relevant topics.';
+
+  @override
+  String get helpFaqQuestion15 =>
+      'Can I regenerate a plan after finishing a quiz?';
+
+  @override
+  String get helpFaqAnswer15 =>
+      'Yes. Applying quiz results automatically rebuilds the outline with the new band.';
+
+  @override
+  String get helpFaqQuestion16 => 'How long are cached outlines kept?';
+
+  @override
+  String get helpFaqAnswer16 =>
+      'They remain until you replace them or clear storage; stale badges appear after 24 hours.';
+
+  @override
+  String get helpFaqQuestion17 => 'Why was I asked to retake the quiz?';
+
+  @override
+  String get helpFaqAnswer17 =>
+      'We prompt a retake when your level looks outdated or the cache exceeded its freshness window.';
+
+  @override
+  String get helpFaqQuestion18 => 'Can I use the app on multiple devices?';
+
+  @override
+  String get helpFaqAnswer18 =>
+      'Yes. Sign in with the same Google account on web or Android to stay in sync.';
+
+  @override
+  String get helpFaqQuestion19 => 'Does the app support dark mode?';
+
+  @override
+  String get helpFaqAnswer19 =>
+      'The interface follows your system theme and keeps contrast within accessibility guidelines.';
+
+  @override
+  String get helpFaqQuestion20 => 'How do I reset my learning streak?';
+
+  @override
+  String get helpFaqAnswer20 =>
+      'Clear local data from system settings or sign in with a new account.';
+
+  @override
+  String get helpFaqQuestion21 => 'How can I request a new feature?';
+
+  @override
+  String get helpFaqAnswer21 =>
+      'Send your idea through the English support email and include Feature idea in the message.';
+
+  @override
+  String get helpFaqQuestion22 => 'Do I need an account to use the app?';
+
+  @override
+  String get helpFaqAnswer22 =>
+      'Yes, Google authentication protects your content and enables personalization.';
+
+  @override
+  String get helpFaqQuestion23 =>
+      'What happens if I close the app during a quiz?';
+
+  @override
+  String get helpFaqAnswer23 =>
+      'You can restart the quiz anytime; progress resets to keep the calibration accurate.';
+
+  @override
+  String get helpFaqQuestion24 => 'How do I delete cached outlines?';
+
+  @override
+  String get helpFaqAnswer24 =>
+      'Cached outlines live only on your device; uninstalling or clearing the app data removes them.';
+
+  @override
+  String get helpFaqQuestion25 =>
+      'Is my personal data shared with third parties?';
+
+  @override
+  String get helpFaqAnswer25 =>
+      'No. We only use aggregate telemetry for reliability and never sell personal information.';
+
+  @override
+  String get helpFaqQuestion26 =>
+      'Can I use the app without Firebase Functions?';
+
+  @override
+  String get helpFaqAnswer26 =>
+      'No. Direct Firestore access is blocked; all requests go through secure HTTPS Functions.';
+
+  @override
+  String get helpFaqQuestion27 => 'Why do I see a stale badge?';
+
+  @override
+  String get helpFaqAnswer27 =>
+      'It means the cached outline is older than the freshness threshold and should be regenerated.';
+
+  @override
+  String get helpFaqQuestion28 => 'How do I join the community?';
+
+  @override
+  String get helpFaqAnswer28 =>
+      'Tap Join Community to open the Telegram news channel or chat group.';
+
+  @override
+  String get helpFaqQuestion29 => 'How do I check the app version?';
+
+  @override
+  String get helpFaqAnswer29 =>
+      'Open Help & Support and scroll to About; the version number is listed there.';
+
+  @override
+  String get helpFaqQuestion30 => 'Can I run the app with local emulators?';
+
+  @override
+  String get helpFaqAnswer30 =>
+      'Yes. Set USE_FUNCTIONS_EMULATOR=true in env.public and start the Firebase emulators.';
+
+  @override
+  String get helpFaqQuestion31 => 'How do I contact support in Spanish?';
+
+  @override
+  String get helpFaqAnswer31 =>
+      'Use the Spanish email button; it routes directly to our Spanish-speaking support team.';
+
+  @override
+  String get helpFaqQuestion32 => 'How quickly does support respond?';
+
+  @override
+  String get helpFaqAnswer32 =>
+      'We aim to reply within one business day and usually respond much sooner.';
+
+  @override
+  String get helpFaqQuestion33 => 'What details help with a bug report?';
+
+  @override
+  String get helpFaqAnswer33 =>
+      'Include the timestamp, locale, app version, device, and clear reproduction steps.';
+
+  @override
+  String get helpFaqQuestion34 => 'How do I get the latest release?';
+
+  @override
+  String get helpFaqAnswer34 =>
+      'Install updates from your app store or pull the main branch if you are contributing.';
+
+  @override
+  String get helpFaqQuestion35 =>
+      'Where can I read the privacy policy and terms?';
+
+  @override
+  String get helpFaqAnswer35 =>
+      'Use the Privacy Policy and Terms of Service links in the About section.';
 }

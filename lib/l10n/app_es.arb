@@ -14,8 +14,8 @@
   "authError": "No fue posible validar la sesion",
   "authRetry": "Reintentar",
   "homeGreeting": "Que quieres aprender hoy?",
-  "homeGreetingNamedShort": "Hola {name} ð",
-  "homeGreetingWave": "Hola ð",
+  "homeGreetingNamedShort": "Hola {name}",
+  "homeGreetingWave": "Hola",
   "homeMotivation": "Sigue con tu impulso de aprendizaje hoy.",
   "homePromptTitle": "Que plan generamos hoy?",
   "homeInputHint": "Ejemplo: Algebra en 7 dias, ingles conversacional...",
@@ -283,6 +283,13 @@
       }
     }
   },
+  "@homeGreetingNamedShort": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "@homeGreetingNamed": {
     "placeholders": {
       "name": {
@@ -402,6 +409,155 @@
   "@lessonQuizIncorrect": {
     "placeholders": {
       "answer": {
+        "type": "String"
+      }
+    }
+  },
+  "helpSupportTitle": "Ayuda y soporte",
+  "helpSupportSubtitle": "Respuestas, formas de contacto y enlaces a la comunidad.",
+  "helpFaqSectionTitle": "Preguntas frecuentes",
+  "helpCommunitySectionTitle": "Comunidad",
+  "helpContactSectionTitle": "Opciones de contacto",
+  "helpJoinCommunity": "Unirte a la comunidad",
+  "helpJoinCommunityDescription": "Elige cómo conectarte con otros estudiantes.",
+  "helpJoinCommunityDialogTitle": "Abrir Telegram",
+  "helpJoinCommunityChannel": "Canal de noticias",
+  "helpJoinCommunityGroup": "Chat de la comunidad",
+  "helpContactSpanish": "Correo de soporte (ES)",
+  "helpContactSpanishDescription": "Escríbenos en español; respondemos rápido.",
+  "helpContactEnglish": "Correo de soporte (EN)",
+  "helpContactEnglishDescription": "Recibe ayuda en inglés del equipo principal.",
+  "helpReportBug": "Reportar un error",
+  "helpReportBugDescription": "Incluye capturas o pasos si es posible.",
+  "helpAboutTitle": "Acerca de esta app",
+  "helpAboutDescription": "Creada con Flutter y Firebase; todo el contenido se genera mediante Cloud Functions seguras.",
+  "helpPrivacyPolicy": "Política de privacidad",
+  "helpTermsOfService": "Términos de servicio",
+  "helpLaunchError": "No pudimos abrir el enlace. Intenta de nuevo.",
+  "homeOverflowHelpSupport": "Ayuda y soporte",
+  "settingsTitle": "Configuración",
+  "settingsGeneralSection": "General",
+  "settingsHelpSupport": "Ayuda y soporte",
+  "settingsHelpSupportSubtitle": "Preguntas, contacto y políticas",
+  "helpEmailSubject": "Solicitud de soporte {appName} (v{version} · {device})",
+  "helpBugReportSubject": "Reporte de bug {appName} (v{version} · {device})",
+  "helpBugReportBody": "Marca de tiempo: {timestamp}\nLocalización: {locale}\nVersión: {version}\nDispositivo: {device}\n\nPasos para reproducir:\n- ",
+  "helpAboutVersion": "Versión {version}",
+  "helpFaqQuestion1": "¿Cómo genero mi primer plan de aprendizaje?",
+  "helpFaqAnswer1": "En la pantalla Inicio, escribe un tema y toca Generar plan con IA.",
+  "helpFaqQuestion2": "¿Dónde encuentro mis planes recientes?",
+  "helpFaqAnswer2": "Desplázate a Recientes en Inicio; cada tarjeta abre el plan guardado.",
+  "helpFaqQuestion3": "¿Cómo se eligen los temas en tendencia?",
+  "helpFaqAnswer3": "Combinamos tus últimas búsquedas con solicitudes populares en tu idioma.",
+  "helpFaqQuestion4": "¿Qué es un quiz de colocación?",
+  "helpFaqAnswer4": "Es una calibración de 10 preguntas que define el nivel adecuado antes del plan.",
+  "helpFaqQuestion5": "¿Puedo cambiar la profundidad del plan después?",
+  "helpFaqAnswer5": "Abre el plan, toca Refinar plan y elige la profundidad que se ajuste a tu meta.",
+  "helpFaqQuestion6": "¿Cómo cambio el idioma del plan?",
+  "helpFaqAnswer6": "Genera nuevamente tras elegir tu idioma preferido en el quiz o en el prompt.",
+  "helpFaqQuestion7": "¿Qué sucede si pierdo la conexión?",
+  "helpFaqAnswer7": "Los planes y recientes en caché siguen disponibles; las nuevas generaciones esperan a que vuelvas a estar en línea.",
+  "helpFaqQuestion8": "¿Cómo se guarda mi progreso?",
+  "helpFaqAnswer8": "Guardamos metadatos y planes en caché de forma segura en tu dispositivo con SharedPreferences.",
+  "helpFaqQuestion9": "¿Cómo cierro sesión de forma segura?",
+  "helpFaqAnswer9": "Usa el icono de salida en la barra superior; cierra sesión en Firebase y en Google en móviles.",
+  "helpFaqQuestion10": "¿Cómo cambio de cuenta de Google?",
+  "helpFaqAnswer10": "Cierra sesión y elige la otra cuenta cuando aparezca la hoja de inicio de sesión de Google.",
+  "helpFaqQuestion11": "¿Cómo borro mis búsquedas recientes?",
+  "helpFaqAnswer11": "El historial se limita a las últimas entradas por cuenta y se limpia automáticamente al cerrar sesión.",
+  "helpFaqQuestion12": "¿Qué datos guardan en Firestore?",
+  "helpFaqAnswer12": "Solo registros anonimizados de planes en caché y métricas de observabilidad creadas por Functions.",
+  "helpFaqQuestion13": "¿Cómo reporto contenido incorrecto?",
+  "helpFaqAnswer13": "Usa el botón Reportar un error y describe lo que debemos corregir.",
+  "helpFaqQuestion14": "¿De dónde salen las recomendaciones?",
+  "helpFaqAnswer14": "Mezclan demanda agregada con tu actividad reciente para mostrar temas relevantes.",
+  "helpFaqQuestion15": "¿Puedo regenerar un plan después del quiz?",
+  "helpFaqAnswer15": "Sí. Al aplicar los resultados se reconstruye el plan con el nuevo nivel.",
+  "helpFaqQuestion16": "¿Cuánto tiempo se conservan los planes en caché?",
+  "helpFaqAnswer16": "Permanecen hasta que los reemplazas o borras la memoria; la etiqueta Caducado aparece tras 24 horas.",
+  "helpFaqQuestion17": "¿Por qué me piden rehacer el quiz?",
+  "helpFaqAnswer17": "Lo sugerimos cuando tu nivel parece desactualizado o la caché supera su ventana de vigencia.",
+  "helpFaqQuestion18": "¿Puedo usar la app en varios dispositivos?",
+  "helpFaqAnswer18": "Sí. Inicia sesión con la misma cuenta de Google en web o Android para mantener la sincronización.",
+  "helpFaqQuestion19": "¿La app soporta modo oscuro?",
+  "helpFaqAnswer19": "Seguimos el tema del sistema y mantenemos el contraste dentro de las guías de accesibilidad.",
+  "helpFaqQuestion20": "¿Cómo reinicio mi racha de aprendizaje?",
+  "helpFaqAnswer20": "Borra los datos locales desde los ajustes del sistema o inicia sesión con una cuenta nueva.",
+  "helpFaqQuestion21": "¿Cómo solicito una nueva función?",
+  "helpFaqAnswer21": "Envía tu idea por el correo de soporte en inglés y añade 'Feature idea' en el mensaje.",
+  "helpFaqQuestion22": "¿Necesito una cuenta para usar la app?",
+  "helpFaqAnswer22": "Sí, usamos autenticación de Google para proteger tu contenido y personalización.",
+  "helpFaqQuestion23": "¿Qué pasa si cierro la app durante un quiz?",
+  "helpFaqAnswer23": "Puedes reiniciar el quiz cuando quieras; el progreso se reinicia para calibrar correctamente.",
+  "helpFaqQuestion24": "¿Cómo elimino los planes en caché?",
+  "helpFaqAnswer24": "Los planes en caché viven en tu dispositivo; desinstala o borra los datos de la app para quitarlos.",
+  "helpFaqQuestion25": "¿Comparten mis datos personales con terceros?",
+  "helpFaqAnswer25": "No. Solo usamos telemetría agregada para confiabilidad y nunca vendemos información personal.",
+  "helpFaqQuestion26": "¿Puedo usar la app sin Firebase Functions?",
+  "helpFaqAnswer26": "No. El acceso directo a Firestore está bloqueado; todas las solicitudes pasan por Functions seguras.",
+  "helpFaqQuestion27": "¿Por qué veo la etiqueta Caducado?",
+  "helpFaqAnswer27": "Indica que el plan en caché pasó el umbral de frescura y conviene regenerarlo.",
+  "helpFaqQuestion28": "¿Cómo me uno a la comunidad?",
+  "helpFaqAnswer28": "Toca Unirte a la comunidad para abrir el canal o el chat en Telegram.",
+  "helpFaqQuestion29": "¿Cómo reviso la versión de la app?",
+  "helpFaqAnswer29": "Abre Ayuda y soporte y desplázate a Acerca de; ahí verás el número de versión.",
+  "helpFaqQuestion30": "¿Puedo ejecutar la app con emuladores locales?",
+  "helpFaqAnswer30": "Sí. Ajusta USE_FUNCTIONS_EMULATOR=true en env.public y arranca los emuladores de Firebase.",
+  "helpFaqQuestion31": "¿Cómo contacto soporte en español?",
+  "helpFaqAnswer31": "Usa el botón de correo en español; llega directo a nuestro equipo hispanohablante.",
+  "helpFaqQuestion32": "¿Cuánto tardan en responder?",
+  "helpFaqAnswer32": "Buscamos responder en un día hábil y normalmente lo hacemos antes.",
+  "helpFaqQuestion33": "¿Qué datos ayudan en un reporte de errores?",
+  "helpFaqAnswer33": "Incluye la marca de tiempo, tu localidad, versión de la app, dispositivo y pasos para reproducir.",
+  "helpFaqQuestion34": "¿Cómo obtengo la versión más reciente?",
+  "helpFaqAnswer34": "Actualiza desde tu tienda de apps o haz pull de la rama main si contribuyes al proyecto.",
+  "helpFaqQuestion35": "¿Dónde leo la política de privacidad y los términos?",
+  "helpFaqAnswer35": "Sigue los enlaces de Política de privacidad y Términos de servicio en la sección Acerca de.",
+  "@helpEmailSubject": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@helpBugReportSubject": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@helpBugReportBody": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      },
+      "locale": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@helpAboutVersion": {
+    "placeholders": {
+      "version": {
         "type": "String"
       }
     }

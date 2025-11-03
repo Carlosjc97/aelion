@@ -1,12 +1,12 @@
-﻿import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/l10n/app_localizations_en.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/l10n/app_localizations_en.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:aelion/services/course_api_service.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 Future<Map<String, dynamic>> _fakeOutline({
   required String topic,
@@ -154,4 +154,5 @@ void main() {
     skip: true,
   );
 }
+
 

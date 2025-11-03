@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-import 'package:aelion/core/app_colors.dart';
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/widgets/skeleton.dart';
+import 'package:edaptia/core/app_colors.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/widgets/skeleton.dart';
 
 class CourseEntryView extends StatefulWidget {
   const CourseEntryView({super.key});
@@ -175,4 +175,5 @@ class _CourseLoadingOverlay extends StatelessWidget {
     );
   }
 }
+
 

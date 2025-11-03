@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:aelion/l10n/app_localizations_en.dart';
-import 'package:aelion/l10n/app_localizations_es.dart';
+import 'package:edaptia/l10n/app_localizations_en.dart';
+import 'package:edaptia/l10n/app_localizations_es.dart';
 
 void main() {
   test('i18n keys exist (smoke)', () {
@@ -11,3 +11,4 @@ void main() {
     expect(es.depthMedium, 'intermedia');
   });
 }
+

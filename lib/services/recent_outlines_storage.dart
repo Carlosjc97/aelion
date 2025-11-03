@@ -1,8 +1,8 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:aelion/services/outline_cache_key.dart';
+import 'package:edaptia/services/outline_cache_key.dart';
 
 class RecentOutlineMetadata {
   const RecentOutlineMetadata({
@@ -76,7 +76,7 @@ class RecentOutlinesStorage {
   RecentOutlinesStorage._();
 
   static const _storageKey = 'recentOutlines.meta.v1';
-  static const _maxEntries = 35;
+  static const _maxEntries = 5;
 
   static final RecentOutlinesStorage instance = RecentOutlinesStorage._();
 
@@ -166,4 +166,5 @@ class RecentOutlinesStorage {
     await prefs.setString(_storageKey, jsonEncode(serialized));
   }
 }
+
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/core/router.dart';
-import 'package:aelion/features/auth/auth_gate.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/core/router.dart';
+import 'package:edaptia/features/auth/auth_gate.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 Widget _app({Locale locale = const Locale('es')}) => MaterialApp(
       locale: locale,
@@ -66,3 +66,4 @@ void main() {
     );
   });
 }
+

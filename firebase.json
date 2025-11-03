@@ -1,61 +1,21 @@
 {
   "hosting": {
     "public": "build/web",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      {
-        "source": "/api/**",
-        "function": "api"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/api/**", "function": "api" },
+      { "source": "**", "destination": "/index.html" }
     ]
   },
   "functions": {
     "source": "functions",
-    "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" run build"
-    ]
+    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
   },
-  "firestore": [
-    {
-      "target": "aelionDb",
-      "rules": "firestore.rules",
-      "indexes": "firestore.indexes.json"
-    }
-  ],
   "emulators": {
-    "hub": {
-      "host": "127.0.0.1",
-      "port": 4405
-    },
-    "logging": {
-      "host": "127.0.0.1",
-      "port": 4510
-    },
-    "functions": {
-      "host": "127.0.0.1",
-      "port": 5005
-    },
-    "firestore": {
-      "host": "127.0.0.1",
-      "port": 8080
-    },
-    "ui": {
-      "enabled": true,
-      "host": "127.0.0.1",
-      "port": 4100
-    },
-    "hosting": {
-      "host": "127.0.0.1",
-      "port": 5100
-    },
+    "hub":       { "host": "127.0.0.1", "port": 4405 },
+    "ui":        { "enabled": true, "host": "127.0.0.1", "port": 4100 },
+    "functions": { "host": "127.0.0.1", "port": 5005 },
+    "hosting":   { "host": "127.0.0.1", "port": 5100 },
     "singleProjectMode": true
   }
 }

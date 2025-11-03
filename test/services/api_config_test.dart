@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:aelion/services/api_config.dart';
+import 'package:edaptia/services/api_config.dart';
 
 void main() {
   test('release URLs are absolute and secure', () {
@@ -23,3 +23,4 @@ void main() {
     }
   });
 }
+

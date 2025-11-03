@@ -1,10 +1,10 @@
-﻿import 'package:aelion/features/lesson/lesson_detail_page.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:aelion/services/course_api_service.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -87,3 +87,4 @@ void main() {
     expect(find.text('Detailed lesson content'), findsOneWidget);
   });
 }
+

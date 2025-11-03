@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:aelion/services/recent_search_storage.dart';
+import 'package:edaptia/services/recent_search_storage.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -48,3 +48,4 @@ void main() {
     expect(entries.first.topic, 'machine learning');
   });
 }
+

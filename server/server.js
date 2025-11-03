@@ -2,6 +2,25 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import nodeFetch from 'node-fetch';
+import {
+  EARLY_STOP_CONFIDENCE,
+  EARLY_STOP_ITEM,
+  MAX_ITEMS,
+  finishSession as finishAssessmentSession,
+  getNextQuestion,
+  getSession,
+  getSessionState,
+  persistSession,
+  startAssessmentSession,
+  submitAnswer,
+  buildSummary,
+} from './assessment.js';
+import {
+  attachResponseTimestamp,
+  enforceRateLimits,
+  issueServerTimestamp,
+  requireSignedTimestamp,
+} from './security.js';
 
 dotenv.config();
 
@@ -9,7 +28,55 @@ const fetchImpl = typeof globalThis.fetch === 'function' ? globalThis.fetch : no
 
 const app = express();
 
-app.use(cors({ origin: '*' }));
+const rawAllowedOrigins =
+  process.env.SERVER_ALLOWED_ORIGINS ?? process.env.ALLOWED_ORIGINS ?? '';
+const allowedOriginList = rawAllowedOrigins
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
+const allowedOriginSet = new Set(allowedOriginList);
+const isTestEnv = process.env.NODE_ENV === 'test';
+
+if (allowedOriginSet.size === 0) {
+  throw new Error(
+    'SERVER_ALLOWED_ORIGINS must be configured (comma-separated) for every environment.'
+  );
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (origin && allowedOriginSet.has(origin)) {
+      return callback(null, true);
+    }
+    if (!origin && isTestEnv) {
+      return callback(null, true);
+    }
+    return callback(new Error('forbidden_origin'));
+  },
+  allowedHeaders: [
+    'Content-Type',
+    'X-Server-Timestamp',
+    'X-Server-Signature',
+    'Authorization',
+  ],
+  exposedHeaders: ['X-Revision', 'X-Server-Timestamp', 'X-Server-Signature'],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+const corsMiddleware = cors(corsOptions);
+
+app.use((req, res, next) => {
+  corsMiddleware(req, res, (err) => {
+    if (err) {
+      res.status(403).json({ error: 'forbidden_origin' });
+      return;
+    }
+    next();
+  });
+});
+
+app.use(attachResponseTimestamp);
 app.use(express.json());
 app.use((req, res, next) => {
   res.set('X-Revision', process.env.ROLLOUT || 'dev');
@@ -19,6 +86,16 @@ app.use((req, res, next) => {
 const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const PORT = process.env.PORT || 8787;
+
+function handleRateLimitError(res, error, scope) {
+  if (error && typeof error.code === 'string' && error.code.startsWith('rate_limit')) {
+    return res
+      .status(error.status ?? 429)
+      .json({ error: error.code, scope });
+  }
+  console.error(`[${scope}] rate limit check failed:`, error);
+  return res.status(500).json({ error: 'server_error' });
+}
 
 function sanitizeApiKey(raw) {
   if (typeof raw !== 'string') {
@@ -115,8 +192,142 @@ function buildBypassQuiz(numQuestions, topic, language) {
   });
 }
 
+app.post('/assessment/start', requireSignedTimestamp, async (req, res) => {
+  try {
+    enforceRateLimits(req, { userId: req.body?.userId });
+  } catch (error) {
+    return handleRateLimitError(res, error, '/assessment/start');
+  }
+
+  try {
+    const session = await startAssessmentSession(req.body ?? {});
+    const snapshot = getSessionState(session);
+    res.status(201).json({
+      sessionId: snapshot.sessionId,
+      status: snapshot.status,
+      createdAt: snapshot.createdAt,
+      expiresAt: snapshot.expiresAt,
+      level: snapshot.level,
+      confidence: snapshot.confidence,
+      ability: snapshot.ability,
+      totalAnswered: snapshot.totalAnswered,
+      remaining: snapshot.remaining,
+      config: snapshot.config,
+    });
+  } catch (error) {
+    console.error('[/assessment/start] failed:', error);
+    res.status(400).json({ error: 'bad_request' });
+  }
+});
+
+app.get('/assessment/:sessionId/state', requireSignedTimestamp, async (req, res) => {
+  const session = await getSession(req.params.sessionId);
+  if (!session) {
+    return res.status(404).json({ error: 'session_not_found' });
+  }
+
+  try {
+    enforceRateLimits(req, { session });
+  } catch (error) {
+    return handleRateLimitError(res, error, '/assessment/state');
+  }
+
+  res.json(getSessionState(session));
+});
+
+app.get('/assessment/:sessionId/next', requireSignedTimestamp, async (req, res) => {
+  const session = await getSession(req.params.sessionId);
+  if (!session) {
+    return res.status(404).json({ error: 'session_not_found' });
+  }
+
+  try {
+    enforceRateLimits(req, { session });
+  } catch (error) {
+    return handleRateLimitError(res, error, '/assessment/next');
+  }
+
+  try {
+    const payload = getNextQuestion(session);
+    await persistSession(session);
+
+    if (!payload) {
+      if (session.status === 'finished') {
+        return res.status(409).json({
+          error: 'session_completed',
+          summary: buildSummary(session),
+        });
+      }
+      return res.status(409).json({ error: 'no_more_questions' });
+    }
+
+    res.json({
+      ...payload,
+      config: {
+        maxItems: MAX_ITEMS,
+        earlyStopConfidence: EARLY_STOP_CONFIDENCE,
+        earlyStopItem: EARLY_STOP_ITEM,
+      },
+    });
+  } catch (error) {
+    console.error('[/assessment/:sessionId/next] failed:', error);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+app.post('/assessment/:sessionId/answer', requireSignedTimestamp, async (req, res) => {
+  const session = await getSession(req.params.sessionId);
+  if (!session) {
+    return res.status(404).json({ error: 'session_not_found' });
+  }
+
+  try {
+    enforceRateLimits(req, { session });
+  } catch (error) {
+    return handleRateLimitError(res, error, '/assessment/answer');
+  }
+
+  try {
+    const result = submitAnswer(session, req.body ?? {});
+    await persistSession(session);
+    res.json(result);
+  } catch (error) {
+    if (error && error.code) {
+      return res.status(error.status ?? 400).json({ error: error.code });
+    }
+    console.error('[/assessment/:sessionId/answer] failed:', error);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+app.post('/assessment/:sessionId/finish', requireSignedTimestamp, async (req, res) => {
+  const session = await getSession(req.params.sessionId);
+  if (!session) {
+    return res.status(404).json({ error: 'session_not_found' });
+  }
+
+  try {
+    enforceRateLimits(req, { session });
+  } catch (error) {
+    return handleRateLimitError(res, error, '/assessment/finish');
+  }
+
+  const reason =
+    typeof req.body?.reason === 'string' && req.body.reason.trim()
+      ? req.body.reason.trim()
+      : 'manual';
+  finishAssessmentSession(session, reason);
+  await persistSession(session);
+  res.json(buildSummary(session));
+});
+
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get('/server/timestamp', (_req, res) => {
+  const payload = issueServerTimestamp();
+  res.json(payload);
 });
 
 app.post('/outline', (req, res) => {

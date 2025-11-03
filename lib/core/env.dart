@@ -1,4 +1,4 @@
-import 'package:aelion/services/api_config.dart';
+import 'package:edaptia/services/api_config.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -13,3 +13,4 @@ class Env {
     return key.isNotEmpty && key != 'changeme';
   }
 }
+

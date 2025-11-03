@@ -1,4 +1,6 @@
-﻿import 'package:aelion/services/local_outline_storage.dart';
+import 'dart:convert';
+
+import 'package:edaptia/services/local_outline_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -56,6 +58,70 @@ void main() {
     expect(all.last.topic, 'Topic 0');
   });
 
+  test('compresses history payload and prunes heavy fields', () async {
+    final storage = LocalOutlineStorage.instance;
+    final largeText = List<String>.filled(4000, 'x').join();
+    final payload = <String, dynamic>{
+      'outline': [
+        {
+          'title': 'Module',
+          'lessons': [
+            {'title': 'Lesson', 'body': largeText},
+          ],
+        },
+      ],
+      'source': 'fresh',
+      'rawOutline': largeText,
+    };
+
+    await storage.save(topic: 'Heavy', payload: payload);
+
+    final prefs = await SharedPreferences.getInstance();
+    final historyString = prefs.getString('outlineHistory.v1');
+
+    expect(historyString, isNotNull);
+    expect(historyString!.startsWith('gz:'), isTrue);
+
+    final stored = await storage.read();
+    expect(stored, isNotNull);
+    expect(stored!.rawResponse.containsKey('rawOutline'), isFalse);
+  });
+
+  test('drops outlines older than retention window', () async {
+    final storage = LocalOutlineStorage.instance;
+    final prefs = await SharedPreferences.getInstance();
+    final oldPayload = <String, dynamic>{
+      'outline': [
+        {'title': 'Old module', 'lessons': []},
+      ],
+      'source': 'cache',
+    };
+
+    final oldEntry = <String, dynamic>{
+      'topic': 'Legacy',
+      'savedAt': DateTime.now()
+          .subtract(const Duration(days: 60))
+          .toIso8601String(),
+      'source': 'cache',
+      'payload': oldPayload,
+    };
+
+    prefs.setString('outlineHistory.v1', jsonEncode([oldEntry]));
+
+    await storage.save(
+      topic: 'Fresh',
+      payload: <String, dynamic>{
+        'outline': [
+          {'title': 'New module', 'lessons': []},
+        ],
+        'source': 'fresh',
+      },
+    );
+
+    final all = await storage.readAll();
+    expect(all.any((outline) => outline.topic == 'Legacy'), isFalse);
+  });
+
   test('deduplicates outlines by topic and band', () async {
     final storage = LocalOutlineStorage.instance;
     final payload = <String, dynamic>{
@@ -73,3 +139,4 @@ void main() {
     expect(all, hasLength(1));
   });
 }
+

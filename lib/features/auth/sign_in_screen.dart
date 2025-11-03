@@ -3,11 +3,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/analytics/analytics_service.dart';
-import 'package:aelion/services/analytics/guest_id.dart';
-import 'package:aelion/services/google_sign_in_helper.dart';
-import 'package:aelion/widgets/a11y_button.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
+import 'package:edaptia/services/analytics/guest_id.dart';
+import 'package:edaptia/services/google_sign_in_helper.dart';
+import 'package:edaptia/widgets/a11y_button.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -256,3 +256,4 @@ class _HighlightsCard extends StatelessWidget {
     );
   }
 }
+

@@ -1,9 +1,9 @@
-import 'package:aelion/features/courses/course_entry_view.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/l10n/app_localizations_en.dart';
-import 'package:aelion/services/course_api_service.dart';
+import 'package:edaptia/features/courses/course_entry_view.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/l10n/app_localizations_en.dart';
+import 'package:edaptia/services/course_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -155,3 +155,4 @@ void main() {
     skip: true,
   );
 }
+

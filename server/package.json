@@ -1,16 +1,23 @@
 {
-  "name": "aelion-proxy",
+  "name": "aelion-server",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.21.2",
-    "node-fetch": "^3.3.2",
-    "openai": "^4.56.0"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^13.5.0",
+    "node-fetch": "^3.3.2"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.4"
   }
 }

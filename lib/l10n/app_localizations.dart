@@ -185,13 +185,13 @@ abstract class AppLocalizations {
   /// No description provided for @homeGreetingNamedShort.
   ///
   /// In en, this message translates to:
-  /// **'Hi {name} 👋'**
+  /// **'Hi {name}'**
   String homeGreetingNamedShort(String name);
 
   /// No description provided for @homeGreetingWave.
   ///
   /// In en, this message translates to:
-  /// **'Hello 👋'**
+  /// **'Hello'**
   String get homeGreetingWave;
 
   /// No description provided for @homeMotivation.
@@ -1033,6 +1033,607 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan created.'**
   String get quizPlanCreated;
+
+  /// No description provided for @helpSupportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get helpSupportTitle;
+
+  /// No description provided for @helpSupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers, contact options, and community links.'**
+  String get helpSupportSubtitle;
+
+  /// No description provided for @helpFaqSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently asked questions'**
+  String get helpFaqSectionTitle;
+
+  /// No description provided for @helpCommunitySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get helpCommunitySectionTitle;
+
+  /// No description provided for @helpContactSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact options'**
+  String get helpContactSectionTitle;
+
+  /// No description provided for @helpJoinCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Community'**
+  String get helpJoinCommunity;
+
+  /// No description provided for @helpJoinCommunityDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to connect with other learners.'**
+  String get helpJoinCommunityDescription;
+
+  /// No description provided for @helpJoinCommunityDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram'**
+  String get helpJoinCommunityDialogTitle;
+
+  /// No description provided for @helpJoinCommunityChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'News channel'**
+  String get helpJoinCommunityChannel;
+
+  /// No description provided for @helpJoinCommunityGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Community chat'**
+  String get helpJoinCommunityGroup;
+
+  /// No description provided for @helpContactSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Email support (ES)'**
+  String get helpContactSpanish;
+
+  /// No description provided for @helpContactSpanishDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach our Spanish-speaking agents.'**
+  String get helpContactSpanishDescription;
+
+  /// No description provided for @helpContactEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Email support (EN)'**
+  String get helpContactEnglish;
+
+  /// No description provided for @helpContactEnglishDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help in English from the core team.'**
+  String get helpContactEnglishDescription;
+
+  /// No description provided for @helpReportBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a bug'**
+  String get helpReportBug;
+
+  /// No description provided for @helpReportBugDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Include screenshots or steps if possible.'**
+  String get helpReportBugDescription;
+
+  /// No description provided for @helpAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About this app'**
+  String get helpAboutTitle;
+
+  /// No description provided for @helpAboutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Built with Flutter and Firebase; all content is generated via secure Cloud Functions.'**
+  String get helpAboutDescription;
+
+  /// No description provided for @helpPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get helpPrivacyPolicy;
+
+  /// No description provided for @helpTermsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get helpTermsOfService;
+
+  /// No description provided for @helpLaunchError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open the link. Please try again.'**
+  String get helpLaunchError;
+
+  /// No description provided for @homeOverflowHelpSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get homeOverflowHelpSupport;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsGeneralSection.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsGeneralSection;
+
+  /// No description provided for @settingsHelpSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get settingsHelpSupport;
+
+  /// No description provided for @settingsHelpSupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQs, contact, and policies'**
+  String get settingsHelpSupportSubtitle;
+
+  /// No description provided for @helpEmailSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} support request (v{version} · {device})'**
+  String helpEmailSubject(String appName, String version, String device);
+
+  /// No description provided for @helpBugReportSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} bug report (v{version} · {device})'**
+  String helpBugReportSubject(String appName, String version, String device);
+
+  /// No description provided for @helpBugReportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp: {timestamp}\nLocale: {locale}\nVersion: {version}\nDevice: {device}\n\nSteps to reproduce:\n- '**
+  String helpBugReportBody(
+      String timestamp, String locale, String version, String device);
+
+  /// No description provided for @helpAboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String helpAboutVersion(String version);
+
+  /// No description provided for @helpFaqQuestion1.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I generate my first learning plan?'**
+  String get helpFaqQuestion1;
+
+  /// No description provided for @helpFaqAnswer1.
+  ///
+  /// In en, this message translates to:
+  /// **'On the Home screen, enter a topic and tap Generate AI learning plan.'**
+  String get helpFaqAnswer1;
+
+  /// No description provided for @helpFaqQuestion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Where can I find my recent outlines?'**
+  String get helpFaqQuestion2;
+
+  /// No description provided for @helpFaqAnswer2.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to the Recents section on Home; each card reopens the saved outline instantly.'**
+  String get helpFaqAnswer2;
+
+  /// No description provided for @helpFaqQuestion3.
+  ///
+  /// In en, this message translates to:
+  /// **'How are trending topics selected?'**
+  String get helpFaqQuestion3;
+
+  /// No description provided for @helpFaqAnswer3.
+  ///
+  /// In en, this message translates to:
+  /// **'We mix your latest searches with popular requests in your language to suggest new ideas.'**
+  String get helpFaqAnswer3;
+
+  /// No description provided for @helpFaqQuestion4.
+  ///
+  /// In en, this message translates to:
+  /// **'What is a placement quiz?'**
+  String get helpFaqQuestion4;
+
+  /// No description provided for @helpFaqAnswer4.
+  ///
+  /// In en, this message translates to:
+  /// **'It is a 10-question calibration that sets the right level before we build a tailored plan.'**
+  String get helpFaqAnswer4;
+
+  /// No description provided for @helpFaqQuestion5.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I change the depth of a plan later?'**
+  String get helpFaqQuestion5;
+
+  /// No description provided for @helpFaqAnswer5.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the outline, tap Refine plan, and select the depth that matches your goal.'**
+  String get helpFaqAnswer5;
+
+  /// No description provided for @helpFaqQuestion6.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I switch the outline language?'**
+  String get helpFaqQuestion6;
+
+  /// No description provided for @helpFaqAnswer6.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate again after choosing your preferred language in the quiz or topic prompt.'**
+  String get helpFaqAnswer6;
+
+  /// No description provided for @helpFaqQuestion7.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens if I lose connection?'**
+  String get helpFaqQuestion7;
+
+  /// No description provided for @helpFaqAnswer7.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached outlines and recents stay available offline; new generations wait until you are online.'**
+  String get helpFaqAnswer7;
+
+  /// No description provided for @helpFaqQuestion8.
+  ///
+  /// In en, this message translates to:
+  /// **'How is my progress saved?'**
+  String get helpFaqQuestion8;
+
+  /// No description provided for @helpFaqAnswer8.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata and cached outlines are stored securely on your device via SharedPreferences.'**
+  String get helpFaqAnswer8;
+
+  /// No description provided for @helpFaqQuestion9.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I sign out safely?'**
+  String get helpFaqQuestion9;
+
+  /// No description provided for @helpFaqAnswer9.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the logout icon on the Home app bar; it signs you out of Firebase and Google on mobile.'**
+  String get helpFaqAnswer9;
+
+  /// No description provided for @helpFaqQuestion10.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I switch Google accounts?'**
+  String get helpFaqQuestion10;
+
+  /// No description provided for @helpFaqAnswer10.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out first, then pick the other account when the Google sign-in sheet appears.'**
+  String get helpFaqAnswer10;
+
+  /// No description provided for @helpFaqQuestion11.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I clear my recent searches?'**
+  String get helpFaqQuestion11;
+
+  /// No description provided for @helpFaqAnswer11.
+  ///
+  /// In en, this message translates to:
+  /// **'Search history is capped to the latest entries per account and is cleared automatically when you sign out.'**
+  String get helpFaqAnswer11;
+
+  /// No description provided for @helpFaqQuestion12.
+  ///
+  /// In en, this message translates to:
+  /// **'What data do you store in Firestore?'**
+  String get helpFaqQuestion12;
+
+  /// No description provided for @helpFaqAnswer12.
+  ///
+  /// In en, this message translates to:
+  /// **'Only anonymized outline cache entries and observability metrics generated by Cloud Functions.'**
+  String get helpFaqAnswer12;
+
+  /// No description provided for @helpFaqQuestion13.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I report incorrect content?'**
+  String get helpFaqQuestion13;
+
+  /// No description provided for @helpFaqAnswer13.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Report a bug button below and describe what needs to be fixed.'**
+  String get helpFaqAnswer13;
+
+  /// No description provided for @helpFaqQuestion14.
+  ///
+  /// In en, this message translates to:
+  /// **'Where do recommendations come from?'**
+  String get helpFaqQuestion14;
+
+  /// No description provided for @helpFaqAnswer14.
+  ///
+  /// In en, this message translates to:
+  /// **'They combine aggregated demand with your recent activity to surface relevant topics.'**
+  String get helpFaqAnswer14;
+
+  /// No description provided for @helpFaqQuestion15.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I regenerate a plan after finishing a quiz?'**
+  String get helpFaqQuestion15;
+
+  /// No description provided for @helpFaqAnswer15.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. Applying quiz results automatically rebuilds the outline with the new band.'**
+  String get helpFaqAnswer15;
+
+  /// No description provided for @helpFaqQuestion16.
+  ///
+  /// In en, this message translates to:
+  /// **'How long are cached outlines kept?'**
+  String get helpFaqQuestion16;
+
+  /// No description provided for @helpFaqAnswer16.
+  ///
+  /// In en, this message translates to:
+  /// **'They remain until you replace them or clear storage; stale badges appear after 24 hours.'**
+  String get helpFaqAnswer16;
+
+  /// No description provided for @helpFaqQuestion17.
+  ///
+  /// In en, this message translates to:
+  /// **'Why was I asked to retake the quiz?'**
+  String get helpFaqQuestion17;
+
+  /// No description provided for @helpFaqAnswer17.
+  ///
+  /// In en, this message translates to:
+  /// **'We prompt a retake when your level looks outdated or the cache exceeded its freshness window.'**
+  String get helpFaqAnswer17;
+
+  /// No description provided for @helpFaqQuestion18.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I use the app on multiple devices?'**
+  String get helpFaqQuestion18;
+
+  /// No description provided for @helpFaqAnswer18.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. Sign in with the same Google account on web or Android to stay in sync.'**
+  String get helpFaqAnswer18;
+
+  /// No description provided for @helpFaqQuestion19.
+  ///
+  /// In en, this message translates to:
+  /// **'Does the app support dark mode?'**
+  String get helpFaqQuestion19;
+
+  /// No description provided for @helpFaqAnswer19.
+  ///
+  /// In en, this message translates to:
+  /// **'The interface follows your system theme and keeps contrast within accessibility guidelines.'**
+  String get helpFaqAnswer19;
+
+  /// No description provided for @helpFaqQuestion20.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I reset my learning streak?'**
+  String get helpFaqQuestion20;
+
+  /// No description provided for @helpFaqAnswer20.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear local data from system settings or sign in with a new account.'**
+  String get helpFaqAnswer20;
+
+  /// No description provided for @helpFaqQuestion21.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I request a new feature?'**
+  String get helpFaqQuestion21;
+
+  /// No description provided for @helpFaqAnswer21.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your idea through the English support email and include Feature idea in the message.'**
+  String get helpFaqAnswer21;
+
+  /// No description provided for @helpFaqQuestion22.
+  ///
+  /// In en, this message translates to:
+  /// **'Do I need an account to use the app?'**
+  String get helpFaqQuestion22;
+
+  /// No description provided for @helpFaqAnswer22.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, Google authentication protects your content and enables personalization.'**
+  String get helpFaqAnswer22;
+
+  /// No description provided for @helpFaqQuestion23.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens if I close the app during a quiz?'**
+  String get helpFaqQuestion23;
+
+  /// No description provided for @helpFaqAnswer23.
+  ///
+  /// In en, this message translates to:
+  /// **'You can restart the quiz anytime; progress resets to keep the calibration accurate.'**
+  String get helpFaqAnswer23;
+
+  /// No description provided for @helpFaqQuestion24.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I delete cached outlines?'**
+  String get helpFaqQuestion24;
+
+  /// No description provided for @helpFaqAnswer24.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached outlines live only on your device; uninstalling or clearing the app data removes them.'**
+  String get helpFaqAnswer24;
+
+  /// No description provided for @helpFaqQuestion25.
+  ///
+  /// In en, this message translates to:
+  /// **'Is my personal data shared with third parties?'**
+  String get helpFaqQuestion25;
+
+  /// No description provided for @helpFaqAnswer25.
+  ///
+  /// In en, this message translates to:
+  /// **'No. We only use aggregate telemetry for reliability and never sell personal information.'**
+  String get helpFaqAnswer25;
+
+  /// No description provided for @helpFaqQuestion26.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I use the app without Firebase Functions?'**
+  String get helpFaqQuestion26;
+
+  /// No description provided for @helpFaqAnswer26.
+  ///
+  /// In en, this message translates to:
+  /// **'No. Direct Firestore access is blocked; all requests go through secure HTTPS Functions.'**
+  String get helpFaqAnswer26;
+
+  /// No description provided for @helpFaqQuestion27.
+  ///
+  /// In en, this message translates to:
+  /// **'Why do I see a stale badge?'**
+  String get helpFaqQuestion27;
+
+  /// No description provided for @helpFaqAnswer27.
+  ///
+  /// In en, this message translates to:
+  /// **'It means the cached outline is older than the freshness threshold and should be regenerated.'**
+  String get helpFaqAnswer27;
+
+  /// No description provided for @helpFaqQuestion28.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I join the community?'**
+  String get helpFaqQuestion28;
+
+  /// No description provided for @helpFaqAnswer28.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Join Community to open the Telegram news channel or chat group.'**
+  String get helpFaqAnswer28;
+
+  /// No description provided for @helpFaqQuestion29.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I check the app version?'**
+  String get helpFaqQuestion29;
+
+  /// No description provided for @helpFaqAnswer29.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Help & Support and scroll to About; the version number is listed there.'**
+  String get helpFaqAnswer29;
+
+  /// No description provided for @helpFaqQuestion30.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I run the app with local emulators?'**
+  String get helpFaqQuestion30;
+
+  /// No description provided for @helpFaqAnswer30.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. Set USE_FUNCTIONS_EMULATOR=true in env.public and start the Firebase emulators.'**
+  String get helpFaqAnswer30;
+
+  /// No description provided for @helpFaqQuestion31.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I contact support in Spanish?'**
+  String get helpFaqQuestion31;
+
+  /// No description provided for @helpFaqAnswer31.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Spanish email button; it routes directly to our Spanish-speaking support team.'**
+  String get helpFaqAnswer31;
+
+  /// No description provided for @helpFaqQuestion32.
+  ///
+  /// In en, this message translates to:
+  /// **'How quickly does support respond?'**
+  String get helpFaqQuestion32;
+
+  /// No description provided for @helpFaqAnswer32.
+  ///
+  /// In en, this message translates to:
+  /// **'We aim to reply within one business day and usually respond much sooner.'**
+  String get helpFaqAnswer32;
+
+  /// No description provided for @helpFaqQuestion33.
+  ///
+  /// In en, this message translates to:
+  /// **'What details help with a bug report?'**
+  String get helpFaqQuestion33;
+
+  /// No description provided for @helpFaqAnswer33.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the timestamp, locale, app version, device, and clear reproduction steps.'**
+  String get helpFaqAnswer33;
+
+  /// No description provided for @helpFaqQuestion34.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I get the latest release?'**
+  String get helpFaqQuestion34;
+
+  /// No description provided for @helpFaqAnswer34.
+  ///
+  /// In en, this message translates to:
+  /// **'Install updates from your app store or pull the main branch if you are contributing.'**
+  String get helpFaqAnswer34;
+
+  /// No description provided for @helpFaqQuestion35.
+  ///
+  /// In en, this message translates to:
+  /// **'Where can I read the privacy policy and terms?'**
+  String get helpFaqQuestion35;
+
+  /// No description provided for @helpFaqAnswer35.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Privacy Policy and Terms of Service links in the About section.'**
+  String get helpFaqAnswer35;
 }
 
 class _AppLocalizationsDelegate

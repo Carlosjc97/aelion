@@ -1,4 +1,4 @@
-import 'package:aelion/services/recent_outlines_storage.dart';
+import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,7 +51,7 @@ void main() {
     expect(all.first.savedAt, updatedFirst.savedAt);
   });
 
-  test('upsert maintains only the 35 most recent entries', () async {
+  test('upsert maintains only the 5 most recent entries', () async {
     final storage = RecentOutlinesStorage.instance;
 
     for (var i = 0; i < 40; i++) {
@@ -59,7 +59,7 @@ void main() {
     }
 
     final all = await storage.readAll();
-    expect(all, hasLength(35));
+    expect(all, hasLength(5));
     final ids = all.map((entry) => entry.id).toList(growable: false);
 
     // The earliest inserted entries should have been evicted.
@@ -71,3 +71,4 @@ void main() {
     expect(all.first.id, entry(39).id);
   });
 }
+

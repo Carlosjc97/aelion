@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/analytics/analytics_service.dart';
-import 'package:aelion/services/progress_service.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
+import 'package:edaptia/services/progress_service.dart';
 
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
@@ -264,3 +264,4 @@ class _LessonViewState extends State<LessonView>
     );
   }
 }
+

@@ -1,7 +1,7 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
-import 'package:aelion/services/course_api_service.dart';
-import 'package:aelion/services/topic_band_cache.dart';
+import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -72,3 +72,4 @@ void main() {
     expect(hasStored, isFalse);
   });
 }
+

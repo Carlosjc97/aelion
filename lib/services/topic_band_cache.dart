@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:aelion/services/course_api_service.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 class TopicBandCache {
   TopicBandCache._();
@@ -170,4 +170,5 @@ class TopicBandCache {
     await prefs.setString(_storageKey, encoded);
   }
 }
+
 

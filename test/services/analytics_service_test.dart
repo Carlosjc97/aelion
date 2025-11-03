@@ -1,6 +1,5 @@
-import 'dart:async';
 
-import 'package:aelion/services/analytics/analytics_service.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -103,3 +102,4 @@ void main() {
     expect(analytics.debugPosthogQueueLength(), equals(2));
   });
 }
+

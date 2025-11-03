@@ -3,15 +3,14 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/services/analytics/analytics_service.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/course_api_service.dart';
-import 'package:aelion/services/local_outline_storage.dart';
-import 'package:aelion/services/quiz_attempt_storage.dart';
-import 'package:aelion/services/recent_outlines_storage.dart';
-import 'package:aelion/services/topic_band_cache.dart';
-import 'package:aelion/widgets/skeleton.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/services/local_outline_storage.dart';
+import 'package:edaptia/services/quiz_attempt_storage.dart';
+import 'package:edaptia/services/recent_outlines_storage.dart';
+import 'package:edaptia/services/topic_band_cache.dart';
+import 'package:edaptia/widgets/skeleton.dart';
 
 typedef PlacementQuizLoader = Future<PlacementQuizStartResponse> Function({
   required String topic,
@@ -804,3 +803,4 @@ class _QuizSkeleton extends StatelessWidget {
     );
   }
 }
+

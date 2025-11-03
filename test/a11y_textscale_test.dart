@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/features/auth/sign_in_screen.dart';
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/features/auth/sign_in_screen.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 Widget _localizedApp(Widget child, {Locale locale = const Locale('es')}) {
   return MaterialApp(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aelion/features/topics/topic_search_view.dart';
-import 'package:aelion/l10n/app_localizations.dart';
+import 'package:edaptia/features/topics/topic_search_view.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('TopicSearchView builds without errors', (widgetTester) async {
@@ -18,3 +18,4 @@ void main() {
     expect(find.byType(Scaffold), findsOneWidget);
   });
 }
+

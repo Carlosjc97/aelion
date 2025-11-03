@@ -6,8 +6,8 @@ import 'package:firebase_core_platform_interface/firebase_core_platform_interfac
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:aelion/firebase_options.dart';
-import 'package:aelion/services/analytics/analytics_service.dart';
+import 'package:edaptia/firebase_options.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 
 class _FakeFirebasePlatform extends FirebasePlatform {
   final Map<String, FirebaseAppPlatform> _apps = {};
@@ -72,3 +72,4 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   analytics.debugSetPosthogCaptureHandler((_, __) async {});
   await testMain();
 }
+

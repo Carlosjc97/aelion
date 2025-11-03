@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:aelion/features/auth/auth.dart';
-import 'package:aelion/features/courses/course_entry_view.dart';
-import 'package:aelion/features/home/home_view.dart';
-import 'package:aelion/features/lesson/lesson_detail_page.dart';
-import 'package:aelion/features/modules/module_outline_view.dart';
-import 'package:aelion/features/quiz/quiz_screen.dart';
-import 'package:aelion/features/topics/topic_search_view.dart';
-import 'package:aelion/widgets/not_found_view.dart';
+import 'package:edaptia/features/auth/auth.dart';
+import 'package:edaptia/features/courses/course_entry_view.dart';
+import 'package:edaptia/features/home/home_view.dart';
+import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
+import 'package:edaptia/features/settings/settings_view.dart';
+import 'package:edaptia/features/support/help_support_screen.dart';
+import 'package:edaptia/features/topics/topic_search_view.dart';
+import 'package:edaptia/widgets/not_found_view.dart';
 
 class AppRouter {
   const AppRouter._();
@@ -120,6 +122,21 @@ class AppRouter {
             arguments: args,
           ),
         );
+      case SettingsView.routeName:
+        return _guarded(
+          const SettingsView(),
+          const RouteSettings(name: SettingsView.routeName),
+        );
+      case HelpSupportScreen.routeName:
+        return _guarded(
+          const HelpSupportScreen(),
+          const RouteSettings(name: HelpSupportScreen.routeName),
+        );
+      case LessonsPage.routeName:
+        return _guarded(
+          const LessonsPage(),
+          const RouteSettings(name: LessonsPage.routeName),
+        );
       default:
         return onUnknownRoute(settings);
     }
@@ -149,3 +166,9 @@ class AppRouter {
     );
   }
 }
+
+
+
+
+
+

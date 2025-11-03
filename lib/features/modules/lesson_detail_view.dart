@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:aelion/l10n/app_localizations.dart';
-import 'package:aelion/services/progress_service.dart';
+import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/progress_service.dart';
 
 class LessonDetailView extends StatefulWidget {
   final String courseId;
@@ -188,3 +188,4 @@ class _LessonDetailViewState extends State<LessonDetailView> {
     );
   }
 }
+

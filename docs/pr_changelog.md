@@ -43,3 +43,6 @@ $answers = $start.questions | ForEach-Object { @{ id = $_.id; choiceIndex = 0 } 
 $gradeBody = @{ quizId = $start.quizId; answers = $answers } | ConvertTo-Json -Compress
 Invoke-RestMethod -Method POST -Uri $URL_GRADE -ContentType "application/json" -Body $gradeBody
 ```
+- Instrumentación analytics_costs: `functions/src/index.ts` registra latencia/counters e índices; añadido `npm run test` + pruebas node.
+- Refactor Home/Course services: `lib/features/home/home_controller.dart`, `lib/features/home/home_view.dart`, `lib/services/course/**/*.dart`.
+
