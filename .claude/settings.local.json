@@ -1,16 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat:*)",
-      "Bash(npm test:*)",
-      "Edit(*)\n\nBash(*)\n\nGit(*)\n\nFilesystem(*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(node scripts/secrets-manager.js:*)",
-      "Bash(gcloud config get-value:*)",
-      "Bash(gcloud config set:*)",
-      "Bash(GOOGLE_CLOUD_PROJECT=aelion-c90d2 node scripts/secrets-manager.js:*)",
-      "Bash(gcloud run deploy:*)"
+      "Bash(test:*)",
+      "Bash(gcloud components list:*)",
+      "Bash(docker --version:*)",
+      "Bash(python -m pip list:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(where:*)",
+      "Bash($env:CLOUDSDK_PYTHON = \"C:\\Users\\Jean Villalta\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\")",
+      "Bash(Select-Object -First 5)",
+      "Bash(\"/c/Users/Jean Villalta/AppData/Local/Google/Cloud SDK/google-cloud-sdk/platform/bundledpythonunix/bin/python3\" -m pip install grpcio)"
     ],
     "deny": [],
     "ask": []
