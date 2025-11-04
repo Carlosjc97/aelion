@@ -36,10 +36,11 @@ content/sql-marketing/mock-exam.json
 
 **Entregables:**
 - [x] Banco cargado en server/assessment.js (reemplazar sintético)
-- [ ] Calibración (10 preguntas) funcionando
-- [ ] Plan generado basado en nivel detectado
-- [ ] Gates (6-10 preguntas por bloque) funcionando
-- [ ] Mock exam disponible
+- [x] Assessment flow E2E funcionando con banco SQL real
+- [x] IRT adaptativo funcionando (validado con test)
+- [ ] Plan generado basado en nivel detectado (pendiente /outline)
+- [ ] Gates (6-10 preguntas por bloque) funcionando (backend listo, falta UI)
+- [ ] Mock exam disponible (pendiente)
 
 **Archivos a modificar:**
 ```

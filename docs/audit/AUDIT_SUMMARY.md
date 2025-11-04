@@ -106,10 +106,12 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 - [x] Mock exam (10 preguntas subset)
 - [x] Parámetros IRT (a,b,c) aproximados
 
-**DÍA 2: INTEGRACIÓN** 🔄 EN PROGRESO
+**DÍA 2: INTEGRACIÓN** ✅ BACKEND COMPLETADO (2025-11-04)
 - [x] Cargar banco en server/assessment.js
-- [ ] Flujo calibración → plan → gate E2E
-- [ ] Health check del flujo completo
+- [x] Flujo de assessment con banco real funcionando
+- [x] Tests E2E validados (7 pasos completos)
+- [ ] Conectar /outline endpoint con contenido real (pendiente)
+- [ ] UI Flutter conectada al backend (pendiente)
 
 **DÍA 3: PAYWALL**
 - [ ] Modal paywall simple (M1 gratis, resto bloqueado)
