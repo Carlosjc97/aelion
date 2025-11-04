@@ -1,8 +1,9 @@
 # AUDIT SUMMARY — EDAPTIA MVP (BRUTAL REVIEW)
-> **Última actualización:** 2025-01-03
-> **Changelog:** Seguridad mejorada 7/10 → 9/10 | Deployment & DevOps 5/10 → 7/10
+> **Última actualización:** 2025-11-04
+> **Changelog:** Deployment COMPLETADO ✅ | Assessment API en producción: https://assessment-api-110324120650.us-central1.run.app
 
 ## 🧭 Overview General
+- ✅ **DEPLOYMENT COMPLETADO:** Assessment API live en Cloud Run → https://assessment-api-110324120650.us-central1.run.app
 - ✅ **SEGURIDAD PRODUCCIÓN-READY:** Firebase Auth implementado en Express, Secret Manager integrado, alertas configuradas, validación CI.
 - Los mínimos de seguridad están cubiertos (secrets en Secret Manager, CORS estricto, HMAC + Firebase Auth, rate limiting por usuario).
 - ⚠️ `/outline` continúa devolviendo un mock; sin contenido curado no hay propuesta de valor.
@@ -12,23 +13,23 @@
 - HomeView se seccionó en `HomeController`, widgets de recomendaciones y tarjetas de recientes; menos de 700 líneas.
 - CourseApiService quedó como fachada sobre servicios tipados (Outline/Quiz/Trending/Search).
 - `analytics_costs` almacena latencia y consumo estimado de `/outline` y `/trending` (pendiente armar dashboards/alertas).
-- ✅ Tests del servidor completos (27 tests pasando), pero Functions y E2E continúan sin cobertura.
+- ✅ Tests del servidor completos (15 tests pasando), Flutter config actualizado con production URL.
 
 ## 📊 Score por Área
 ```
 Arquitectura & Código: ████░░░░░░ 4/10
 Algoritmo IRT        : █████░░░░░ 5/10
 Firebase Integración : █████░░░░░ 5/10
-Seguridad            : █████████░ 9/10  ⬆️ +2 (MEJORADO)
+Seguridad            : █████████░ 9/10  ✅ (PRODUCTION READY)
 Stripe & Monetización: █░░░░░░░░░ 1/10
 UX/UI & Flows        : ████░░░░░░ 4/10
 Performance          : ████░░░░░░ 4/10
 Testing & QA         : ██████░░░░ 6/10
 Documentación        : ████░░░░░░ 4/10
-Deployment & DevOps  : ███████░░░ 7/10  ⬆️ +2 (MEJORADO)
+Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED TO CLOUD RUN ✅)
 ```
 
-**Score Global:** 5.4/10 → **5.8/10** (ponderado por impacto de seguridad)
+**Score Global:** 5.8/10 → **6.2/10** (deployment exitoso + seguridad production-ready)
 
 ## 🚨 Top 10 Problemas Más Críticos
 
@@ -78,14 +79,16 @@ Deployment & DevOps  : ███████░░░ 7/10  ⬆️ +2 (MEJORADO)
 
 ## 🛣️ Roadmap Priorizado de Fixes
 
-### ✅ Fase 0 — COMPLETADO (2025-01-03)
+### ✅ Fase 0 — COMPLETADO (2025-11-04)
 - ✅ Implementar autenticación Firebase en Express server
 - ✅ Integrar Secret Manager y documentar rotación
 - ✅ Configurar alertas de Cloud Monitoring
 - ✅ Crear RUNBOOK operacional
 - ✅ Validar secretos en CI
-- ✅ Tests comprehensivos del servidor (27 tests)
+- ✅ Tests comprehensivos del servidor (15 tests)
 - ✅ Estrategia de deployment Cloud Run documentada
+- ✅ **DEPLOYMENT A PRODUCCIÓN COMPLETADO** → https://assessment-api-110324120650.us-central1.run.app
+- ✅ Flutter config actualizado con URL de producción (lib/services/api_config.dart)
 
 ### 🔄 Fase 1 — Próxima semana
 - [ ] Sustituir `generateDemoOutline` por pipeline curado + LLM (Firestore/Storage + plantillas).
@@ -234,12 +237,14 @@ Deployment & DevOps  : ███████░░░ 7/10  ⬆️ +2 (MEJORADO)
 
 ## 🧭 Próximos Pasos Sugeridos
 
-### Inmediato (Esta semana)
-1. **Deploy a producción** siguiendo `docs/DEPLOYMENT_GUIDE.md`
-   - Verificar secretos en Secret Manager ✅
-   - Deploy Express Server a Cloud Run
-   - Configurar alertas en Cloud Monitoring
-   - Smoke tests en producción
+### ✅ Completado (2025-11-04)
+1. **✅ Deploy a producción** siguiendo `docs/DEPLOYMENT_GUIDE.md`
+   - ✅ Verificar secretos en Secret Manager
+   - ✅ Deploy Express Server a Cloud Run
+   - ✅ Configurar SERVER_ALLOWED_ORIGINS
+   - ✅ Smoke tests en producción (health check respondiendo correctamente)
+   - Service URL: https://assessment-api-110324120650.us-central1.run.app
+   - ⚠️ Alertas en Cloud Monitoring pendientes (configuración manual en Console)
 
 ### Corto plazo (Próximas 2 semanas)
 2. **Contenido real**

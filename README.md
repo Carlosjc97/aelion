@@ -2,6 +2,25 @@
 
 Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Gen‑2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
+## 🚀 Production Services
+
+### Assessment API (IRT Adaptive Testing)
+**Live Service:** https://assessment-api-110324120650.us-central1.run.app
+
+Adaptive assessment engine using Item Response Theory (IRT) with 3-parameter logistic model. Deployed on Cloud Run with:
+- Firebase Authentication
+- Google Cloud Secret Manager integration
+- HMAC signing + Rate limiting
+- 15 tests passing
+
+**Health Check:**
+```bash
+curl -H "Origin: https://aelion-c90d2.web.app" https://assessment-api-110324120650.us-central1.run.app/health
+# Returns: {"ok":true}
+```
+
+See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for full deployment documentation.
+
 ---
 
 ## Backend Quickstart (Firebase Functions)

@@ -1,0 +1,3 @@
+NODE_ENV: production
+GOOGLE_CLOUD_PROJECT: aelion-c90d2
+SERVER_ALLOWED_ORIGINS: https://aelion-c90d2.web.app,https://aelion-c90d2.firebaseapp.com

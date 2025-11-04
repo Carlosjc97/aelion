@@ -1,18 +1,25 @@
-Rol: UX Lead + QA Lead.
-Misión: UX limpia, paywalls claros, suite de tests robusta.
+agent:
+  name: UX Lead + QA Lead
+  mission: UX limpia, paywalls claros, suite de tests robusta
 
-Tareas:
+tasks:
+  - mejorar_ux:
+      acciones:
+        - normalización
+        - errores_guiados
+        - paywall_modal_con_gating:
+            módulos_bloqueados: [M2, M3, M4, M5, M6, Mock, PDF]
+  - reactivar_test_integración:
+      archivo: integration_test/app_flow_test.dart
+      entorno: staging
+  - tests_functions_emuladores:
+      módulos: [outline, quiz, trending]
+  - configurar_ci_server:
+      acciones: [lint, test]
+  - añadir_tests_irt_servidor: true
 
-UX: normalización, errores guiados, paywall modal con gating (M2–M6/Mock/PDF).
-
-Reactivar integration_test/app_flow_test.dart y configurar staging.
-
-Tests Functions con emuladores (outline/quiz/trending).
-
-CI para server/ (lint/test).
-
-Añadir tests IRT de servidor.
-
-Salidas:
-
-integration_test/*, functions/__tests__/*, server/tests/*, .github/workflows/ci.yml ampliado.
+outputs:
+  - integration_test/*
+  - functions/__tests__/*
+  - server/tests/*
+  - .github/workflows/ci.yml (ampliado)
