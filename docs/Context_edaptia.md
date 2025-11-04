@@ -1,323 +1,390 @@
-# CONTEXT.txt  Edaptia (versión completa v2)
+# CONTEXT.txt  Edaptia (versiï¿½n completa v2)
 
-## Qué es
+## Quï¿½ es
 
-Edaptia convierte una duda específica en un **plan corto y útil** que cabe en tu agenda. En lugar de cursos eternos, te damos **micro-lecciones de 34 minutos** con pequeños retos que confirman tu avance. La **calibración inicial no es un examen**: solo nos ubica para recomendarte el camino correcto.
+Edaptia convierte una duda especï¿½fica en un **plan corto y ï¿½til** que cabe en tu agenda. En lugar de cursos eternos, te damos **micro-lecciones de 34 minutos** con pequeï¿½os retos que confirman tu avance. La **calibraciï¿½n inicial no es un examen**: solo nos ubica para recomendarte el camino correcto.
 
-## Para quién (ICP)
+## Para quiï¿½n (ICP)
 
-Profesionales y equipos que necesitan resultados rápidos en:
+Profesionales y equipos que necesitan resultados rï¿½pidos en:
 
-* **Tecnología** (p. ej., .NET/SQL).
-* **Negocio/Marketing** (p. ej., analítica, mensajes de ventas).
-* **Idiomas profesionales** (p. ej., inglés para trabajo).
+* **Tecnologï¿½a** (p. ej., .NET/SQL).
+* **Negocio/Marketing** (p. ej., analï¿½tica, mensajes de ventas).
+* **Idiomas profesionales** (p. ej., inglï¿½s para trabajo).
 
 Enfoque **ES-first / LATAM**, con ejemplos locales y tono cercano.
 
 ## Problemas que resolvemos
 
 * Falta de tiempo y cursos largos que nunca se terminan.
-* Contenido genérico que no se adapta al nivel.
-* "Parálisis por teoría": mucho saber, poco hacer.
-* Incertidumbre de si realmente estás progresando.
+* Contenido genï¿½rico que no se adapta al nivel.
+* "Parï¿½lisis por teorï¿½a": mucho saber, poco hacer.
+* Incertidumbre de si realmente estï¿½s progresando.
 
 ## Propuesta de valor (en cristiano)
 
-* **Avanzas desde el día 1.** Entras con un objetivo y sales con un plan accionable.
-* **Aprendes a tu ritmo.** La calibración te ubica y los retos se ajustan a cómo te va.
-* **Sin paja.** Cada módulo tiene objetivo, ejemplo concreto y práctica guiada.
+* **Avanzas desde el dï¿½a 1.** Entras con un objetivo y sales con un plan accionable.
+* **Aprendes a tu ritmo.** La calibraciï¿½n te ubica y los retos se ajustan a cï¿½mo te va.
+* **Sin paja.** Cada mï¿½dulo tiene objetivo, ejemplo concreto y prï¿½ctica guiada.
 * **Transparente.** Siempre ves tu progreso y el siguiente paso.
 * **En tu idioma, con tu contexto.** Ejemplos LATAM, tono cercano, sin traducciones raras.
 
-## Por qué NO usar Coursera/Udemy/ChatGPT
+## Por quï¿½ NO usar Coursera/Udemy/ChatGPT
 
 ### L Alternativas tradicionales:
 - Cursos de 40+ horas que nunca terminas
-- Contenido genérico para "todos los niveles" (= para nadie)
-- No sabes si estás progresando de verdad
-- Consumo pasivo, sin validación
+- Contenido genï¿½rico para "todos los niveles" (= para nadie)
+- No sabes si estï¿½s progresando de verdad
+- Consumo pasivo, sin validaciï¿½n
 
-###  Por qué SÍ usar Edaptia:
-- **2-3 semanas máximo** por skill completo
+###  Por quï¿½ Sï¿½ usar Edaptia:
+- **2-3 semanas mï¿½ximo** por skill completo
 - **Plan adaptado a TU nivel** desde minuto 1
-- **Validación constante:** sabes que avanzas
-- **Accionable:** módulos de 3-4 min que caben en tu día
-- **En español**, con ejemplos LATAM
+- **Validaciï¿½n constante:** sabes que avanzas
+- **Accionable:** mï¿½dulos de 3-4 min que caben en tu dï¿½a
+- **En espaï¿½ol**, con ejemplos LATAM
 
-## Cómo funciona (flujo MVP)
+## Cï¿½mo funciona (flujo MVP)
 
-1. **Home** ’ botón "Generar plan con IA".
-2. **Calibración corta** (610 preguntas, sin nota visible, < 3 min).
-3. **Plan adaptado** a tu nivel: módulos de 34 min; **primer bloque gratis**.
-4. **Gate** (610 ítems) que se ajusta a tu desempeño después de cada bloque.
-5. **Mock corto** (5 preguntas) si elegiste entrevista/práctica.
-6. **Paywall claro** en 3 momentos: post-calibración, al abrir Mock, y al descargar **PDF** de apoyo.
+1. **Home** ï¿½ botï¿½n "Generar plan con IA".
+2. **Calibraciï¿½n corta** (610 preguntas, sin nota visible, < 3 min).
+3. **Plan adaptado** a tu nivel: mï¿½dulos de 34 min; **primer bloque gratis**.
+4. **Gate** (610 ï¿½tems) que se ajusta a tu desempeï¿½o despuï¿½s de cada bloque.
+5. **Mock corto** (5 preguntas) si elegiste entrevista/prï¿½ctica.
+6. **Paywall claro** en 3 momentos: post-calibraciï¿½n, al abrir Mock, y al descargar **PDF** de apoyo.
 7. **Recordatorios**: D+1 para seguir tu plan y **T12h** si dijiste que tienes una fecha objetivo.
 
-## Casos de uso específicos (ejemplos reales)
+## Casos de uso especï¿½ficos (ejemplos reales)
 
-### =Ê Marketing Analyst que necesita SQL:
-**Situación:** Puede hacer Excel pero necesita queries para BigQuery/Snowflake
-- **Día 1:** Calibración ’ detectamos nivel "básico-intermedio"
-- **Semana 1:** Módulos de SELECT, WHERE, JOIN (3-4 min c/u)
+### =ï¿½ Marketing Analyst que necesita SQL:
+**Situaciï¿½n:** Puede hacer Excel pero necesita queries para BigQuery/Snowflake
+- **Dï¿½a 1:** Calibraciï¿½n ï¿½ detectamos nivel "bï¿½sico-intermedio"
+- **Semana 1:** Mï¿½dulos de SELECT, WHERE, JOIN (3-4 min c/u)
 - **Semana 2:** Agregaciones y subconsultas con ejemplos de marketing
-- **Semana 3:** Mock con caso real (análisis de campaña)
-- **Resultado:** Puede hacer queries reales en su trabajo al día siguiente
+- **Semana 3:** Mock con caso real (anï¿½lisis de campaï¿½a)
+- **Resultado:** Puede hacer queries reales en su trabajo al dï¿½a siguiente
 
-### =» Dev que cambia a .NET:
-**Situación:** Conoce Java/Python, necesita aplicar a roles .NET
-- **Día 1:** Calibración ’ detectamos nivel "intermedio en OOP"
-- **Semana 1:** C# syntax y paradigmas .NET específicos
+### =ï¿½ Dev que cambia a .NET:
+**Situaciï¿½n:** Conoce Java/Python, necesita aplicar a roles .NET
+- **Dï¿½a 1:** Calibraciï¿½n ï¿½ detectamos nivel "intermedio en OOP"
+- **Semana 1:** C# syntax y paradigmas .NET especï¿½ficos
 - **Semana 2:** Entity Framework y APIs REST
-- **Semana 3:** Mock de entrevista técnica con preguntas reales
+- **Semana 3:** Mock de entrevista tï¿½cnica con preguntas reales
 - **Resultado:** Confianza y conocimiento base para entrevistas .NET
 
-### < Profesional que necesita inglés técnico:
-**Situación:** Lee documentación pero no puede participar en calls
-- **Día 1:** Calibración ’ detectamos nivel "intermedio reading, básico speaking"
-- **Semana 1:** Vocabulario técnico y frases comunes en reuniones
+### < Profesional que necesita inglï¿½s tï¿½cnico:
+**Situaciï¿½n:** Lee documentaciï¿½n pero no puede participar en calls
+- **Dï¿½a 1:** Calibraciï¿½n ï¿½ detectamos nivel "intermedio reading, bï¿½sico speaking"
+- **Semana 1:** Vocabulario tï¿½cnico y frases comunes en reuniones
 - **Semana 2:** Role-plays de situaciones reales (sprint planning, demos)
-- **Semana 3:** Mock de presentación técnica
+- **Semana 3:** Mock de presentaciï¿½n tï¿½cnica
 - **Resultado:** Participa activamente en calls internacionales
 
-## Qué incluye Premium (trial 7 días ’ $4.99/mes)
+## Quï¿½ incluye Premium (trial 7 dï¿½as ï¿½ $4.99/mes)
 
 ### Gratis (siempre):
- Calibración completa
+ Calibraciï¿½n completa
  Primer bloque del plan
  Ver roadmap de aprendizaje
-L Resto de módulos bloqueados
+L Resto de mï¿½dulos bloqueados
 L Mock bloqueado
 L PDF bloqueado
 
 ### Premium:
- Plan completo desbloqueado (12-15 módulos)
- Mock práctico para validar aprendizaje
+ Plan completo desbloqueado (12-15 mï¿½dulos)
+ Mock prï¿½ctico para validar aprendizaje
  **Cheat-sheet PDF** descargable
- Guardado de progreso automático
+ Guardado de progreso automï¿½tico
  Nuevos tracks cada mes
  Soporte prioritario
 
-**Valor percibido:** "Menos que un café al día, mejor que 3 cursos de Udemy que no terminas"
+**Valor percibido:** "Menos que un cafï¿½ al dï¿½a, mejor que 3 cursos de Udemy que no terminas"
 
-## Señales de éxito que medimos
+## Seï¿½ales de ï¿½xito que medimos
 
-### Conversión:
-* **Trial start rate e 6%** (de quienes completan calibración)
-* **Trial ’ Pago e 45%** (realista para EdTech de calidad)
-* **CAC orgánico < $5**
+### Conversiï¿½n:
+* **Trial start rate e 6%** (de quienes completan calibraciï¿½n)
+* **Trial ï¿½ Pago e 45%** (realista para EdTech de calidad)
+* **CAC orgï¿½nico < $5**
 
 ### Retention:
-* **D7 e 12%** (usuarios activos después de 7 días)
-* **D30 e 25%** (usuarios activos después de 30 días)
+* **D7 e 12%** (usuarios activos despuï¿½s de 7 dï¿½as)
+* **D30 e 25%** (usuarios activos despuï¿½s de 30 dï¿½as)
 * **Completion rate e 40%** (completan el plan completo)
 
 ### Performance:
 * **p95 plan_rendered < 4 s** (velocidad percibida)
-* **Abandono calibration ’ plan < 8%**
+* **Abandono calibration ï¿½ plan < 8%**
 * **Crash-free rate e 99.5%**
 
 ## Diferenciales frente a "cursos" tradicionales
 
-* **Micro-aprendizaje con gates adaptativos** (no teoría infinita).
-* **Primero utilidad, luego profundidad**: resolvemos la intención real del usuario.
+* **Micro-aprendizaje con gates adaptativos** (no teorï¿½a infinita).
+* **Primero utilidad, luego profundidad**: resolvemos la intenciï¿½n real del usuario.
 * **ES/LATAM nativo e Ingles** (ejemplos y tono locales, no traducciones malas).
 * **Tiempo respetado**: todo cabe en bloques de 34 min.
-* **Validación constante**: sabes exactamente dónde estás parado.
-* **Accionable desde día 1**: no "aprenderás", sino "ya puedes hacer X".
+* **Validaciï¿½n constante**: sabes exactamente dï¿½nde estï¿½s parado.
+* **Accionable desde dï¿½a 1**: no "aprenderï¿½s", sino "ya puedes hacer X".
 
 ## Principios de producto (no negociables)
 
-1. **No examinamos**, ubicamos. La calibración es para nosotros, no para juzgarte.
+1. **No examinamos**, ubicamos. La calibraciï¿½n es para nosotros, no para juzgarte.
 2. Siempre **muestra progreso** y el **siguiente paso** claro.
 3. **Primer bloque gratis** visible antes de pedir pago (demuestra valor primero).
-4. **Una sola hipótesis A/B** activa (paywall timing) para aprender rápido sin ruido.
-5. **Accesible**: foco visible, objetivos táctiles e44px, contraste suficiente (WCAG AA).
-6. **Privado y seguro**: la corrección vive en servidor; no filtramos respuestas correctas al cliente.
-7. **Rápido por diseño**: 500 ms de *skeleton*, p95 < 4 s para plan completo.
+4. **Una sola hipï¿½tesis A/B** activa (paywall timing) para aprender rï¿½pido sin ruido.
+5. **Accesible**: foco visible, objetivos tï¿½ctiles e44px, contraste suficiente (WCAG AA).
+6. **Privado y seguro**: la correcciï¿½n vive en servidor; no filtramos respuestas correctas al cliente.
+7. **Rï¿½pido por diseï¿½o**: 500 ms de *skeleton*, p95 < 4 s para plan completo.
 
-## Qué ya decidimos para el MVP
+## Quï¿½ ya decidimos para el MVP
 
 ### Contenido:
-* **Track inicial**: SQL para Marketing con banco de ítems (100 preguntas calibradas).
-* **Estructura**: Calibración ’ 3 bloques temáticos ’ Mock ’ PDF
-* **Extensión**: 12-15 módulos de 3-4 min c/u
+* **Track inicial**: SQL para Marketing con banco de ï¿½tems (100 preguntas calibradas).
+* **Estructura**: Calibraciï¿½n ï¿½ 3 bloques temï¿½ticos ï¿½ Mock ï¿½ PDF
+* **Extensiï¿½n**: 12-15 mï¿½dulos de 3-4 min c/u
+
+#### Estructura detallada de mï¿½dulos:
+
+**TRACK: SQL para Marketing**
+Total: 6 mï¿½dulos ï¿½ 22 lecciones = ~3.5 horas
+
+**Mï¿½DULO 1: Fundamentos SELECT (4 lecciones = 28 min) - GRATIS**
+ï¿½ï¿½ Lecciï¿½n 1-1: SELECT bï¿½sico (7 min)
+ï¿½ï¿½ Lecciï¿½n 1-2: WHERE filtros (7 min)
+ï¿½ï¿½ Lecciï¿½n 1-3: ORDER BY y LIMIT (7 min)
+ï¿½ï¿½ Lecciï¿½n 1-4: DISTINCT y NULL (7 min)
+ï¿½ï¿½ GATE M1: 8 preguntas (aprobar >70%)
+
+**Mï¿½DULO 2: JOINs (4 lecciones = 28 min) - PREMIUM**
+ï¿½ï¿½ Lecciï¿½n 2-1: Concepto de relaciones (7 min)
+ï¿½ï¿½ Lecciï¿½n 2-2: INNER JOIN (7 min)
+ï¿½ï¿½ Lecciï¿½n 2-3: LEFT JOIN (7 min)
+ï¿½ï¿½ Lecciï¿½n 2-4: Casos de uso marketing (7 min)
+ï¿½ï¿½ GATE M2: 8 preguntas
+
+**Mï¿½DULO 3: Agregaciones (4 lecciones = 28 min) - PREMIUM**
+ï¿½ï¿½ Lecciï¿½n 3-1: COUNT y SUM (7 min)
+ï¿½ï¿½ Lecciï¿½n 3-2: AVG, MIN, MAX (7 min)
+ï¿½ï¿½ Lecciï¿½n 3-3: GROUP BY (7 min)
+ï¿½ï¿½ Lecciï¿½n 3-4: HAVING (7 min)
+ï¿½ï¿½ GATE M3: 8 preguntas
+
+**Mï¿½DULO 4: Funciones (4 lecciones = 28 min) - PREMIUM**
+ï¿½ï¿½ Lecciï¿½n 4-1: DATE functions (7 min)
+ï¿½ï¿½ Lecciï¿½n 4-2: STRING functions (7 min)
+ï¿½ï¿½ Lecciï¿½n 4-3: CASE WHEN (7 min)
+ï¿½ï¿½ Lecciï¿½n 4-4: COALESCE, NULLIF (7 min)
+ï¿½ï¿½ GATE M4: 8 preguntas
+
+**Mï¿½DULO 5: Subconsultas (3 lecciones = 21 min) - PREMIUM**
+ï¿½ï¿½ Lecciï¿½n 5-1: Subquery en WHERE (7 min)
+ï¿½ï¿½ Lecciï¿½n 5-2: Subquery en FROM (7 min)
+ï¿½ï¿½ Lecciï¿½n 5-3: EXISTS y NOT EXISTS (7 min)
+ï¿½ï¿½ GATE M5: 8 preguntas
+
+**Mï¿½DULO 6: Window Functions (3 lecciones = 21 min) - PREMIUM**
+ï¿½ï¿½ Lecciï¿½n 6-1: ROW_NUMBER, RANK (7 min)
+ï¿½ï¿½ Lecciï¿½n 6-2: PARTITION BY (7 min)
+ï¿½ï¿½ Lecciï¿½n 6-3: LAG, LEAD (7 min)
+ï¿½ï¿½ GATE M6: 8 preguntas
+
+**MOCK FINAL: 10 preguntas tipo entrevista - PREMIUM**
+**PDF CHEAT SHEET: 2 pï¿½ginas descargables - PREMIUM**
+
+#### Distribuciï¿½n del banco de 100 preguntas:
+- **10 preguntas:** Calibraciï¿½n inicial (M1-M2, nivel bï¿½sico)
+- **48 preguntas:** Gates (6 mï¿½dulos ï¿½ 8 preguntas)
+- **10 preguntas:** Mock final (mix de todos los mï¿½dulos)
+- **32 preguntas:** Pool de rotaciï¿½n (evitar memorizaciï¿½n)
+
+#### Gates adaptativos:
+- **Umbral de aprobaciï¿½n:** 70% (6/8 preguntas correctas)
+- **Si aprueba:** Avanza al siguiente mï¿½dulo
+- **Si no aprueba:** Opciones ï¿½ Repasar mï¿½dulo, reintentar gate, ajustar dificultad
+
+#### Archivo de contenido:
+- **Ubicaciï¿½n:** `content/sql-marketing/question-bank-es.json`
+- **Total preguntas:** 100
+- **Idioma:** Espaï¿½ol (LATAM)
+- **Parï¿½metros IRT:** a (discriminaciï¿½n), b (dificultad), c (adivinaciï¿½n) incluidos
+- **Tipos:** 80% multiple_choice, 10% true_false, 10% multiple_select
+- **Contexto:** Ejemplos reales de marketing (campaï¿½as, segmentaciï¿½n, mï¿½tricas)
 
 ### Adaptativo:
 * **Motor simple en servidor**: ability en 3..+3, +0.6 acierto / 0.5 error
 * **Sin repetir subtema** consecutivo (variedad percibida)
-* **Sin LLM durante test** (costo cero, velocidad máxima)
+* **Sin LLM durante test** (costo cero, velocidad mï¿½xima)
 
 ### LLM:
-* **1 sola llamada** post-calibración para `recommendedOutline`
-* **Caché agresivo** por `{courseId, level}`
+* **1 sola llamada** post-calibraciï¿½n para `recommendedOutline`
+* **Cachï¿½ agresivo** por `{courseId, level}`
 * **Diffs por skillProfile** (no regenerar todo)
 
 ### Analytics:
-* **GA4**: eventos FTUE, monetización, latencias
+* **GA4**: eventos FTUE, monetizaciï¿½n, latencias
 * **Remote Config**: feature flags (panic_mode, paywall_variant)
-* **Crashlytics + Performance**: monitoreo básico
+* **Crashlytics + Performance**: monitoreo bï¿½sico
 * **PostHog**: solo replay opcional (apagado por default)
 
 ### Notificaciones:
 * **D+1**: recordatorio suave para continuar plan
 * **T12h**: si usuario dijo que tiene fecha objetivo
-* **Sin T90**: no agregamos presión innecesaria en MVP
+* **Sin T90**: no agregamos presiï¿½n innecesaria en MVP
 
-### Monetización:
-* **A/B único**: ubicación de paywall (post-calibración vs. abrir bloque 2)
-* **3 CTAs claros**: post-calibración, Mock, PDF
-* **Trial 7 días** sin pedir tarjeta upfront
-* **Cobro**: solo en playstore por el momento; políticas de tienda en apps
+### Monetizaciï¿½n:
+* **A/B ï¿½nico**: ubicaciï¿½n de paywall (post-calibraciï¿½n vs. abrir bloque 2)
+* **3 CTAs claros**: post-calibraciï¿½n, Mock, PDF
+* **Trial 7 dï¿½as** sin pedir tarjeta upfront
+* **Cobro**: solo en playstore por el momento; polï¿½ticas de tienda en apps
 
 ### QA/SLOs:
-* Reanudar sesión donde quedaste
+* Reanudar sesiï¿½n donde quedaste
 * Bloquear "back" en test (no hacer trampa)
-* Idempotencia en corrección
+* Idempotencia en correcciï¿½n
 * Crash-free e 99.5% en staging 24h antes de prod
 
 ## Modelo de negocio (freemium con trial)
 
-* **Gratis**: calibración + 1er bloque (demostración de valor).
-* **Trial 7 días**: acceso completo + Mock + PDF (sin tarjeta).
-* **Premium**: $4.99/mes (early bird) ’ $7.99/mes (después de 500 usuarios).
+* **Gratis**: calibraciï¿½n + 1er bloque (demostraciï¿½n de valor).
+* **Trial 7 dï¿½as**: acceso completo + Mock + PDF (sin tarjeta).
+* **Premium**: $4.99/mes (early bird) ï¿½ $7.99/mes (despuï¿½s de 500 usuarios).
 * **Paywall en 3 momentos** (ver flujo arriba).
 
 ## Stack (explicado sin jerga)
 
-* **App**: Flutter (rápida y multiplataforma, iOS + Android).
+* **App**: Flutter (rï¿½pida y multiplataforma, iOS + Android).
 * **Backend**: Firebase (login, Firestore, Functions, Storage).
 * **Assessment API**: Express + Cloud Run (IRT adaptativo).
 * **Mensajes**: FCM push + emails transaccionales (SendGrid/Postmark).
-* **Sitio**: Landing y legal en páginas estáticas rápidas (Astro/Next).
+* **Sitio**: Landing y legal en pï¿½ginas estï¿½ticas rï¿½pidas (Astro/Next).
 * **Pago**: RevenueCat para subscripciones (iOS + Android).
 
 Todo pensado para **salir ya**, medir y mejorar con ingresos reales.
 
 ## Privacidad y confianza
 
-* La calibración es solo para ajustar el nivel, no para juzgar.
+* La calibraciï¿½n es solo para ajustar el nivel, no para juzgar.
 * Guardamos el progreso para que retomes donde ibas.
-* No compartimos respuestas correctas del banco de ítems en el dispositivo.
-* Cumplimos GDPR/CCPA básico (borrado de datos, exportación).
+* No compartimos respuestas correctas del banco de ï¿½tems en el dispositivo.
+* Cumplimos GDPR/CCPA bï¿½sico (borrado de datos, exportaciï¿½n).
 
-## Riesgos identificados y cómo los mitigamos
+## Riesgos identificados y cï¿½mo los mitigamos
 
-### =¨ Riesgo: Usuario no completa calibración
-**Mitigación:**
-- Calibración < 3 min (6-10 preguntas max)
+### =ï¿½ Riesgo: Usuario no completa calibraciï¿½n
+**Mitigaciï¿½n:**
+- Calibraciï¿½n < 3 min (6-10 preguntas max)
 - Progress bar visible en todo momento
 - Sin nota visible (reduce ansiedad)
 - Copy claro: "Esto NO es un examen"
 
-### =¨ Riesgo: Contenido percibido como "muy fácil/difícil"
-**Mitigación:**
+### =ï¿½ Riesgo: Contenido percibido como "muy fï¿½cil/difï¿½cil"
+**Mitigaciï¿½n:**
 - Adaptativo ajusta en tiempo real (gates cada bloque)
 - Feedback constante del nivel actual
-- Opción de "saltar bloque" si muy fácil
-- Opción de "repasar" si muy difícil
+- Opciï¿½n de "saltar bloque" si muy fï¿½cil
+- Opciï¿½n de "repasar" si muy difï¿½cil
 
-### =¨ Riesgo: Trial’Pago bajo (<30%)
-**Mitigación:**
+### =ï¿½ Riesgo: Trialï¿½Pago bajo (<30%)
+**Mitigaciï¿½n:**
 - Primer bloque gratis demuestra valor ANTES de paywall
-- 3 CTAs estratégicos (no spam)
+- 3 CTAs estratï¿½gicos (no spam)
 - Copy optimizado en paywall (beneficios > features)
 - A/B test de timing basado en engagement
 - Grandfathering para early adopters ($4.99 forever)
 
-### =¨ Riesgo: Churn D7 alto (>35%)
-**Mitigación:**
-- Notificaciones contextuales (no genéricas)
-- Progress visible (motivación intrínseca)
+### =ï¿½ Riesgo: Churn D7 alto (>35%)
+**Mitigaciï¿½n:**
+- Notificaciones contextuales (no genï¿½ricas)
+- Progress visible (motivaciï¿½n intrï¿½nseca)
 - Modules cortos (3-4 min, momentum constante)
 - Siguiente paso siempre claro
 
-### =¨ Riesgo: Performance lenta (>4s)
-**Mitigación:**
+### =ï¿½ Riesgo: Performance lenta (>4s)
+**Mitigaciï¿½n:**
 - Skeleton loading (feedback inmediato)
-- Caché agresivo de LLM
+- Cachï¿½ agresivo de LLM
 - Plan rendering en background
 - Monitoreo con Firebase Performance
 
-## Hoja de ruta inmediata (5 días para lanzar)
+## Hoja de ruta inmediata (5 dï¿½as para lanzar)
 
-### Día 1: CONTENIDO
+### Dï¿½a 1: CONTENIDO
 - [ ] 100 preguntas SQL para Marketing
-- [ ] Estructura 6 módulos básicos
+- [ ] Estructura 6 mï¿½dulos bï¿½sicos
 - [ ] Mock exam (10 preguntas)
-- [ ] Parámetros IRT aproximados
+- [ ] Parï¿½metros IRT aproximados
 
-### Día 2: INTEGRACIÓN
+### Dï¿½a 2: INTEGRACIï¿½N
 - [ ] Cargar banco en server/assessment.js
-- [ ] Flujo calibración ’ plan ’ gate E2E
+- [ ] Flujo calibraciï¿½n ï¿½ plan ï¿½ gate E2E
 - [ ] Health check del flujo completo
 
-### Día 3: PAYWALL
+### Dï¿½a 3: PAYWALL
 - [ ] Modal paywall simple (M1 gratis, resto bloqueado)
-- [ ] Trial 7 días + RevenueCat básico
-- [ ] 3 CTAs (post-calibración, Mock, PDF)
+- [ ] Trial 7 dï¿½as + RevenueCat bï¿½sico
+- [ ] 3 CTAs (post-calibraciï¿½n, Mock, PDF)
 
-### Día 4: POLISH MÍNIMO
-- [ ] Smoke tests básicos
-- [ ] GA4 eventos críticos
+### Dï¿½a 4: POLISH Mï¿½NIMO
+- [ ] Smoke tests bï¿½sicos
+- [ ] GA4 eventos crï¿½ticos
 - [ ] Crashlytics funcionando
 - [ ] README con screenshots
 
-### Día 5: LANZAR
+### Dï¿½a 5: LANZAR
 - [ ] TestFlight/Internal testing (20 usuarios)
-- [ ] Landing page mínima
-- [ ] Métricas dashboard
-- [ ] LANZAR =€
+- [ ] Landing page mï¿½nima
+- [ ] Mï¿½tricas dashboard
+- [ ] LANZAR =ï¿½
 
-## Lo que NO somos (para evitar desvíos)
+## Lo que NO somos (para evitar desvï¿½os)
 
 L **NO somos** Netflix de cursos (no acumules, avanza)
 L **NO somos** un examen o test de conocimiento (no te juzgamos)
-L **NO prometemos** "experto en 7 días" (realismo > hype)
-L **NO hacemos** gamificación forzada (progreso real > badges vacíos)
+L **NO prometemos** "experto en 7 dï¿½as" (realismo > hype)
+L **NO hacemos** gamificaciï¿½n forzada (progreso real > badges vacï¿½os)
 L **NO vendemos** certificados oficiales (vendemos skills aplicables)
-L **NO reemplazamos** práctica real (te preparamos para ella)
+L **NO reemplazamos** prï¿½ctica real (te preparamos para ella)
 L **NO somos** para curiosos casuales (para profesionales con objetivo claro)
 
-## Tono y valores (cómo hablamos)
+## Tono y valores (cï¿½mo hablamos)
 
-### Principios de comunicación:
+### Principios de comunicaciï¿½n:
 1. **Claro > Clever**
     "Aprende SQL en 3 semanas"
    L "Desbloquea tu potencial data-driven"
 
-2. **Útil > Inspiracional**
-    "Siguiente módulo: JOIN queries (3 min)"
-   L "¡Sigue tu viaje de aprendizaje! =€"
+2. **ï¿½til > Inspiracional**
+    "Siguiente mï¿½dulo: JOIN queries (3 min)"
+   L "ï¿½Sigue tu viaje de aprendizaje! =ï¿½"
 
-3. **Progreso visible > Gamificación**
-    "4/12 módulos completados"
-   L "¡Ganaste 500 puntos y subiste de nivel!"
+3. **Progreso visible > Gamificaciï¿½n**
+    "4/12 mï¿½dulos completados"
+   L "ï¿½Ganaste 500 puntos y subiste de nivel!"
 
 4. **Realista > Promesas exageradas**
-    "En 2-3 semanas tendrás las bases sólidas"
-   L "Conviértete en experto en 7 días"
+    "En 2-3 semanas tendrï¿½s las bases sï¿½lidas"
+   L "Conviï¿½rtete en experto en 7 dï¿½as"
 
 ### Copy guidelines:
 - Sin jerga innecesaria (habla como humano)
-- Verbos de acción en CTAs ("Empezar plan" no "Continuar")
+- Verbos de acciï¿½n en CTAs ("Empezar plan" no "Continuar")
 - Beneficios antes que features ("Aprende SQL" no "Accede a 100 preguntas")
 - Siempre mostrar progreso + siguiente paso
-- Usar "tú" no "usted" (cercano pero profesional)
+- Usar "tï¿½" no "usted" (cercano pero profesional)
 
-## Cómo usar este documento
+## Cï¿½mo usar este documento
 
-### Para devs/diseñers:
-Lee esto primero ’ entiendes el contexto completo ’ contribuyes alineado
+### Para devs/diseï¿½ers:
+Lee esto primero ï¿½ entiendes el contexto completo ï¿½ contribuyes alineado
 
 ### Para IAs (Codex/ChatGPT/Claude):
-"Lee docs/Context_edaptia.md y dame X según estos principios"
+"Lee docs/Context_edaptia.md y dame X segï¿½n estos principios"
 
 ### Para decisiones:
-¿Agregar feature X? ’ Consulta "Principios no-negociables" + "Lo que NO somos"
+ï¿½Agregar feature X? ï¿½ Consulta "Principios no-negociables" + "Lo que NO somos"
 
 ### Para pitch:
-Sección "Qué es" + "Propuesta de valor" = elevator pitch de 2 min
+Secciï¿½n "Quï¿½ es" + "Propuesta de valor" = elevator pitch de 2 min
 
 ---
 
@@ -328,15 +395,15 @@ Sección "Qué es" + "Propuesta de valor" = elevator pitch de 2 min
 - Deployment: 9/10 (Assessment API en Cloud Run)
 - Backend: Express + Firestore + IRT funcionando
 
-**Bloqueadores críticos para lanzar:**
-1. L Contenido: 0/100 preguntas SQL
+**Bloqueadores crï¿½ticos para lanzar:**
+1.  Contenido: 100/100 preguntas SQL - COMPLETADO (Dï¿½A 1)
 2. L Paywall UI: sin gating implementado
-3. L Flujo E2E: calibración ’ plan ’ gate sin probar completo
+3. L Flujo E2E: calibraciï¿½n ï¿½ plan ï¿½ gate sin probar completo
 
-**Siguiente paso inmediato:** Generar banco de 100 preguntas SQL para Marketing
+**Siguiente paso inmediato:** Integrar banco de preguntas en server/assessment.js (Dï¿½A 2)
 
 ---
 
-**Última actualización:** 2025-01-04
-**Versión:** 2.1 (sincronizado con auditorías y estado real del proyecto)
-**Próxima revisión:** Después de lanzamiento (día 5)
+**ï¿½ltima actualizaciï¿½n:** 2025-01-04
+**Versiï¿½n:** 2.2 (Dï¿½A 1 completado - banco de 100 preguntas SQL integrado)
+**Prï¿½xima revisiï¿½n:** Despuï¿½s de Dï¿½A 2 (integraciï¿½n backend)
