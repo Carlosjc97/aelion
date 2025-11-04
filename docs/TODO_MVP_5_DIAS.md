@@ -10,11 +10,11 @@
 ### 🎯 Objetivo: Banco completo de preguntas SQL
 
 **Entregables:**
-- [ ] 100 preguntas SQL para Marketing en JSON
-- [ ] 6 módulos estructurados (SELECT → Window Functions)
-- [ ] Parámetros IRT (a,b,c) aproximados por pregunta
-- [ ] Mock exam (10 preguntas subset)
-- [ ] Tags por módulo y dificultad
+- [x] 100 preguntas SQL para Marketing en JSON
+- [x] 6 módulos estructurados (SELECT → Window Functions)
+- [x] Parámetros IRT (a,b,c) aproximados por pregunta
+- [x] Mock exam (10 preguntas subset)
+- [x] Tags por módulo y dificultad
 
 **Archivos a crear:**
 ```
@@ -35,7 +35,7 @@ content/sql-marketing/mock-exam.json
 ### 🎯 Objetivo: Flujo E2E funcional
 
 **Entregables:**
-- [ ] Banco cargado en server/assessment.js (reemplazar sintético)
+- [x] Banco cargado en server/assessment.js (reemplazar sintético)
 - [ ] Calibración (10 preguntas) funcionando
 - [ ] Plan generado basado en nivel detectado
 - [ ] Gates (6-10 preguntas por bloque) funcionando

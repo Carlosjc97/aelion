@@ -53,7 +53,11 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 
 3. **Stripe/monetización inexistente** — `pubspec.yaml` / `functions/package.json`
 
-4. **Banco de ítems IRT sintético** — `server/assessment.js:830`
+4. **✅ [RESUELTO] Banco de ítems IRT sintético** — `server/assessment.js:834`
+   - **Solución:** Integrado banco de 100 preguntas SQL reales desde `content/sql-marketing/question-bank-es.json`
+   - **Parámetros IRT:** a, b, c incluidos para cada pregunta
+   - **Módulos:** 6 módulos (M1-M6) con distribución correcta
+   - **Status:** Production Ready ✅
 
 5. **Parámetros IRT estáticos por dificultad** — `server/assessment.js:31`
 
@@ -96,14 +100,14 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 
 ### 🔥 MVP 5 DÍAS: CONTENIDO + PAYWALL (Día 1-5)
 
-**DÍA 1: CONTENIDO**
-- [ ] 100 preguntas SQL para Marketing (JSON)
-- [ ] 6 módulos estructurados (SELECT → Window Functions)
-- [ ] Mock exam (10 preguntas)
-- [ ] Parámetros IRT (a,b,c) aproximados
+**DÍA 1: CONTENIDO** ✅ COMPLETADO (2025-11-04)
+- [x] 100 preguntas SQL para Marketing (JSON)
+- [x] 6 módulos estructurados (SELECT → Window Functions)
+- [x] Mock exam (10 preguntas subset)
+- [x] Parámetros IRT (a,b,c) aproximados
 
-**DÍA 2: INTEGRACIÓN**
-- [ ] Cargar banco en server/assessment.js
+**DÍA 2: INTEGRACIÓN** 🔄 EN PROGRESO
+- [x] Cargar banco en server/assessment.js
 - [ ] Flujo calibración → plan → gate E2E
 - [ ] Health check del flujo completo
 
@@ -122,7 +126,8 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 - [ ] Dashboard métricas
 - [ ] LANZAR 🚀
 
-**BLOQUEADOR #1:** Sin las 100 preguntas SQL, NO HAY MVP.
+**✅ BLOQUEADOR #1 RESUELTO:** Banco de 100 preguntas SQL integrado en assessment engine.
+**🔄 BLOQUEADOR #2 EN PROGRESO:** Flujo E2E calibración → plan → gate.
 
 ---
 

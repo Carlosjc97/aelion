@@ -1,8 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-const MAX_ITEMS = 68;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const MAX_ITEMS = 100; // Updated to match SQL question bank
 const EARLY_STOP_ITEM = 8;
 const EARLY_STOP_CONFIDENCE = 0.72;
 const MIN_EARLY_RESPONSES = 4;
@@ -120,10 +126,12 @@ const difficultyWeight = new Map([
 ]);
 
 const SKILLS = [
-  { id: 'numeracy', label: 'Numeracy' },
-  { id: 'logic', label: 'Razonamiento' },
-  { id: 'data', label: 'Data Literacy' },
-  { id: 'communication', label: 'Comunicaci\u00f3n' },
+  { id: 'M1', label: 'Fundamentos SELECT' },
+  { id: 'M2', label: 'JOINs' },
+  { id: 'M3', label: 'Agregaciones' },
+  { id: 'M4', label: 'Funciones' },
+  { id: 'M5', label: 'Subconsultas' },
+  { id: 'M6', label: 'Window Functions' },
 ];
 
 function buildInitialSkillStats() {
@@ -287,7 +295,7 @@ function clearSessionCacheForTesting() {
   // no-op; legacy helper retained for backward compatibility
 }
 
-const QUESTION_BANK = buildQuestionBank();
+const QUESTION_BANK = loadQuestionBankFromJSON();
 
 function normalizeScoring(raw = {}) {
   const guessPenalty =
@@ -820,7 +828,64 @@ function createHttpError(status, code) {
   return error;
 }
 
-function buildQuestionBank() {
+/**
+ * Load real question bank from JSON file (SQL for Marketing track)
+ */
+function loadQuestionBankFromJSON() {
+  try {
+    const questionBankPath = join(__dirname, '..', 'content', 'sql-marketing', 'question-bank-es.json');
+    const rawData = readFileSync(questionBankPath, 'utf-8');
+    const bankData = JSON.parse(rawData);
+
+    if (!bankData.questions || !Array.isArray(bankData.questions)) {
+      throw new Error('Invalid question bank format: missing questions array');
+    }
+
+    // Map JSON format to assessment.js format
+    const questions = bankData.questions.map((q, index) => {
+      // Map difficulty: "easy"/"medium"/"hard" → 1/2/3
+      let difficultyNum = 2; // default medium
+      if (q.difficulty === 'easy') difficultyNum = 1;
+      else if (q.difficulty === 'hard') difficultyNum = 3;
+
+      // Find matching skill
+      const skill = SKILLS.find(s => s.id === q.module) || SKILLS[0];
+
+      return {
+        id: q.id,
+        index,
+        prompt: q.question,
+        options: q.options,
+        answerIndex: q.correct_answer,
+        difficulty: difficultyNum,
+        irt: {
+          a: q.irt_params.a,
+          b: q.irt_params.b,
+          c: q.irt_params.c,
+        },
+        skillId: skill.id,
+        skillLabel: skill.label,
+        type: q.type,
+        rationale: q.explanation,
+        context: q.context,
+        tags: q.tags,
+        module: q.module,
+        moduleName: q.module_name,
+      };
+    });
+
+    console.log(`[Assessment] Loaded ${questions.length} questions from SQL question bank`);
+    return questions;
+  } catch (error) {
+    console.error('[Assessment] Failed to load question bank, falling back to synthetic:', error.message);
+    return buildQuestionBankSynthetic();
+  }
+}
+
+/**
+ * Fallback synthetic question bank (original implementation)
+ */
+function buildQuestionBankSynthetic() {
   const questions = [];
   const skillCount = SKILLS.length;
 
