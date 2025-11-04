@@ -77,9 +77,9 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 2. Montar pruebas de `/outline` y `/placementQuiz*` usando el emulador de Firestore.
 3. Rehabilitar el test E2E apuntando a un entorno de staging controlado.
 
-## 🛣️ Roadmap Priorizado de Fixes
+## 🛣️ Roadmap Priorizado (LANZAR EN 5 DÍAS)
 
-### ✅ Fase 0 — COMPLETADO (2025-11-04)
+### ✅ Fase 0: INFRAESTRUCTURA — COMPLETADO (2025-11-04)
 - ✅ Implementar autenticación Firebase en Express server
 - ✅ Integrar Secret Manager y documentar rotación
 - ✅ Configurar alertas de Cloud Monitoring
@@ -90,18 +90,57 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 - ✅ **DEPLOYMENT A PRODUCCIÓN COMPLETADO** → https://assessment-api-110324120650.us-central1.run.app
 - ✅ Flutter config actualizado con URL de producción (lib/services/api_config.dart)
 
-### 🔄 Fase 1 — Próxima semana
-- [ ] Sustituir `generateDemoOutline` por pipeline curado + LLM (Firestore/Storage + plantillas).
-- [ ] Definir y versionar el banco SQL de 100 preguntas con parámetros (a, b, c) por ítem.
-- [ ] Integrar Stripe (checkout + webhooks) y bloquear lecciones premium.
-- [ ] Montar suite de Functions con cobertura básica.
-- [ ] Publicar los 5 documentos maestros en `docs/`.
+**Score infraestructura: 9/10 ✅**
 
-### Fase 2 — 3-4 semanas
-- [ ] Pipeline de recalibración IRT (EAP/MLE, simulaciones, métricas de fiabilidad).
-- [ ] Agregaciones `trending` programadas y optimización de caching.
-- [ ] Refactorizar `ModuleOutlineView` y `HomeView` en componentes mantenibles.
-- [ ] Beta con 50 usuarios y observabilidad PostHog/Sentry cerrando feedback diario.
+---
+
+### 🔥 MVP 5 DÍAS: CONTENIDO + PAYWALL (Día 1-5)
+
+**DÍA 1: CONTENIDO**
+- [ ] 100 preguntas SQL para Marketing (JSON)
+- [ ] 6 módulos estructurados (SELECT → Window Functions)
+- [ ] Mock exam (10 preguntas)
+- [ ] Parámetros IRT (a,b,c) aproximados
+
+**DÍA 2: INTEGRACIÓN**
+- [ ] Cargar banco en server/assessment.js
+- [ ] Flujo calibración → plan → gate E2E
+- [ ] Health check del flujo completo
+
+**DÍA 3: PAYWALL**
+- [ ] Modal paywall simple (M1 gratis, resto bloqueado)
+- [ ] RevenueCat trial 7 días (mock)
+- [ ] 3 CTAs (post-calibración, Mock, PDF)
+
+**DÍA 4: POLISH**
+- [ ] Smoke tests manuales
+- [ ] GA4 eventos críticos
+- [ ] Landing page mínima
+
+**DÍA 5: LANZAR**
+- [ ] TestFlight/Internal testing (20 usuarios)
+- [ ] Dashboard métricas
+- [ ] LANZAR 🚀
+
+**BLOQUEADOR #1:** Sin las 100 preguntas SQL, NO HAY MVP.
+
+---
+
+### 📦 Post-Lanzamiento (Día 6+)
+
+**Semana 2-3: Iterar con data**
+- [ ] Analizar métricas (trial start rate, D7, completion rate)
+- [ ] Ajustar paywall timing según conversión
+- [ ] Optimizar contenido según feedback
+- [ ] Agregar tracks (si demand lo justifica)
+
+**Mes 2: Refactors no urgentes**
+- [ ] Refactorizar `ModuleOutlineView` (2140 líneas)
+- [ ] Tests E2E completos
+- [ ] Recalibración IRT perfecta
+- [ ] Performance <4s
+
+**No antes de tener 500 usuarios activos.**
 
 ## ✅ Checklist de Acción
 
