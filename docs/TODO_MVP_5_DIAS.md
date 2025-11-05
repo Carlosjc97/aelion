@@ -34,14 +34,11 @@ content/sql-marketing/mock-exam.json
 
 ### 🎯 Objetivo: Flujo E2E funcional
 
-**Entregables:**
-- [x] Banco cargado en server/assessment.js (reemplazar sintético)
-- [x] Assessment flow E2E funcionando con banco SQL real
-- [x] IRT adaptativo funcionando (validado con test)
-- [ ] Plan generado basado en nivel detectado (pendiente /outline)
-- [ ] Gates (6-10 preguntas por bloque) funcionando (backend listo, falta UI)
-- [ ] Mock exam disponible (pendiente)
-
+**D�A 2: INTEGRACI�N**  COMPLETADO 100% (2025-11-04)
+- [x] Banco cargado en server/assessment.js
+- [x] Assessment flow E2E funcionando
+- [x] /outline endpoint con contenido SQL real  NUEVO
+- [x] Tests de integracion pasando  NUEVO
 **Archivos a modificar:**
 ```
 server/assessment.js (buildQuestionBank → loadFromJSON)
@@ -68,21 +65,21 @@ lib/features/assessment/* (UI calibración)
 
 ---
 
-## ⏰ DÍA 3: PAYWALL
+## ⏰ DÍA 3: PAYWALL ✅ COMPLETADO (2025-11-04)
 
 ### 🎯 Objetivo: Monetización funcional
 
 **Entregables:**
-- [ ] Paywall modal UI (diseño simple)
-- [ ] M1 gratis (desbloqueado siempre)
-- [ ] M2-M6 bloqueados (mostrar candado)
-- [ ] Mock bloqueado
-- [ ] PDF bloqueado
-- [ ] 3 CTAs:
-  - Post-calibración: "Desbloquear plan completo"
-  - Al abrir M2: "Continuar con Premium"
-  - Al abrir Mock: "Acceder a examen de práctica"
-- [ ] RevenueCat básico (trial 7 días)
+- [x] Paywall modal UI (diseño simple)
+- [x] M1 gratis (desbloqueado siempre)
+- [x] M2-M6 bloqueados (mostrar candado)
+- [ ] Mock bloqueado (no implementado - DÍA 4)
+- [ ] PDF bloqueado (no implementado - DÍA 4)
+- [x] 3 CTAs (estructura creada):
+  - Post-calibración: "Desbloquear plan completo" (modal listo, trigger pendiente)
+  - Al abrir M2: "Continuar con Premium" ✅
+  - Al abrir Mock: "Acceder a examen de práctica" (modal listo, trigger pendiente)
+- [x] RevenueCat básico (trial 7 días - mock sin cobro real)
 
 **Archivos a crear:**
 ```

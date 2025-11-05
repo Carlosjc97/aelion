@@ -13,6 +13,9 @@ import 'package:edaptia/services/quiz_attempt_storage.dart';
 import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:edaptia/widgets/skeleton.dart';
+// GATING ADDED - DÍA 3
+import 'package:edaptia/features/paywall/paywall_helper.dart';
+import 'package:edaptia/services/entitlements_service.dart';
 
 part 'module_outline_controller.dart';
 part 'module_outline_controller_actions.dart';

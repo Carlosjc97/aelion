@@ -1,5 +1,7 @@
 part of 'package:edaptia/features/modules/outline/module_outline_view.dart';
 
+// GATING ADDED - DÍA 3
+
 class ModuleCard extends StatelessWidget {
   const ModuleCard({
     super.key,
@@ -25,7 +27,11 @@ class ModuleCard extends StatelessWidget {
         ? rawTitle!
         : l10n.outlineModuleFallback(moduleIndex + 1);
 
-    final locked = module['locked'] == true;
+    // GATING ADDED - DÍA 3: Use entitlements to check lock status
+    final entitlements = EntitlementsService();
+    final moduleId = 'M${moduleIndex + 1}'; // M1, M2, M3, etc.
+    final locked = !entitlements.isModuleUnlocked(moduleId);
+
     final lessons = _parseLessons(module['lessons']);
     final languageLabel = courseLanguage ?? '';
 

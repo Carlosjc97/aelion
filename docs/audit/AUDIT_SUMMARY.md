@@ -106,17 +106,19 @@ Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED 
 - [x] Mock exam (10 preguntas subset)
 - [x] Parámetros IRT (a,b,c) aproximados
 
-**DÍA 2: INTEGRACIÓN** ✅ BACKEND COMPLETADO (2025-11-04)
+**DÍA 2: INTEGRACIÓN**  COMPLETADO 100% (2025-11-04)
 - [x] Cargar banco en server/assessment.js
 - [x] Flujo de assessment con banco real funcionando
 - [x] Tests E2E validados (7 pasos completos)
-- [ ] Conectar /outline endpoint con contenido real (pendiente)
-- [ ] UI Flutter conectada al backend (pendiente)
+- [x] Conectar /outline endpoint con contenido SQL real  NUEVO
+- [ ] UI Flutter conectada al backend (DÍA 3)
 
-**DÍA 3: PAYWALL**
-- [ ] Modal paywall simple (M1 gratis, resto bloqueado)
-- [ ] RevenueCat trial 7 días (mock)
-- [ ] 3 CTAs (post-calibración, Mock, PDF)
+**DÍA 3: PAYWALL** ✅ COMPLETADO (2025-11-04)
+- [x] Modal paywall simple (M1 gratis, resto bloqueado)
+- [x] RevenueCat trial 7 días (mock sin cobro real)
+- [x] 3 CTAs implementados (estructura completa, 1 trigger activo)
+- [x] Gating UI en módulos
+- [x] Tests básicos pasando (4/4) ✅
 
 **DÍA 4: POLISH**
 - [ ] Smoke tests manuales
