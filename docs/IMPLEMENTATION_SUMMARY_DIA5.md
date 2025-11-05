@@ -42,7 +42,7 @@
   - Métricas diarias de tracking
   - Criterios de éxito/fallo
 
-### 4. TestFlight Setup Guide
+### 4. TestFlight Setup Guide (Referencia iOS)
 - **Archivo**: `docs/TESTFLIGHT_GUIDE.md`
 - **Guía completa**:
   - 7 pasos desde setup hasta external testing
@@ -51,6 +51,7 @@
   - Internal testing setup (20 slots)
   - Troubleshooting common issues
   - Checklist pre-launch
+- **Nota**: Launch inicial será Play Store (Android), TestFlight en Fase 2
 
 ### 5. Crashlytics Validation
 - **Status**: ✅ Ya configurado en `lib/main.dart`
@@ -229,7 +230,7 @@ Día 7: Primera Retrospectiva
 - ❌ Trial no persiste en backend (solo memoria)
 - ❌ Mock exam UI no implementado
 - ❌ PDF cheat sheet no implementado
-- ❌ Stripe real no integrado (solo mock)
+- ✅ Stripe NO necesario - Launch será Play Store (Google Play Billing)
 
 **Contenido:**
 - ❌ Solo 1 track (SQL para Marketing)
@@ -267,10 +268,11 @@ Día 7: Primera Retrospectiva
 ### **Antes del Lanzamiento (Día -2)**
 - [ ] Deploy landing page a hosting (Firebase Hosting, Vercel, Netlify)
 - [ ] Crear Privacy Policy + Terms páginas simples
-- [ ] Build & Upload a TestFlight
+- [ ] Build & Upload a Play Store Internal Testing (Android)
 - [ ] Configurar dashboard GA4 en Firebase Console
 - [ ] Tomar screenshots de la app (6 mínimo)
-- [ ] Preparar device de testing (iOS)
+- [ ] Preparar device de testing (Android)
+- **Estrategia:** Play Store first → iOS después de validar
 
 ### **Día 0 (Lanzamiento)**
 - [ ] Enviar invitaciones Wave 2 (20-30 testers)

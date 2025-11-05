@@ -53,7 +53,7 @@ Launch Readiness     : █████████░ 9/10  ⬆️ NEW (Landing,
 
 2. **`/outline` sigue entregando contenido demo** — `functions/src/index.ts:784`
 
-3. **Stripe/monetización inexistente** — `pubspec.yaml` / `functions/package.json`
+3. **✅ [NO BLOQUEANTE] Stripe/monetización** — Launch inicial será Play Store con Google Play Billing (no Stripe)
 
 4. **✅ [RESUELTO] Banco de ítems IRT sintético** — `server/assessment.js:834`
    - **Solución:** Integrado banco de 100 preguntas SQL reales desde `content/sql-marketing/question-bank-es.json`
@@ -129,12 +129,13 @@ Launch Readiness     : █████████░ 9/10  ⬆️ NEW (Landing,
 - [x] README actualizado
 
 **DÍA 5: LANZAR** ✅ COMPLETADO (2025-11-04)
-- [x] TestFlight guide completa (setup → external testing)
+- [x] TestFlight guide completa (setup → external testing) [referencia iOS]
 - [x] Dashboard GA4 documentado (queries, alerts, KPIs)
 - [x] Landing page HTML responsive
 - [x] Plan de comunicación (4 canales, timeline, templates)
 - [x] Crashlytics validado ✅
 - [x] LAUNCH READY 🚀
+- **Estrategia:** Play Store first (Google Play Billing), iOS después
 
 **✅ BLOQUEADOR #1 RESUELTO:** Banco de 100 preguntas SQL integrado en assessment engine.
 **🔄 BLOQUEADOR #2 EN PROGRESO:** Flujo E2E calibración → plan → gate.
@@ -184,20 +185,18 @@ Launch Readiness     : █████████░ 9/10  ⬆️ NEW (Landing,
 ## 🚧 Pendientes Inmediatos (Siguiente Sprint)
 
 ### Alta prioridad
-1. **Contenido real para `/outline`**
-   - Impacto: Sin contenido curado no hay propuesta de valor
-   - Esfuerzo: 16h
-   - Bloqueador: Sí (MVP no viable sin esto)
+1. **✅ [RESUELTO] Contenido real para `/outline`**
+   - Template SQL Marketing implementado (6 módulos, 22 lecciones)
+   - Status: COMPLETADO DÍA 2
 
-2. **Stripe end-to-end**
-   - Impacto: Sin monetización no hay modelo de negocio
-   - Esfuerzo: 12h
-   - Bloqueador: Sí (para beta pública)
+2. **Play Store Internal Testing setup**
+   - Impacto: Necesario para beta cerrada Android
+   - Esfuerzo: 4h
+   - Bloqueador: Sí (para lanzamiento Play Store)
 
-3. **Banco IRT con preguntas reales**
-   - Impacto: Assessment adaptativo solo funciona con banco calibrado
-   - Esfuerzo: 20h (incluyendo curación)
-   - Bloqueador: No (puede usarse versión sintética temporalmente)
+3. **✅ [NO BLOQUEANTE] Stripe end-to-end**
+   - Status: Pospuesto - Launch será Play Store (Google Play Billing)
+   - iOS + Stripe: Fase 2 (después de validar con Android)
 
 ### Media prioridad
 4. **Tests de Functions**
