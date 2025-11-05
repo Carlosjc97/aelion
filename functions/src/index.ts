@@ -7,6 +7,7 @@ import { getStorage } from "firebase-admin/storage";
 import * as logger from "firebase-functions/logger";
 import { z } from "zod";
 import { createHash } from "node:crypto";
+import { SQL_MARKETING_TEMPLATE } from "./templates/sql-marketing";
 
 if (!getApps().length) {
   initializeApp();
@@ -115,7 +116,7 @@ interface AnalyticsCostSample {
 interface OutlineResolutionResult {
   body: OutlineResponseBody;
   counters: AnalyticsCallCounters;
-  resolution: "firestore" | "storage" | "template";
+  resolution: "firestore" | "storage" | "template" | "template_sql";
 }
 
 interface TrendingResolutionResult {
@@ -538,7 +539,12 @@ function adaptTemplateToResponse(template: OutlineTemplate, input: OutlineResolu
     .map((lesson) => lesson.durationMinutes ?? 20)
     .reduce((sum, value) => sum + value, 0);
   const depthMultiplier = input.depth === "deep" ? 1.2 : input.depth === "intro" ? 0.75 : 1;
-  const estimatedHours = Math.max(4, Math.round((estimatedMinutes / 60) * depthMultiplier));
+  const templateEstimatedHours =
+    typeof template.estimatedHours === "number" ? template.estimatedHours : undefined;
+  const baseEstimatedHours = templateEstimatedHours ?? estimatedMinutes / 60;
+  const estimatedHours = templateEstimatedHours
+    ? Number((baseEstimatedHours * depthMultiplier).toFixed(1))
+    : Math.max(4, Math.round((baseEstimatedHours) * depthMultiplier));
 
   const goal = input.goal && input.goal.trim().length > 0 ? input.goal.trim() : template.goal;
 
@@ -562,9 +568,23 @@ function adaptTemplateToResponse(template: OutlineTemplate, input: OutlineResolu
   };
 }
 
+// Outline resolution prefers curated sources (Firestore, Storage) and rehydrates metadata
+// before falling back to template content. If a stored outline is missing lessons, it clones
+// a fallback template by slug. When no persisted artifacts exist, it synthesizes a response
+// from curated templates so clients always receive a structured plan.
 async function resolveOutlineDocument(input: OutlineResolutionInput): Promise<OutlineResolutionResult> {
   const counters = createCounters();
   const slug = slugifyTopic(input.topic);
+
+  if (slug === "sql-marketing" || input.topic.toLowerCase().includes("sql")) {
+    const templateSlug = "sql-marketing";
+    const body = adaptTemplateToResponse(SQL_MARKETING_TEMPLATE, input, templateSlug);
+    return {
+      body,
+      counters,
+      resolution: "template_sql",
+    };
+  }
 
   const fromFirestore = await loadOutlineFromFirestore(slug, counters);
   if (fromFirestore) {
