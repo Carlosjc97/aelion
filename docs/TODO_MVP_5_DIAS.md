@@ -107,22 +107,24 @@ lib/services/entitlements_service.dart (mock para MVP)
 
 ---
 
-## ⏰ DÍA 4: POLISH MÍNIMO
+## ⏰ DÍA 4: POLISH MÍNIMO ✅ COMPLETADO (2025-11-04)
 
 ### 🎯 Objetivo: App estable para testing interno
 
 **Entregables:**
-- [ ] Smoke tests manuales (checklist completo)
-- [ ] GA4 eventos críticos:
-  - `calibration_start`
-  - `calibration_complete`
-  - `paywall_shown`
-  - `trial_start`
-  - `module_complete`
-  - `mock_start`
-- [ ] Crashlytics configurado
-- [ ] README actualizado con screenshots
-- [ ] Landing page mínima (1 página HTML)
+- [x] Smoke tests manuales (checklist completo) ✅
+- [x] GA4 eventos críticos implementados:
+  - ✅ `paywall_viewed` (post_calibration, module_locked)
+  - ✅ `trial_start` (trigger, trial_days)
+  - ✅ `module_started` (module_id, topic)
+  - ✅ `module_completed` (module_id, topic, duration_s)
+  - ⚠️ `calibration_start` (no implementado - DÍA 5)
+  - ⚠️ `calibration_complete` (no implementado - DÍA 5)
+  - ⚠️ `mock_start` (mock exam no existe en UI)
+- [x] README actualizado con paywall info ✅
+- [x] Trigger post_calibration implementado ✅
+- [ ] Crashlytics configurado (DÍA 5)
+- [ ] Landing page mínima (DÍA 5)
 
 **Smoke tests checklist:**
 ```

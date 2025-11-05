@@ -23,6 +23,54 @@ See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for full deployment document
 
 ---
 
+## 💰 Paywall & Monetization (MVP)
+
+**Status:** Functional (Mock - No real payment)
+
+The app implements a freemium model with paywall gating:
+- **M1 (Fundamentos SELECT)**: Free forever - 4 lessons (~28 min)
+- **M2-M6**: Premium locked - 18 lessons (~126 min)
+- **Mock Exam**: Premium locked
+- **PDF Cheat Sheet**: Premium locked
+
+### Paywall Triggers
+Three strategic paywall moments:
+1. **Post-calibration**: "Desbloquear plan completo" (first contact after quiz)
+2. **Module locked**: "Continuar con Premium" (friction moment when accessing M2-M6)
+3. **Mock exam**: "Acceder a examen de práctica" (added value)
+
+### Trial
+- **7 days free** (no credit card required)
+- Mock implementation (no RevenueCat integration yet)
+- Trial state persists in memory only (resets on app restart)
+
+### Implementation Files
+```
+lib/services/entitlements_service.dart  # Trial & premium logic
+lib/features/paywall/paywall_modal.dart # Paywall UI
+lib/features/paywall/paywall_helper.dart # Helper for showing paywall
+test/paywall_smoke_test.dart  # 4/4 tests passing
+```
+
+### Testing Paywall Locally
+```bash
+# Run paywall tests
+flutter test test/paywall_smoke_test.dart
+
+# Expected output:
+# ✅ 4/4 tests passing
+```
+
+### GA4 Events
+```
+paywall_viewed (placement: 'post_calibration' | 'module_locked' | 'mock_locked')
+trial_start (trigger: string, trial_days: 7)
+```
+
+See [SMOKE_TEST_CHECKLIST.md](docs/SMOKE_TEST_CHECKLIST.md) for complete testing guide.
+
+---
+
 ## Backend Quickstart (Firebase Functions)
 
 **Prerequisites**

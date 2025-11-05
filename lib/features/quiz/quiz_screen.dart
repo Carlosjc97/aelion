@@ -11,6 +11,8 @@ import 'package:edaptia/services/quiz_attempt_storage.dart';
 import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:edaptia/widgets/skeleton.dart';
+// GATING ADDED - DÍA 4: Post-calibration paywall
+import 'package:edaptia/features/paywall/paywall_helper.dart';
 
 typedef PlacementQuizLoader = Future<PlacementQuizStartResponse> Function({
   required String topic,
@@ -290,6 +292,16 @@ class _QuizScreenState extends State<QuizScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.quizPlanCreated)),
       );
+
+      // GATING ADDED - DÍA 4: Show paywall after calibration
+      // This is an informative paywall to drive trial starts
+      // Users can still access M1 for free even if they dismiss
+      await PaywallHelper.checkAndShowPaywall(
+        context,
+        trigger: 'post_calibration',
+      );
+
+      if (!mounted) return;
 
       await Navigator.of(context).pushReplacementNamed(
         ModuleOutlineView.routeName,

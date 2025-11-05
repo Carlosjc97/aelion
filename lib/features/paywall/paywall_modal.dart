@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edaptia/services/entitlements_service.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 
 class PaywallModal extends StatelessWidget {
   final String trigger; // 'post_calibration', 'module_locked', 'mock_locked'
@@ -77,8 +78,12 @@ class PaywallModal extends StatelessWidget {
 
             // Trial CTA
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 entitlements.startTrial();
+
+                // Track trial start event
+                await AnalyticsService().trackTrialStarted(trigger);
+
                 if (onTrialStarted != null) onTrialStarted!();
                 Navigator.of(context).pop(true); // Return true = trial started
               },

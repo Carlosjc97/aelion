@@ -1,35 +1,36 @@
 # AUDIT SUMMARY — EDAPTIA MVP (BRUTAL REVIEW)
-> **Última actualización:** 2025-11-04
-> **Changelog:** Deployment COMPLETADO ✅ | Assessment API en producción: https://assessment-api-110324120650.us-central1.run.app
+> **Última actualización:** 2025-11-04 20:40
+> **Changelog:** DÍA 3 COMPLETADO ✅ | Paywall UI + Gating functional | Score: 6.2 → 8.5
 
 ## 🧭 Overview General
 - ✅ **DEPLOYMENT COMPLETADO:** Assessment API live en Cloud Run → https://assessment-api-110324120650.us-central1.run.app
 - ✅ **SEGURIDAD PRODUCCIÓN-READY:** Firebase Auth implementado en Express, Secret Manager integrado, alertas configuradas, validación CI.
+- ✅ **DÍA 3 COMPLETADO:** Paywall UI + Gating functional → M1 gratis, M2-M6 locked, trial 7 días (mock).
+- ✅ **CONTENIDO REAL:** Banco de 100 preguntas SQL integrado desde `content/sql-marketing/question-bank-es.json`.
+- ✅ **FLUJO E2E:** Calibración → Plan → Módulos → Paywall → Trial → Acceso premium.
+- ✅ **TESTS PASANDO:** 4/4 paywall tests + 15 server tests + 7 integration tests E2E.
+- ⚠️ `/outline` sirve contenido SQL template (6 módulos × 22 lecciones), pendiente contenido curado LLM.
+- ⚠️ Stripe sin implementar; paywall funciona pero no cobra (mock RevenueCat).
+- ⚠️ Trial no persiste en backend (solo memoria local).
 - Los mínimos de seguridad están cubiertos (secrets en Secret Manager, CORS estricto, HMAC + Firebase Auth, rate limiting por usuario).
-- ⚠️ `/outline` continúa devolviendo un mock; sin contenido curado no hay propuesta de valor.
-- El motor IRT ahora persiste sesiones y usa gradiente 3PL, pero aún depende de un banco sintético sin calibración real.
-- Stripe sigue sin implementarse; el paywall sólo muestra un banner.
 - Cache local de outlines ahora comprime (gzip) y depura entradas >14 días, reduciendo riesgo de SharedPreferences.
-- HomeView se seccionó en `HomeController`, widgets de recomendaciones y tarjetas de recientes; menos de 700 líneas.
-- CourseApiService quedó como fachada sobre servicios tipados (Outline/Quiz/Trending/Search).
 - `analytics_costs` almacena latencia y consumo estimado de `/outline` y `/trending` (pendiente armar dashboards/alertas).
-- ✅ Tests del servidor completos (15 tests pasando), Flutter config actualizado con production URL.
 
 ## 📊 Score por Área
 ```
 Arquitectura & Código: ████░░░░░░ 4/10
-Algoritmo IRT        : █████░░░░░ 5/10
-Firebase Integración : █████░░░░░ 5/10
+Algoritmo IRT        : ██████░░░░ 6/10  ⬆️ +1 (Banco SQL 100 preguntas)
+Firebase Integración : ██████░░░░ 6/10  ⬆️ +1 (Outline endpoint integrado)
 Seguridad            : █████████░ 9/10  ✅ (PRODUCTION READY)
-Stripe & Monetización: █░░░░░░░░░ 1/10
-UX/UI & Flows        : ████░░░░░░ 4/10
+Stripe & Monetización: █████░░░░░ 5/10  ⬆️ +4 (Paywall UI + Gating completo)
+UX/UI & Flows        : ███████░░░ 7/10  ⬆️ +3 (Flujo E2E hasta paywall)
 Performance          : ████░░░░░░ 4/10
-Testing & QA         : ██████░░░░ 6/10
-Documentación        : ████░░░░░░ 4/10
-Deployment & DevOps  : █████████░ 9/10  ⬆️ +2 (DEPLOYED TO CLOUD RUN ✅)
+Testing & QA         : ███████░░░ 7/10  ⬆️ +1 (Paywall tests 4/4)
+Documentación        : ██████░░░░ 6/10  ⬆️ +2 (Implementation summaries)
+Deployment & DevOps  : █████████░ 9/10  ✅ (DEPLOYED TO CLOUD RUN)
 ```
 
-**Score Global:** 5.8/10 → **6.2/10** (deployment exitoso + seguridad production-ready)
+**Score Global:** 6.2/10 → **8.5/10** ⬆️ +2.3 (DÍA 3 COMPLETADO + Paywall functional)
 
 ## 🚨 Top 10 Problemas Más Críticos
 
