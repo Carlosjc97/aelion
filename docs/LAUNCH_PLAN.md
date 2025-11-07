@@ -25,22 +25,30 @@
 
 ## 📅 Timeline de Lanzamiento
 
-### **Día -2 (2025-11-06): Preparación**
-- [ ] TestFlight build subido
-- [ ] 20 slots de internal testing disponibles
-- [ ] Landing page deployada
+### **Día -3 (HOY - 2025-11-06): Web Launch**
+- [ ] Deploy landing a Firebase Hosting
+- [ ] Configurar DNS edaptia.io (Namecheap → Firebase)
+- [ ] Activar formulario waitlist (capturar emails)
+- [ ] Comenzar a compartir en LinkedIn/Twitter
+- [ ] Target: 50-100 emails pre-launch
+
+### **Día -2 (2025-11-07): Preparación App**
+- [ ] Build & Upload AAB a Play Store Internal Testing
+- [ ] 20-30 slots de internal testing disponibles
+- [ ] Actualizar landing: Waitlist → Play Store link
 - [ ] Dashboard GA4 configurado
 - [ ] Crashlytics validado funcionando
 - [ ] Smoke tests completos (15/15 checks)
 
-### **Día -1 (2025-11-07): Pre-launch**
+### **Día -1 (2025-11-08): Pre-launch**
 - [ ] Internal testers invitados (5-10 personas)
 - [ ] Feedback inicial recopilado
-- [ ] Bugs críticos corregidos
+- [ ] Bugs críticos corregidos (P0/P1)
 - [ ] Mensaje de lanzamiento preparado
 
-### **Día 0 (2025-11-08): Lanzamiento**
-- [ ] Invitaciones TestFlight enviadas (50 personas)
+### **Día 0 (2025-11-09): Lanzamiento Público**
+- [ ] Invitaciones Play Store enviadas (50 personas)
+- [ ] Email a waitlist: "Beta ya disponible"
 - [ ] Post en redes sociales publicado
 - [ ] Comunidades notificadas
 - [ ] Dashboard GA4 monitoreado cada 2 horas
@@ -63,14 +71,29 @@
 
 ### **1. Red Personal (Día 0)**
 
-#### LinkedIn Post
+#### LinkedIn Post (Día -3: Pre-Launch)
 ```
-🚀 ¡Lanzamos Aelion en Beta!
+🚀 Estoy construyendo Edaptia
 
-Después de 5 días intensos construyendo, hoy lanzamos Aelion:
+Aprende SQL en 3 semanas (no 3 meses) con aprendizaje adaptativo.
+
+Landing page: edaptia.io
+
+✅ Plan personalizado a tu nivel
+✅ 100 preguntas SQL curadas
+✅ Enfoque en entrevistas técnicas
+
+Beta Android próximamente. ¿Quién quiere ser early tester? 👇
+```
+
+#### LinkedIn Post (Día 0: Launch)
+```
+🚀 ¡Lanzamos Edaptia en Beta!
+
+Después de 5 días intensos construyendo, hoy lanzamos Edaptia:
 un compañero de aprendizaje que te enseña SQL en 3 semanas, no en 3 meses.
 
-¿Qué hace diferente a Aelion?
+¿Qué hace diferente a Edaptia?
 ✅ Evaluación adaptativa que personaliza tu plan
 ✅ Algoritmo IRT que ajusta dificultad en tiempo real
 ✅ 100 preguntas SQL curadas para Marketing Analytics
