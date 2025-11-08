@@ -165,16 +165,18 @@ analytics.logEvent('calibration_start', {
 
 ---
 
-## ⏰ DÍA 5: LANZAR 🚀 ✅ COMPLETADO (2025-11-04)
+## ⏰ DÍA 5: LANZAR 🚀 ⚠️ EN PROGRESO (Lunes 11 Nov 2025)
 
-### 🎯 Objetivo: App en manos de usuarios reales
+### 🎯 Objetivo: App en Play Store (Android)
 
 **Entregables:**
-- [x] TestFlight/Internal Track con 20 slots ✅ (Guía completa)
+- [x] TestFlight guide (referencia iOS - futuro) ✅
 - [x] Dashboard GA4 con métricas críticas ✅ (Config documentada)
 - [x] Crashlytics monitoreando 24/7 ✅ (Ya configurado)
 - [x] Landing page (HTML responsive) ✅
 - [x] Plan de comunicación completo ✅ (4 canales, timeline, templates)
+- [ ] Play Store Internal Testing (Android) ⏳ FIN DE SEMANA
+- [ ] Features finales MVP (onboarding, language switch, reveal) ⏳
 
 **Métricas a monitorear:**
 ```
@@ -207,26 +209,27 @@ Día 4-7:
 
 ---
 
-## ❌ LO QUE NO HACEMOS (por ahora)
+## ⏰ FIN DE SEMANA (8-10 Nov) - FEATURES FINALES
 
-### Refactors no urgentes:
-- ❌ ModuleOutlineView (2140 líneas) → **DESPUÉS**
-- ❌ Tests E2E completos → **DESPUÉS**
-- ❌ Recalibración IRT perfecta → **DESPUÉS**
-- ❌ Functions tests con emulador → **DESPUÉS**
-- ❌ Performance <4s → **DESPUÉS**
+### 🔴 CRÍTICO (Viernes-Sábado):
+- [ ] Onboarding 5 preguntas (edad, intereses, escolaridad, SQL exp, beta tester)
+- [ ] Language switcher (EN ↔ ES)
+- [ ] "Tu nivel en 60s" reveal post-calibración
+- [ ] Share button (LinkedIn/Twitter)
+- [ ] Google Play Console setup + Google Play Billing ($9.99/mes)
+- [ ] Build release AAB + upload Internal Testing
 
-### Features no críticas:
-- ❌ Notificaciones T-12h → **DESPUÉS**
-- ❌ PDF cheatsheet → **DESPUÉS** (puede ser M2-M6 desbloqueados)
-- ❌ Múltiples tracks → **DESPUÉS**
-- ❌ A/B testing paywall → **DESPUÉS** (1 versión primero)
+### 🟡 IMPORTANTE (Domingo):
+- [ ] Smoke tests completos (ES + EN)
+- [ ] Fix bugs P0
+- [ ] Internal testing con 5-10 personas
+- [ ] Screenshots Play Store (6+ ES, 6+ EN)
 
-### Polish no urgente:
-- ❌ Animaciones fancy → **DESPUÉS**
-- ❌ Dark mode → **DESPUÉS**
-- ❌ Onboarding tutorial → **DESPUÉS**
-- ❌ Gamificación → **DESPUÉS**
+### ❌ NO PARA AHORA:
+- ❌ Track "Inglés Técnico" contenido → Placeholder "Coming Soon"
+- ❌ Leaderboard → Semana 2
+- ❌ Curso on-demand → Mes 3-4
+- ❌ Refactors → Post-PMF
 
 ---
 
