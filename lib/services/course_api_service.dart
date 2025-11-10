@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'package:edaptia/services/api_config.dart';
+
 import 'course/course_api_client.dart';
 import 'course/models.dart';
 import 'course/course_normalizers.dart';

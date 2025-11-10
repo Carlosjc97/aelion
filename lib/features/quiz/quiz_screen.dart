@@ -81,7 +81,6 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _submitting = false;
   String? _error;
   List<String> _detectedGaps = const [];
-  bool _resumedFromCache = false;
 
   @override
   void dispose() {
@@ -136,7 +135,6 @@ class _QuizScreenState extends State<QuizScreen> {
         _answers = List<int?>.filled(session.questions.length, null);
         _currentIndex = 0;
         _stage = _QuizStage.questions;
-        _resumedFromCache = false;
       });
 
       if (_controller.hasClients) {
@@ -409,7 +407,6 @@ class _QuizScreenState extends State<QuizScreen> {
       _session = restored;
       _answers = restoredAnswers;
       _stage = _QuizStage.questions;
-      _resumedFromCache = true;
       _currentIndex = 0;
     });
 
@@ -509,7 +506,7 @@ class _QuizScreenState extends State<QuizScreen> {
         'title': 'M${outline.length + 1}',
         'summary': '',
         'lessons': <Map<String, dynamic>>[],
-        'locked': outline.length > 0,
+        'locked': outline.isNotEmpty,
         'source': 'tweak',
       });
     }

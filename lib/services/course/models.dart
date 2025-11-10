@@ -369,7 +369,7 @@ class UsageEntry {
       id: map['id']?.toString() ?? '',
       endpoint: map['endpoint']?.toString() ?? 'unknown',
       tokens: map['tokens'] is num ? (map['tokens'] as num).toInt() : 0,
-      estimatedCost: map['estimatedCost'] is num ? (map['estimatedCost'] as num).toDouble() : 0,
+      estimatedCost: map['estimatedCost'] is num ? (map['estimatedCost'] as num).toDouble() : 0.0,
       timestamp: DateTime.fromMillisecondsSinceEpoch(
         map['timestamp'] is num ? (map['timestamp'] as num).toInt() : DateTime.now().millisecondsSinceEpoch,
       ),
@@ -402,7 +402,7 @@ class UsageMetrics {
 
     final totals = map['totals'];
     final totalTokens = totals is Map && totals['tokens'] is num ? (totals['tokens'] as num).toInt() : 0;
-    final totalCost = totals is Map && totals['cost'] is num ? (totals['cost'] as num).toDouble() : 0;
+    final totalCost = totals is Map && totals['cost'] is num ? (totals['cost'] as num).toDouble() : 0.0;
 
     final byEndpointRaw = map['byEndpoint'];
     final byEndpoint = <String, int>{};

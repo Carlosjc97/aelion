@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:edaptia/features/paywall/paywall_modal.dart';
 import 'package:edaptia/services/entitlements_service.dart';

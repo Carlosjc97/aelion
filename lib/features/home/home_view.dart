@@ -27,7 +27,7 @@ class HomeView extends ConsumerStatefulWidget {
   static const routeName = '/home';
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  ConsumerState<HomeView> createState() => _HomeViewState();
 }
 
 enum _HomeMenuAction { settings, help, catalog }
@@ -271,6 +271,85 @@ class _HomeViewState extends ConsumerState<HomeView> {
     }
     await ref.read(streakProvider.notifier).checkIn(userId);
   }
+  Widget? _buildStreakCard(
+    StreakState state,
+    ThemeData theme,
+    bool isSpanish,
+  ) {
+    final userId = _safeAuth()?.currentUser?.uid;
+    if (userId == null) return null;
+
+    final title = isSpanish ? 'Racha diaria' : 'Daily streak';
+    final subtitle = state.lastCheckIn == null
+        ? (isSpanish
+            ? 'Tu primera racha comienza hoy'
+            : 'Start your first streak today')
+        : (isSpanish
+            ? 'Último check-in: ${_formatDate(state.lastCheckIn!)}'
+            : 'Last check-in: ${_formatDate(state.lastCheckIn!)}');
+    final buttonLabel = state.loading
+        ? (isSpanish ? 'Actualizando...' : 'Updating...')
+        : (isSpanish ? 'Marcar día completado' : 'Mark day complete');
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.local_fire_department,
+                  color: theme.colorScheme.primary,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '${state.days}',
+                  style: theme.textTheme.headlineSmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: state.loading ? null : _handleStreakCheckIn,
+              child: Text(buttonLabel),
+            ),
+            if (state.error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                state.error!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final local = date.toLocal();
+    return '${local.day}/${local.month}/${local.year}';
+  }
 
   void _handleRecommendationTap(String topic) {
     final normalized = topic.trim();
@@ -363,9 +442,16 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
     final recommendations = _controller.buildRecommendationItems();
     final userId = user?.uid ?? 'anonymous';
-    final languageCode = Localizations.localeOf(context).languageCode;
+    final locale = Localizations.localeOf(context);
+    final languageCode = locale.languageCode;
     final greeting = _buildGreeting(l10n, user);
     final motivation = l10n.homeMotivation;
+    final streakState = ref.watch(streakProvider);
+    final streakCard = _buildStreakCard(
+      streakState,
+      theme,
+      locale.languageCode == 'es',
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -434,6 +520,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   hintText: l10n.homeInputHint,
                   title: l10n.homePromptTitle,
                 ),
+                if (streakCard != null) ...[
+                  const SizedBox(height: 24),
+                  streakCard,
+                ],
                 const SizedBox(height: 24),
                 _RecommendationsSection(
                   l10n: l10n,
@@ -1093,19 +1183,11 @@ class _LessonsPageState extends State<LessonsPage> {
       return const Center(child: Text('Sin contenido disponible.'));
     }
 
-    final streakState = ref.watch(streakProvider);
-    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
-    final streakCard = _buildStreakCard(streakState, theme, isSpanish);
-
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         children: [
-          if (streakCard != null) ...[
-            streakCard,
-            const SizedBox(height: 12),
-          ],
           Text(course.title, style: theme.textTheme.headlineSmall),
           if (course.subtitle?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
@@ -1122,84 +1204,35 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  Widget? _buildStreakCard(
-    StreakState state,
-    ThemeData theme,
-    bool isSpanish,
-  ) {
-    final userId = _safeAuth()?.currentUser?.uid;
-    if (userId == null) return null;
+}
 
-    final title = isSpanish ? 'Racha diaria' : 'Daily streak';
-    final subtitle = state.lastCheckIn == null
-        ? (isSpanish
-            ? 'Tu primera racha comienza hoy'
-            : 'Start your first streak today')
-        : (isSpanish
-            ? 'Último check-in: ${_formatDate(state.lastCheckIn!)}'
-            : 'Last check-in: ${_formatDate(state.lastCheckIn!)}');
-    final buttonLabel = state.loading
-        ? (isSpanish ? 'Actualizando...' : 'Updating...')
-        : (isSpanish ? 'Marcar día completado' : 'Mark day complete');
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
 
-    return Card(
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.local_fire_department,
-                  color: theme.colorScheme.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '${state.days}',
-                  style: theme.textTheme.headlineSmall,
-                ),
-              ],
-            ),
+            Text(message,
+                textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: state.loading ? null : _handleStreakCheckIn,
-              child: Text(buttonLabel),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
             ),
-            if (state.error != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                state.error!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            ],
           ],
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final local = date.toLocal();
-    return '${local.day}/${local.month}/${local.year}';
   }
 }
 
@@ -1241,32 +1274,3 @@ class _ModuleTile extends StatelessWidget {
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message,
-                textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

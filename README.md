@@ -2,6 +2,14 @@
 
 Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Genâ€‘2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
+## What's New
+
+- **Adaptive engagement** – Placement quizzes now cache locally/offline, forward detected gaps to an OpenAI "tweak" call before persisting, and expose shareable, topic-aware results.
+- **Interactive lessons** – Lesson detail screens render AI-authored markdown hooks and validate user submissions through the `validateChallenge` endpoint to unlock badges.
+- **Gamification** – Daily streaks are stored in Firestore via a Riverpod provider and can trigger FCM reminders for lapsed learners.
+- **Cost transparency** – The new usage dashboard consumes `openaiUsageMetrics` to visualize token/cost spend per endpoint with `fl_chart`.
+- **Safer paywall UX** – Paywall helper/modal handle entitlement failures gracefully, emit GA4 `paywall_dismissed`, and expose a callback for additional tracking.
+
 ## ðŸš€ Production Services
 
 ### Assessment API (IRT Adaptive Testing)

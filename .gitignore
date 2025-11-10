@@ -107,6 +107,23 @@ results.sarif
 *.zip
 android/app/google-services.json
 .gitignore
+PROMPT_*.md
+BUGFIX*.md
+FIX_*.md
+DEPLOY_STATUS_FINAL.md
+docs/PROMPT_*.md
+docs/GENERATIVE_SETUP.md
+docs/EDAPTIA_SUMMARY.md
+docs/ESTADO_FINAL_PROYECTO.md
+docs/archive/
+sql_marketing_questions*.json
+functions/data/
+functions/scripts/
+functions/nul
+nul
+get_test_token.cjs
+clear_rate_limits.cjs
+test_smoke_generative.cjs
 
 functions/lib
 functions/node_modules

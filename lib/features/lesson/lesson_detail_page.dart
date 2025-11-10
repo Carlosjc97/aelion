@@ -4,7 +4,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course_api_service.dart';
-import 'package:edaptia/services/course/models.dart';
 
 class LessonDetailArgs {
   const LessonDetailArgs({
@@ -209,6 +208,7 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
           'lesson': widget.args.lessonTitle,
         },
       );
+      if (!mounted) return;
       if (result.passed) {
         final messenger = ScaffoldMessenger.of(context);
         messenger
