@@ -210,6 +210,14 @@ class AnalyticsService {
     );
   }
 
+  Future<void> trackPaywallDismissed(String trigger) {
+    return track(
+      'paywall_dismissed',
+      properties: <String, Object?>{'trigger': trigger},
+      targets: const {targetGa4},
+    );
+  }
+
   Future<void> trackPurchaseCompleted({
     required String plan,
     required double priceUsd,

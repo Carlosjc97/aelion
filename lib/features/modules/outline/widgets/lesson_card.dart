@@ -12,6 +12,7 @@ class LessonCard extends StatefulWidget {
     required this.moduleTitle,
     required this.l10n,
     this.courseLanguage,
+    this.isLocked = false,
   });
 
   final int moduleIndex;
@@ -21,6 +22,7 @@ class LessonCard extends StatefulWidget {
   final String moduleTitle;
   final AppLocalizations l10n;
   final String? courseLanguage;
+  final bool isLocked;
 
   @override
   State<LessonCard> createState() => _LessonCardState();
@@ -38,10 +40,7 @@ class _LessonCardState extends State<LessonCard> {
     final languageLabel =
         widget.lesson['language']?.toString() ?? widget.courseLanguage ?? '';
 
-    // GATING ADDED - DÍA 3: Check if module is locked
-    final entitlements = EntitlementsService();
-    final moduleId = 'M${widget.moduleIndex + 1}'; // M1, M2, M3, etc.
-    final isLocked = !entitlements.isModuleUnlocked(moduleId);
+    final isLocked = widget.isLocked;
 
     return ListTile(
       key: Key('lesson-tile-${widget.moduleIndex}-${widget.lessonIndex}'),
@@ -54,6 +53,7 @@ class _LessonCardState extends State<LessonCard> {
           ? const Icon(Icons.lock, color: Colors.grey)
           : const Icon(Icons.chevron_right),
       onTap: () async {
+        final navigator = Navigator.of(context);
         // GATING ADDED - DÍA 3: Check paywall before navigation
         if (isLocked) {
           final hasAccess = await PaywallHelper.checkAndShowPaywall(
@@ -61,21 +61,25 @@ class _LessonCardState extends State<LessonCard> {
             trigger: 'module_locked',
             onTrialStarted: () {
               // Refresh UI after trial start
-              setState(() {});
+              if (mounted) {
+                setState(() {});
+              }
             },
           );
 
-          if (!hasAccess) return; // User cancelled
+          if (!hasAccess || !mounted) return; // User cancelled or widget disposed
         }
 
+        if (!mounted) return;
         // Original navigation code
-        Navigator.of(context).pushNamed(
+        navigator.pushNamed(
           LessonDetailPage.routeName,
           arguments: LessonDetailArgs(
             courseId: widget.courseId,
             moduleTitle: widget.moduleTitle,
             lessonTitle: lessonTitle,
             content: widget.lesson['content']?.toString(),
+            lesson: Map<String, dynamic>.from(widget.lesson),
           ),
         );
       },

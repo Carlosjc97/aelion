@@ -7,7 +7,16 @@ import { getStorage } from "firebase-admin/storage";
 import * as logger from "firebase-functions/logger";
 import { z } from "zod";
 import { createHash } from "node:crypto";
-import { SQL_MARKETING_TEMPLATE } from "./templates/sql-marketing";
+import { getSQLMarketingTemplate } from "./templates/sql-marketing";
+import {
+  loadQuestionBank,
+  selectCalibrationQuestions,
+  gradeQuiz,
+  generateQuizId,
+} from "./assessment";
+import { generateCalibrationQuiz, generateModule } from "./openai-service";
+import { getCached, setCached, generateCacheKey } from "./cache-service";
+import { savePlacementSession, getPlacementSession } from "./session-store";
 
 if (!getApps().length) {
   initializeApp();
@@ -578,7 +587,7 @@ async function resolveOutlineDocument(input: OutlineResolutionInput): Promise<Ou
 
   if (slug === "sql-marketing" || input.topic.toLowerCase().includes("sql")) {
     const templateSlug = "sql-marketing";
-    const body = adaptTemplateToResponse(SQL_MARKETING_TEMPLATE, input, templateSlug);
+    const body = adaptTemplateToResponse(getSQLMarketingTemplate(input.band), input, templateSlug);
     return {
       body,
       counters,
@@ -924,4 +933,173 @@ export const trending = onRequest({ cors: true }, async (req, res) => {
   }
 });
 
+// ============================================================
+// PLACEMENT QUIZ ENDPOINTS
+// ============================================================
+
+// In-memory storage imported from session store (shared with generative endpoints)
+
+/**
+ * POST /placementQuizStart
+ * Body: { topic: string, lang: string }
+ * Returns: { quizId, expiresAt, maxMinutes, questions: [{ id, text, choices }] }
+ */
+export const placementQuizStart = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const { topic, lang } = req.body;
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    const language = lang === "es" ? "es" : "en";
+    const quizId = generateQuizId();
+    const createdAt = Date.now();
+    const expiresAt = createdAt + 60 * 60 * 1000; // 1 hour
+
+    // Load question bank and select calibration questions
+    const bank = loadQuestionBank(language);
+    const selectedQuestions = selectCalibrationQuestions(bank, 10);
+
+    // Store session in Firestore
+    await savePlacementSession({
+      quizId,
+      topic: topic.trim(),
+      language,
+      questions: selectedQuestions,
+      createdAt,
+      expiresAt,
+    });
+
+    // Return questions without correct answers
+    const questionsForClient = selectedQuestions.map(q => ({
+      id: q.id,
+      text: q.question,
+      choices: q.options,
+    }));
+
+    res.status(200).json({
+      quizId,
+      expiresAt,
+      maxMinutes: 15,
+      questions: questionsForClient,
+      policy: {
+        numQuestions: 10,
+        maxMinutes: 15,
+      },
+    });
+
+    logger.info(`placementQuizStart: ${quizId} for topic "${topic}" in ${language}`);
+  } catch (error) {
+    logger.error("placementQuizStart error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+/**
+ * POST /placementQuizGrade
+ * Body: { quizId: string, answers: [{ id: string, selectedIndex: number }] }
+ * Returns: { band, scorePct, theta, suggestedDepth, recommendRegenerate, responses: boolean[] }
+ */
+export const placementQuizGrade = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const { quizId, answers } = req.body;
+
+    if (!quizId || typeof quizId !== "string") {
+      res.status(400).json({ error: "Invalid quizId" });
+      return;
+    }
+
+    if (!Array.isArray(answers) || answers.length === 0) {
+      res.status(400).json({ error: "Invalid answers" });
+      return;
+    }
+
+    // Retrieve quiz session from Firestore
+    const session = await getPlacementSession(quizId);
+    if (!session) {
+      res.status(404).json({ error: "Quiz session not found or expired" });
+      return;
+    }
+
+    // Check expiration
+    if (Date.now() > session.expiresAt) {
+      res.status(410).json({ error: "Quiz session expired" });
+      return;
+    }
+
+    // Build answer map
+    const answerMap = new Map<string, number>();
+    answers.forEach((ans: any) => {
+      if (ans.id && typeof ans.choiceIndex === "number") {
+        answerMap.set(ans.id, ans.choiceIndex);
+      }
+    });
+
+    // Debug logging for grading investigation
+    logger.info("Grading quiz - detailed debug info", {
+      quizId,
+      totalQuestions: session.questions.length,
+      totalAnswers: answerMap.size,
+      sampleQuestion: session.questions[0] ? {
+        id: session.questions[0].id,
+        correctAnswer: session.questions[0].correct_answer,
+        correctAnswerType: typeof session.questions[0].correct_answer,
+      } : null,
+      sampleUserAnswer: answerMap.size > 0 ? {
+        id: session.questions[0]?.id,
+        value: answerMap.get(session.questions[0]?.id),
+        valueType: typeof answerMap.get(session.questions[0]?.id),
+      } : null,
+    });
+
+    // Grade quiz
+    const result = gradeQuiz(session.questions, answerMap);
+
+    // Session cleanup happens via TTL or maintenance job
+
+    res.status(200).json({
+      band: result.band,
+      scorePct: result.scorePct,
+      theta: result.theta,
+      suggestedDepth: result.suggestedDepth,
+      recommendRegenerate: false,
+      responses: result.responseCorrectness,
+    });
+
+    logger.info(`placementQuizGrade: ${quizId} -> band=${result.band}, theta=${result.theta.toFixed(2)}, score=${result.scorePct}%`);
+  } catch (error) {
+    logger.error("placementQuizGrade error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
 export const api = outline;
+
+// Export generative endpoints
+export {
+  placementQuizStartLive,
+  outlineGenerative,
+  fetchNextModule,
+  moduleQuizStart,
+  moduleQuizGrade,
+  validateChallenge,
+  outlineTweak,
+  openaiUsageMetrics,
+} from "./generative-endpoints";
+export { cleanupAiCache } from "./maintenance";

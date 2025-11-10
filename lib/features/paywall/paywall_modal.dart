@@ -5,12 +5,14 @@ import 'package:edaptia/services/analytics/analytics_service.dart';
 class PaywallModal extends StatelessWidget {
   final String trigger; // 'post_calibration', 'module_locked', 'mock_locked'
   final VoidCallback? onTrialStarted;
+  final VoidCallback? onDismissed;
 
   const PaywallModal({
-    Key? key,
+    super.key,
     required this.trigger,
     this.onTrialStarted,
-  }) : super(key: key);
+    this.onDismissed,
+  });
 
   String get _title {
     switch (trigger) {
@@ -28,19 +30,20 @@ class PaywallModal extends StatelessWidget {
   String get _subtitle {
     switch (trigger) {
       case 'post_calibration':
-        return 'Completa los 6 módulos y domina SQL en 3 semanas';
+        return 'Completa los 6 módulos y domina tu nueva habilidad.';
       case 'module_locked':
-        return 'Desbloquea M2-M6 para continuar tu plan personalizado';
+        return 'Desbloquea M2-M6 generados para tu plan personalizado.';
       case 'mock_locked':
-        return 'Practica con casos reales antes de tu entrevista';
+        return 'Practica con casos reales antes de tu entrevista.';
       default:
-        return 'Accede a todo el contenido premium';
+        return 'Accede a todo el contenido premium.';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final entitlements = EntitlementsService();
+    final navigator = Navigator.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -79,13 +82,13 @@ class PaywallModal extends StatelessWidget {
             // Trial CTA
             ElevatedButton(
               onPressed: () async {
-                entitlements.startTrial();
+                await entitlements.startTrial();
 
                 // Track trial start event
                 await AnalyticsService().trackTrialStarted(trigger);
 
-                if (onTrialStarted != null) onTrialStarted!();
-                Navigator.of(context).pop(true); // Return true = trial started
+                onTrialStarted?.call();
+                navigator.pop(true); // Return true = trial started
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
@@ -104,8 +107,11 @@ class PaywallModal extends StatelessWidget {
 
             // Cancel
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Tal vez después'),
+              onPressed: () {
+                onDismissed?.call();
+                navigator.pop(false);
+              },
+              child: const Text('Tal vez después'),
             ),
             SizedBox(height: 8),
 

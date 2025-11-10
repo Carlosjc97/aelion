@@ -28,7 +28,6 @@ class OutlineLesson {
         'durationMinutes': durationMinutes,
         'content': content,
       };
-
 }
 
 class OutlineModule {
@@ -61,7 +60,6 @@ class OutlineModule {
           'total': totalLessons,
         },
       };
-
 }
 
 class OutlinePlan {
@@ -101,7 +99,6 @@ class OutlinePlan {
         'cacheExpiresAt': cacheExpiresAt,
         'meta': meta,
       };
-
 }
 
 class TrendingTopic {
@@ -126,7 +123,6 @@ class TrendingTopic {
         if (band != null) 'band': band,
         if (modules != null) 'modules': modules,
       };
-
 }
 
 class QuizQuestionDto {
@@ -173,7 +169,6 @@ class QuizQuestionDto {
       answer: answer,
     );
   }
-
 }
 
 class PlacementQuizQuestion {
@@ -192,7 +187,6 @@ class PlacementQuizQuestion {
         'text': text,
         'choices': choices,
       };
-
 }
 
 class PlacementQuizAnswer {
@@ -208,7 +202,6 @@ class PlacementQuizAnswer {
         'id': id,
         'choiceIndex': choiceIndex,
       };
-
 }
 
 class PlacementQuizStart {
@@ -233,13 +226,199 @@ class PlacementQuizGrade {
     required this.scorePct,
     required this.recommendRegenerate,
     required this.suggestedDepth,
-  });
+    this.theta,
+    List<bool>? responseCorrectness,
+  }) : responseCorrectness = responseCorrectness ?? const <bool>[];
 
   final PlacementBand band;
   final int scorePct;
   final bool recommendRegenerate;
   final String suggestedDepth;
+  final double? theta;
+  final List<bool> responseCorrectness;
 
   double get scoreFraction => scorePct / 100;
+}
 
+class ModuleQuizGradeResult {
+  const ModuleQuizGradeResult({
+    required this.passed,
+    required this.scorePct,
+    required this.incorrectQuestions,
+    required this.incorrectTags,
+  });
+
+  final bool passed;
+  final int scorePct;
+  final List<String> incorrectQuestions;
+  final List<String> incorrectTags;
+}
+
+class ChallengeValidationResult {
+  const ChallengeValidationResult({
+    required this.score,
+    required this.passed,
+    required this.feedback,
+    this.badgeId,
+    this.moduleNumber,
+    this.lessonId,
+  });
+
+  final int score;
+  final bool passed;
+  final String feedback;
+  final String? badgeId;
+  final int? moduleNumber;
+  final String? lessonId;
+
+  factory ChallengeValidationResult.fromJson(Map<String, dynamic> map) {
+    final rawScore = map['score'];
+    return ChallengeValidationResult(
+      score: rawScore is num ? rawScore.clamp(0, 100).toInt() : 0,
+      passed: map['passed'] == true,
+      feedback: map['feedback']?.toString() ?? '',
+      badgeId: map['badgeId']?.toString(),
+      moduleNumber: map['moduleNumber'] is num ? (map['moduleNumber'] as num).toInt() : null,
+      lessonId: map['lessonId']?.toString(),
+    );
+  }
+}
+
+class OutlineTweakModule {
+  const OutlineTweakModule({
+    required this.moduleNumber,
+    required this.title,
+    required this.objective,
+    required this.focus,
+  });
+
+  final int moduleNumber;
+  final String title;
+  final String objective;
+  final String focus;
+
+  factory OutlineTweakModule.fromJson(Map<String, dynamic> map) {
+    return OutlineTweakModule(
+      moduleNumber: map['moduleNumber'] is num ? (map['moduleNumber'] as num).toInt() : 0,
+      title: map['title']?.toString() ?? '',
+      objective: map['objective']?.toString() ?? '',
+      focus: map['focus']?.toString() ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'moduleNumber': moduleNumber,
+        'title': title,
+        'objective': objective,
+        'focus': focus,
+      };
+}
+
+class OutlineTweakResult {
+  const OutlineTweakResult({
+    required this.modules,
+    required this.recommendedModules,
+    required this.summary,
+    required this.promptVersion,
+  });
+
+  final List<OutlineTweakModule> modules;
+  final int recommendedModules;
+  final String summary;
+  final String promptVersion;
+
+  factory OutlineTweakResult.fromJson(Map<String, dynamic> map) {
+    final modulesRaw = map['modules'];
+    final modules = modulesRaw is List
+        ? modulesRaw
+            .whereType<Map>()
+            .map((raw) => OutlineTweakModule.fromJson(Map<String, dynamic>.from(raw)))
+            .toList(growable: false)
+        : const <OutlineTweakModule>[];
+
+    return OutlineTweakResult(
+      modules: modules,
+      recommendedModules: map['recommendedModules'] is num
+          ? (map['recommendedModules'] as num).toInt().clamp(4, 12)
+          : modules.length,
+      summary: map['summary']?.toString() ?? '',
+      promptVersion: map['promptVersion']?.toString() ?? 'unknown',
+    );
+  }
+}
+
+class UsageEntry {
+  const UsageEntry({
+    required this.id,
+    required this.endpoint,
+    required this.tokens,
+    required this.estimatedCost,
+    required this.timestamp,
+    this.promptVersion,
+  });
+
+  final String id;
+  final String endpoint;
+  final int tokens;
+  final double estimatedCost;
+  final DateTime timestamp;
+  final String? promptVersion;
+
+  factory UsageEntry.fromJson(Map<String, dynamic> map) {
+    return UsageEntry(
+      id: map['id']?.toString() ?? '',
+      endpoint: map['endpoint']?.toString() ?? 'unknown',
+      tokens: map['tokens'] is num ? (map['tokens'] as num).toInt() : 0,
+      estimatedCost: map['estimatedCost'] is num ? (map['estimatedCost'] as num).toDouble() : 0,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(
+        map['timestamp'] is num ? (map['timestamp'] as num).toInt() : DateTime.now().millisecondsSinceEpoch,
+      ),
+      promptVersion: map['promptVersion']?.toString(),
+    );
+  }
+}
+
+class UsageMetrics {
+  const UsageMetrics({
+    required this.entries,
+    required this.totalTokens,
+    required this.totalCost,
+    required this.byEndpoint,
+  });
+
+  final List<UsageEntry> entries;
+  final int totalTokens;
+  final double totalCost;
+  final Map<String, int> byEndpoint;
+
+  factory UsageMetrics.fromJson(Map<String, dynamic> map) {
+    final entriesRaw = map['entries'];
+    final entries = entriesRaw is List
+        ? entriesRaw
+            .whereType<Map>()
+            .map((raw) => UsageEntry.fromJson(Map<String, dynamic>.from(raw)))
+            .toList(growable: false)
+        : const <UsageEntry>[];
+
+    final totals = map['totals'];
+    final totalTokens = totals is Map && totals['tokens'] is num ? (totals['tokens'] as num).toInt() : 0;
+    final totalCost = totals is Map && totals['cost'] is num ? (totals['cost'] as num).toDouble() : 0;
+
+    final byEndpointRaw = map['byEndpoint'];
+    final byEndpoint = <String, int>{};
+    if (byEndpointRaw is Map) {
+      byEndpointRaw.forEach((key, value) {
+        if (value is num) {
+          byEndpoint[key.toString()] = value.toInt();
+        }
+      });
+    }
+
+    return UsageMetrics(
+      entries: entries,
+      totalTokens: totalTokens,
+      totalCost: totalCost,
+      byEndpoint: byEndpoint,
+    );
+  }
 }

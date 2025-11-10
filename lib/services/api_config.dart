@@ -1,12 +1,9 @@
 import 'package:flutter/foundation.dart' show kReleaseMode;
 
 class ApiConfig {
+  // ALL functions now in us-central1
   static const String _fixedHost =
-      'https://us-east4-aelion-c90d2.cloudfunctions.net';
-
-  // Assessment API (Cloud Run)
-  static const String _assessmentApiHost =
-      'https://assessment-api-110324120650.us-central1.run.app';
+      'https://us-central1-aelion-c90d2.cloudfunctions.net';
 
   // En debug puedes permitir override por env; en release, SIEMPRE fijo y https.
   static String get apiBaseUrl {
@@ -20,18 +17,19 @@ class ApiConfig {
     return env;
   }
 
-  static String get assessmentApiUrl => _assessmentApiHost;
-
   static String outline() => '$apiBaseUrl/outline';
+  static String outlineGenerative() => '$apiBaseUrl/outlineGenerative';
+  static String outlineTweak() => '$apiBaseUrl/outlineTweak';
   static String quiz() => '$apiBaseUrl/quiz';
   static String placementQuizStart() => '$apiBaseUrl/placementQuizStart';
+  static String placementQuizStartLive() =>
+      '$apiBaseUrl/placementQuizStartLive';
   static String placementQuizGrade() => '$apiBaseUrl/placementQuizGrade';
+  static String fetchNextModule() => '$apiBaseUrl/fetchNextModule';
+  static String moduleQuizStart() => '$apiBaseUrl/moduleQuizStart';
+  static String moduleQuizGrade() => '$apiBaseUrl/moduleQuizGrade';
+  static String validateChallenge() => '$apiBaseUrl/validateChallenge';
   static String trackSearch() => '$apiBaseUrl/trackSearch';
   static String trending(String lang) => '$apiBaseUrl/trending?lang=$lang';
-
-  // Assessment API endpoints (IRT adaptive testing)
-  static String assessmentStart() => '$assessmentApiUrl/assessment/start';
-  static String assessmentAnswer() => '$assessmentApiUrl/assessment/answer';
-  static String assessmentFinish() => '$assessmentApiUrl/assessment/finish';
-  static String assessmentHealth() => '$assessmentApiUrl/health';
+  static String openaiUsageMetrics() => '$apiBaseUrl/openaiUsageMetrics';
 }
