@@ -239,6 +239,11 @@ Failures to write observability data are logged but never impact the client resp
 
 
 
+## Plan Refinement Policy
+
+Manual "Actualizar plan" actions were removed from the Module Outline screen to avoid unlimited regenerations. Learners now refresh their plans only through the post-quiz flow or the existing "Refinar plan" sheet. See [PLAN_REFINEMENT_POLICY.md](docs/PLAN_REFINEMENT_POLICY.md) for details.
+
+
 ## UI Preview
 
 ![Sign-in Screen](docs/assets/ui-signin.png)

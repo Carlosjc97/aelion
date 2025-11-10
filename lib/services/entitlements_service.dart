@@ -23,14 +23,29 @@ class EntitlementsService {
   /// Get days remaining in trial
   int get trialDaysRemaining {
     if (_trialStartedAt == null) return 0;
-    final daysSinceTrial = DateTime.now().difference(_trialStartedAt!).inDays;
-    return (7 - daysSinceTrial).clamp(0, 7);
+    final difference = _trialStartedAt!.add(const Duration(days: 7)).difference(
+          DateTime.now(),
+        );
+    var remainingDays = difference.inDays;
+    if (difference.inSeconds > 0 &&
+        difference.inSeconds % Duration.secondsPerDay != 0) {
+      remainingDays += 1;
+    }
+    return remainingDays.clamp(0, 7);
   }
 
   /// Start trial (mock)
-  void startTrial() {
+  Future<void> startTrial() async {
     _trialStartedAt = DateTime.now();
     print('[EntitlementsService] Trial started: $_trialStartedAt');
+  }
+
+  /// No-op placeholder so tests can await a consistent API.
+  Future<void> ensureLoaded() async {}
+
+  /// Configures the service for testing (no-op for mock implementation).
+  void configureForTesting({bool memoryOnly = true}) {
+    reset();
   }
 
   /// Grant premium (mock for testing)

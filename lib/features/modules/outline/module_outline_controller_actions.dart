@@ -9,21 +9,6 @@ extension ModuleOutlineControllerActions on ModuleOutlineController {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        actions: [
-          IconButton(
-            tooltip: l10n.outlineUpdatePlan,
-            onPressed: _isLoading
-                ? null
-                : () => _loadOutline(
-                      forceRefresh: true,
-                      preferredBandOverride: _preferredBand,
-                      depthOverride: _activeDepth,
-                      notify: true,
-                      preferCache: false,
-                    ),
-            icon: const Icon(Icons.sync),
-          ),
-        ],
       ),
       body: _buildBody(l10n),
       floatingActionButton: _isLoading || _error != null
