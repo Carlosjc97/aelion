@@ -53,8 +53,15 @@ class StreakNotifier extends StateNotifier<StreakState> {
     }
   }
 
-  Future<void> checkIn(String userId) async {
-    state = state.copyWith(loading: true, error: null);
+  Future<StreakSnapshot?> checkIn(
+    String userId, {
+    bool silent = false,
+  }) async {
+    if (!silent) {
+      state = state.copyWith(loading: true, error: null);
+    } else {
+      state = state.copyWith(error: null);
+    }
     try {
       final snapshot = await _service.checkIn(userId);
       state = state.copyWith(
@@ -63,11 +70,13 @@ class StreakNotifier extends StateNotifier<StreakState> {
         lastCheckIn: snapshot.lastCheckIn,
         error: null,
       );
+      return snapshot;
     } catch (error) {
       state = state.copyWith(
         loading: false,
         error: error.toString(),
       );
+      return null;
     }
   }
 }

@@ -78,6 +78,7 @@ extension ModuleOutlineControllerActions on ModuleOutlineController {
       courseId: _courseId,
       response: response,
       modules: modules,
+      generatingModules: _generatingModules,
       source: source,
       savedAt: savedAt,
       band: _activeBand,

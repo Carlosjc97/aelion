@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -76,6 +75,7 @@ class _QuizScreenState extends State<QuizScreen> {
   int _currentIndex = 0;
   bool _submitting = false;
   String? _error;
+  // ignore: unused_field
   List<String> _detectedGaps = const [];
 
   @override
@@ -710,13 +710,7 @@ String _bandLabel(AppLocalizations l10n, PlacementBand band) {
   }
 }
 
-List<Map<String, dynamic>> _extractOutlineList(dynamic raw) {
-  if (raw is! List) return <Map<String, dynamic>>[];
-  return raw
-      .whereType<Map>()
-      .map((module) => Map<String, dynamic>.from(module))
-      .toList(growable: false);
-}
+// Removed _extractOutlineList - functionality moved to adaptive flow
 
 class _QuizProgressHeader extends StatelessWidget {
   const _QuizProgressHeader({

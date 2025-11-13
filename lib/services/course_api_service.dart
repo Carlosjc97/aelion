@@ -14,6 +14,7 @@ import 'course/quiz_service.dart' as quiz_service;
 import 'course/search_service.dart' as search_service;
 import 'course/trending_service.dart' as trending_service;
 import 'course/module_service.dart' as module_service;
+import 'course/adaptive_service.dart' as adaptive_service;
 
 export 'course/models.dart'
     show
@@ -24,12 +25,20 @@ export 'course/models.dart'
         QuizQuestionDto,
         PlacementQuizQuestion,
         PlacementQuizAnswer,
+        GatePracticeState,
         ModuleQuizGradeResult,
         ChallengeValidationResult,
         OutlineTweakModule,
         OutlineTweakResult,
         UsageEntry,
-        UsageMetrics;
+        UsageMetrics,
+        AdaptivePlanResponse,
+        AdaptiveLearnerState,
+        AdaptiveModuleResponse,
+        AdaptiveCheckpointResponse,
+        AdaptiveEvaluationResponse,
+        AdaptiveEvaluationResult,
+        AdaptiveBoosterResponse;
 export 'course/placement_band.dart' show PlacementBand;
 
 typedef PlacementQuizStartResponse = PlacementQuizStart;
@@ -261,6 +270,86 @@ class CourseApiService {
       throw const FormatException('Invalid outline tweak payload.');
     }
     return OutlineTweakResult.fromJson(Map<String, dynamic>.from(decoded));
+  }
+
+  static Future<AdaptivePlanResponse> fetchAdaptivePlanDraft({
+    required String topic,
+    required PlacementBand band,
+    required String target,
+    String? persona,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.fetchPlanDraft(
+      topic: topic,
+      band: band,
+      target: target,
+      persona: persona,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveModuleResponse> generateAdaptiveModule({
+    required String topic,
+    required int moduleNumber,
+    List<String> focusSkills = const <String>[],
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.generateModule(
+      topic: topic,
+      moduleNumber: moduleNumber,
+      focusSkills: focusSkills,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveCheckpointResponse> generateAdaptiveCheckpoint({
+    required String topic,
+    required int moduleNumber,
+    required List<String> skillsTargeted,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.generateCheckpoint(
+      topic: topic,
+      moduleNumber: moduleNumber,
+      skillsTargeted: skillsTargeted,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveEvaluationResponse> evaluateAdaptiveCheckpoint({
+    required int moduleNumber,
+    required List<Map<String, String>> answers,
+    required List<String> skillsTargeted,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.evaluateCheckpoint(
+      moduleNumber: moduleNumber,
+      answers: answers,
+      skillsTargeted: skillsTargeted,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveBoosterResponse> requestAdaptiveBooster({
+    required String topic,
+    required List<String> weakSkills,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.requestBooster(
+      topic: topic,
+      weakSkills: weakSkills,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
   }
 
   static Future<UsageMetrics> fetchOpenAiUsageMetrics({

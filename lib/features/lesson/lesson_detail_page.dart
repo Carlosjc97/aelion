@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
@@ -34,12 +36,24 @@ class LessonDetailPage extends StatefulWidget {
 
 class _LessonDetailPageState extends State<LessonDetailPage> {
   final TextEditingController _answerController = TextEditingController();
+  final FocusNode _challengeFocus = FocusNode();
   ChallengeValidationResult? _validation;
   bool _validating = false;
   String? _validationError;
+  DateTime? _challengeStartedAt;
+  bool _challengeLoggedStart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _challengeFocus.addListener(_onChallengeFocusChanged);
+  }
 
   @override
   void dispose() {
+    _challengeFocus
+      ..removeListener(_onChallengeFocusChanged)
+      ..dispose();
     _answerController.dispose();
     super.dispose();
   }
@@ -124,6 +138,7 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
               const SizedBox(height: 12),
               TextField(
                 controller: _answerController,
+                focusNode: _challengeFocus,
                 minLines: 4,
                 maxLines: 8,
                 decoration: InputDecoration(
@@ -169,10 +184,44 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
     );
   }
 
+  void _onChallengeFocusChanged() {
+    if (!_challengeFocus.hasFocus) {
+      return;
+    }
+    _challengeStartedAt ??= DateTime.now();
+    if (_challengeLoggedStart) {
+      return;
+    }
+    _challengeLoggedStart = true;
+    unawaited(
+      AnalyticsService().track(
+        'reto_started',
+        properties: <String, Object?>{
+          'lesson': widget.args.lessonTitle,
+          'topic': widget.args.courseId,
+        },
+      ),
+    );
+  }
+
   Future<void> _validateChallenge(
     String description,
     String expected,
   ) async {
+    _challengeStartedAt ??= DateTime.now();
+    if (!_challengeLoggedStart) {
+      _challengeLoggedStart = true;
+      unawaited(
+        AnalyticsService().track(
+          'reto_started',
+          properties: <String, Object?>{
+            'lesson': widget.args.lessonTitle,
+            'topic': widget.args.courseId,
+          },
+        ),
+      );
+    }
+
     final answer = _answerController.text.trim();
     if (answer.isEmpty) {
       final errorMessage = Localizations.localeOf(context).languageCode == 'es'
@@ -200,14 +249,21 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
         _validation = result;
         _validating = false;
       });
+      final timeSpentMs = DateTime.now()
+          .difference(_challengeStartedAt ?? DateTime.now())
+          .inMilliseconds;
       await AnalyticsService().track(
-        'challenge_validated',
+        'reto_completed',
         properties: <String, Object?>{
           'score': result.score,
           'passed': result.passed,
           'lesson': widget.args.lessonTitle,
+          'topic': widget.args.courseId,
+          'time_spent_ms': timeSpentMs,
         },
       );
+      _challengeStartedAt = null;
+      _challengeLoggedStart = false;
       if (!mounted) return;
       if (result.passed) {
         final messenger = ScaffoldMessenger.of(context);

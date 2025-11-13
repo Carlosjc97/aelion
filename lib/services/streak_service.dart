@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class StreakSnapshot {
@@ -17,21 +18,37 @@ class StreakService {
   StreakService();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<StreakSnapshot> fetch(String userId) async {
-    final doc = await _firestore.collection('user_streaks').doc(userId).get();
-    if (!doc.exists) {
+    // Verify auth state before attempting Firestore read
+    final currentUser = _auth.currentUser;
+    if (currentUser == null || currentUser.uid != userId) {
+      // Return default if auth mismatch or not logged in
       return const StreakSnapshot(streakDays: 0, lastCheckIn: null, incremented: false);
     }
-    final data = doc.data() ?? <String, dynamic>{};
-    final streak = data['currentStreak'] is num ? (data['currentStreak'] as num).toInt() : 0;
-    final timestamp = data['lastCheckIn'];
-    final lastCheckIn = timestamp is Timestamp ? timestamp.toDate() : null;
-    return StreakSnapshot(
-      streakDays: streak,
-      lastCheckIn: lastCheckIn,
-      incremented: false,
-    );
+
+    try {
+      final doc = await _firestore.collection('user_streaks').doc(userId).get();
+      if (!doc.exists) {
+        return const StreakSnapshot(streakDays: 0, lastCheckIn: null, incremented: false);
+      }
+      final data = doc.data() ?? <String, dynamic>{};
+      final streak = data['currentStreak'] is num ? (data['currentStreak'] as num).toInt() : 0;
+      final timestamp = data['lastCheckIn'];
+      final lastCheckIn = timestamp is Timestamp ? timestamp.toDate() : null;
+      return StreakSnapshot(
+        streakDays: streak,
+        lastCheckIn: lastCheckIn,
+        incremented: false,
+      );
+    } on FirebaseException catch (e) {
+      // Handle permission-denied gracefully by returning default
+      if (e.code == 'permission-denied') {
+        return const StreakSnapshot(streakDays: 0, lastCheckIn: null, incremented: false);
+      }
+      rethrow;
+    }
   }
 
   Future<StreakSnapshot> checkIn(String userId) async {

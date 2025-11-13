@@ -26,7 +26,7 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Future<void> _loadLanguage() async {
-    final stored = await LanguagePreferences().getPreferredLanguageCode();
+    final stored = await LanguagePreferences.getPreferredLanguageCode();
     if (!mounted) return;
     setState(() => _currentLanguage = stored);
   }
@@ -46,7 +46,7 @@ class _SettingsViewState extends State<SettingsView> {
       _currentLanguage = newLang;
       _isSavingLanguage = true;
     });
-    await LanguagePreferences().setPreferredLanguageCode(newLang);
+    await LanguagePreferences.setPreferredLanguageCode(newLang);
     if (!mounted) return;
     Phoenix.rebirth(context);
   }

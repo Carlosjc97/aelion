@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
 import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';

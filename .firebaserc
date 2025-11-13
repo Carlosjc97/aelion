@@ -2,14 +2,6 @@
   "projects": {
     "default": "aelion-c90d2"
   },
-  "targets": {
-    "aelion-c90d2": {
-      "firestore": {
-        "aelionDb": [
-          "aelion"
-        ]
-      }
-    }
-  },
+  "targets": {},
   "etags": {}
 }

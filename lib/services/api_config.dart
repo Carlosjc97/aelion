@@ -32,4 +32,11 @@ class ApiConfig {
   static String trackSearch() => '$apiBaseUrl/trackSearch';
   static String trending(String lang) => '$apiBaseUrl/trending?lang=$lang';
   static String openaiUsageMetrics() => '$apiBaseUrl/openaiUsageMetrics';
+  static String adaptivePlanDraft() => '$apiBaseUrl/adaptivePlanDraft';
+  static String adaptiveModule() => '$apiBaseUrl/adaptiveModuleGenerate';
+  static String adaptiveCheckpointQuiz() =>
+      '$apiBaseUrl/adaptiveCheckpointQuiz';
+  static String adaptiveEvaluateCheckpoint() =>
+      '$apiBaseUrl/adaptiveEvaluateCheckpoint';
+  static String adaptiveBooster() => '$apiBaseUrl/adaptiveBooster';
 }

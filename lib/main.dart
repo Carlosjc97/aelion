@@ -97,9 +97,9 @@ class _AelionAppState extends State<AelionApp> {
   }
 
   Future<void> _loadPreferredLocale() async {
-    final code = await LanguagePreferences().getPreferredLanguageCode();
+    final code = await LanguagePreferences.getPreferredLanguageCode();
     if (!mounted) return;
-    final locale = LanguagePreferences().resolveLocale(code);
+    final locale = LanguagePreferences.resolveLocale(code);
     if (locale == null) return;
     setState(() => _preferredLocale = locale);
   }

@@ -1,76 +1,134 @@
-/// Mock service for premium entitlements (MVP - no RevenueCat yet)
-///
-/// Manages premium access and trial state for the app.
-/// In MVP phase, this is a simple in-memory mock without backend persistence.
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+
 class EntitlementsService {
+  EntitlementsService._internal();
   static final EntitlementsService _instance = EntitlementsService._internal();
   factory EntitlementsService() => _instance;
-  EntitlementsService._internal();
 
   bool _isPremium = false;
-  DateTime? _trialStartedAt;
+  DateTime? _trialEndsAt;
+  bool _loaded = false;
+  DateTime? _lastFetchedAt;
+  Future<void>? _loadFuture;
 
-  /// Check if user has premium access
   bool get isPremium => _isPremium || isInTrial;
 
-  /// Check if user is in trial period (7 days)
   bool get isInTrial {
-    if (_trialStartedAt == null) return false;
-    final daysSinceTrial = DateTime.now().difference(_trialStartedAt!).inDays;
-    return daysSinceTrial < 7;
+    if (_trialEndsAt == null) return false;
+    return DateTime.now().isBefore(_trialEndsAt!);
   }
 
-  /// Get days remaining in trial
   int get trialDaysRemaining {
-    if (_trialStartedAt == null) return 0;
-    final difference = _trialStartedAt!.add(const Duration(days: 7)).difference(
-          DateTime.now(),
-        );
-    var remainingDays = difference.inDays;
-    if (difference.inSeconds > 0 &&
-        difference.inSeconds % Duration.secondsPerDay != 0) {
-      remainingDays += 1;
+    if (_trialEndsAt == null) return 0;
+    final remaining = _trialEndsAt!.difference(DateTime.now());
+    final days = remaining.inDays +
+        (remaining.inSeconds % Duration.secondsPerDay == 0 ? 0 : 1);
+    return days.clamp(0, 7);
+  }
+
+  Future<void> ensureLoaded({bool forceRefresh = false}) async {
+    if (!forceRefresh && _loaded && _lastFetchedAt != null) {
+      final elapsed = DateTime.now().difference(_lastFetchedAt!);
+      if (elapsed < const Duration(minutes: 5)) {
+        return;
+      }
     }
-    return remainingDays.clamp(0, 7);
+    _loadFuture ??= _fetchEntitlements();
+    try {
+      await _loadFuture;
+    } finally {
+      _loadFuture = null;
+    }
   }
 
-  /// Start trial (mock)
+  Future<void> _fetchEntitlements() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _resetLocal();
+      _loaded = true;
+      _lastFetchedAt = DateTime.now();
+      return;
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final data = snapshot.data();
+      final entitlements = data?['entitlements'];
+      _isPremium = entitlements is Map && entitlements['isPremium'] == true;
+      _trialEndsAt = _parseTimestamp(
+          entitlements is Map ? entitlements['trialEndsAt'] : null);
+      _loaded = true;
+      _lastFetchedAt = DateTime.now();
+    } catch (error, stackTrace) {
+      debugPrint('[EntitlementsService] Failed to load entitlements: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  DateTime? _parseTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    return null;
+  }
+
   Future<void> startTrial() async {
-    _trialStartedAt = DateTime.now();
-    print('[EntitlementsService] Trial started: $_trialStartedAt');
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final trialEnds = DateTime.now().add(const Duration(days: 7));
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'entitlements': {
+          'trialEndsAt': Timestamp.fromDate(trialEnds),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+      }, SetOptions(merge: true));
+      _trialEndsAt = trialEnds;
+      _loaded = true;
+      _lastFetchedAt = DateTime.now();
+    } catch (error, stackTrace) {
+      debugPrint('[EntitlementsService] Failed to start trial: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
-  /// No-op placeholder so tests can await a consistent API.
-  Future<void> ensureLoaded() async {}
-
-  /// Configures the service for testing (no-op for mock implementation).
   void configureForTesting({bool memoryOnly = true}) {
     reset();
   }
 
-  /// Grant premium (mock for testing)
   void grantPremium() {
     _isPremium = true;
-    print('[EntitlementsService] Premium granted');
   }
 
-  /// Check if specific module is unlocked
-  /// M1 is always free, M2-M6 require premium
   bool isModuleUnlocked(String moduleId) {
     final normalized = moduleId.trim().toUpperCase();
-
-    // M1 always free
-    if (normalized == 'M1' || normalized == 'MODULE1' || normalized.contains('FUNDAMENTOS') || normalized.contains('FUNDAMENTALS')) {
+    if (normalized == 'M1' || normalized == 'MODULE1') {
       return true;
     }
-
-    // M2-M6 require premium
     return isPremium;
   }
 
-  /// Reset (for testing)
   void reset() {
+    _resetLocal();
+    _loaded = false;
+    _lastFetchedAt = null;
+  }
+
+  void _resetLocal() {
     _isPremium = false;
-    _trialStartedAt = null;
+    _trialEndsAt = null;
   }
 }

@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Aelion';
+  String get appTitle => 'Edaptia';
 
   @override
   String get loginTitle => 'Learn faster with AI';
@@ -60,6 +60,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreetingWave => 'Hello';
 
   @override
+  String get homeTitle => 'Home';
+
+  @override
   String get homeMotivation => 'Let\'s keep your learning streak going today.';
 
   @override
@@ -97,6 +100,138 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeShortcutProblemSubtitle => 'From question to guided plan';
 
   @override
+  String get startCalibration => 'Discover your level';
+
+  @override
+  String get module1Free => 'Module 1 FREE';
+
+  @override
+  String get unlockPremium => 'Unlock Premium';
+
+  @override
+  String get perMonth => '/month';
+
+  @override
+  String get gateQuizPassed => 'You passed! You can continue.';
+
+  @override
+  String get gateQuizFailed => 'You need 70% to advance.';
+
+  @override
+  String get gateQuizReviewTopics => 'Review these topics:';
+
+  @override
+  String get gateQuizRetry => 'Try again';
+
+  @override
+  String get gatePracticeUnlocked =>
+      'Practice mode unlocked! Use these hints before retrying.';
+
+  @override
+  String get gatePracticeLocked =>
+      'Practice mode unlocks after 3 attempts. Keep going!';
+
+  @override
+  String get gatePracticeHintsTitle => 'Try these mini missions:';
+
+  @override
+  String gatePracticeAttempts(int count, int total) {
+    return 'Attempts used: $count/$total';
+  }
+
+  @override
+  String get modulePremiumContent => 'Premium content';
+
+  @override
+  String modulePremiumUnlock(int moduleNumber) {
+    return 'Unlock module $moduleNumber by starting your free trial.';
+  }
+
+  @override
+  String get modulePremiumButton => 'Unlock with Premium';
+
+  @override
+  String get moduleGatePending => 'Module quiz pending';
+
+  @override
+  String moduleGateRequired(int moduleNumber) {
+    return 'Pass the module $moduleNumber quiz (>=70%) to advance.';
+  }
+
+  @override
+  String get moduleGateTake => 'Take module quiz';
+
+  @override
+  String get homeEnglishComingTitle => 'Early Access';
+
+  @override
+  String get homeEnglishComingSubtitle =>
+      'Be the first to try new features and suggest improvements';
+
+  @override
+  String get homeEnglishNotifyCta => 'Notify me';
+
+  @override
+  String get homeEnglishNotifyDone => 'Already registered';
+
+  @override
+  String get homeEnglishNotifySuccess =>
+      'You\'ll be notified when Technical English launches!';
+
+  @override
+  String get homeEnglishNotifyError => 'Could not register notification';
+
+  @override
+  String assessmentResultTitle(String level) {
+    return 'Your level: $level';
+  }
+
+  @override
+  String assessmentResultLevelLabel(String level) {
+    return 'Detected level: $level';
+  }
+
+  @override
+  String assessmentResultPercentile(int percentile) {
+    return 'You scored better than $percentile% of learners';
+  }
+
+  @override
+  String get assessmentResultStrengthsTitle => 'Strengths';
+
+  @override
+  String get assessmentResultGapsTitle => 'Areas to improve';
+
+  @override
+  String get assessmentResultPlanTitle => 'Suggested plan';
+
+  @override
+  String get assessmentResultShare => 'Share results';
+
+  @override
+  String get assessmentResultCta => 'Generate my learning plan';
+
+  @override
+  String assessmentResultShareMessage(String topic, String level, int score) {
+    return 'I just completed my $topic assessment on Edaptia! Level: $level, Score: $score%';
+  }
+
+  @override
+  String get assessmentResultClose => 'Close';
+
+  @override
+  String get assessmentResultResponsesTitle => 'Your answers';
+
+  @override
+  String get settingsLanguageTitle => 'App Language';
+
+  @override
+  String get settingsLanguageSpanish => 'Spanish';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
+
+  @override
   String get homeLogoutTooltip => 'Sign out';
 
   @override
@@ -125,6 +260,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homePrefillProblem => 'Solve integrals';
+
+  @override
+  String get commonYes => 'Yes';
+
+  @override
+  String get commonNo => 'No';
+
+  @override
+  String get onboardingTitle => 'Tell us about you';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingProgressLabel => 'Question';
+
+  @override
+  String get onboardingBack => 'Back';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingStart => 'Start learning';
+
+  @override
+  String get onboardingSelectLabel => 'Select an option';
+
+  @override
+  String get onboardingQuestionAge => 'What\'s your age range?';
+
+  @override
+  String get onboardingQuestionInterests => 'Which topics interest you?';
+
+  @override
+  String get onboardingQuestionEducation =>
+      'What\'s your education background?';
+
+  @override
+  String get onboardingQuestionFirstSql =>
+      'Is this your first time learning SQL?';
+
+  @override
+  String get onboardingQuestionBeta => 'Do you want to be a beta tester?';
+
+  @override
+  String get onboardingAge18_24 => '18-24';
+
+  @override
+  String get onboardingAge25_34 => '25-34';
+
+  @override
+  String get onboardingAge35_44 => '35-44';
+
+  @override
+  String get onboardingAge45Plus => '45+';
+
+  @override
+  String get onboardingInterestSql => 'SQL';
+
+  @override
+  String get onboardingInterestPython => 'Python';
+
+  @override
+  String get onboardingInterestExcel => 'Excel';
+
+  @override
+  String get onboardingInterestData => 'Data analysis';
+
+  @override
+  String get onboardingInterestMarketing => 'Marketing';
+
+  @override
+  String get onboardingEducationSecondary => 'High school';
+
+  @override
+  String get onboardingEducationUniversity => 'University';
+
+  @override
+  String get onboardingEducationPostgrad => 'Postgraduate';
+
+  @override
+  String get onboardingEducationSelfTaught => 'Self-taught';
+
+  @override
+  String get onboardingBetaDescription =>
+      'Edaptia is in active development. As a beta tester:\\n• You get updates before everyone else\\n• You unlock experimental features\\n• Your feedback helps us improve';
+
+  @override
+  String get onboardingBetaOptIn => 'Yes, I want to be a beta tester';
+
+  @override
+  String get onboardingError =>
+      'We couldn\'t save your answers. Please try again.';
 
   @override
   String get notFoundRoute => 'Route not found';
@@ -208,6 +437,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quizDone => 'Done';
+
+  @override
+  String get quizNext => 'Next';
+
+  @override
+  String get quizSubmit => 'Submit';
+
+  @override
+  String get quizContinue => 'Continue';
 
   @override
   String get quizUnknownError => 'We could not load the quiz. Try again.';
@@ -913,4 +1151,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpFaqAnswer35 =>
       'Use the Privacy Policy and Terms of Service links in the About section.';
+
+  @override
+  String get adaptiveFlowCta => 'Adaptive flow';
+
+  @override
+  String get adaptiveFlowTitle => 'Adaptive journey';
+
+  @override
+  String get adaptiveFlowLoading => 'Loading adaptive plan...';
+
+  @override
+  String get adaptiveFlowError =>
+      'We couldn\'t load the adaptive plan. Try again.';
+
+  @override
+  String get adaptiveFlowNoPlan =>
+      'No adaptive plan yet. Generate one to get started.';
+
+  @override
+  String get adaptiveFlowLearnerState => 'Learner state';
+
+  @override
+  String get adaptiveFlowPlanSection => 'Suggested modules';
+
+  @override
+  String get adaptiveFlowModuleSection => 'Module';
+
+  @override
+  String get adaptiveFlowCheckpointSection => 'Checkpoint';
+
+  @override
+  String get adaptiveFlowBoosterSection => 'Booster';
+
+  @override
+  String get adaptiveFlowGenerateModule => 'Generate module';
+
+  @override
+  String get adaptiveFlowGenerateCheckpoint => 'Create checkpoint';
+
+  @override
+  String get adaptiveFlowSubmitAnswers => 'Evaluate checkpoint';
+
+  @override
+  String get adaptiveFlowBoosterCta => 'Request booster';
+
+  @override
+  String adaptiveFlowWeakSkills(String skills) {
+    return 'Weak skills: $skills';
+  }
+
+  @override
+  String adaptiveFlowScoreLabel(int score) {
+    return 'Score: $score%';
+  }
+
+  @override
+  String get adaptiveFlowActionAdvance => 'Great! Advance to the next module.';
+
+  @override
+  String get adaptiveFlowActionBooster =>
+      'Booster recommended before moving on.';
+
+  @override
+  String get adaptiveFlowActionReplan =>
+      'Repeating this module with more scaffolding.';
+
+  @override
+  String get adaptiveFlowCheckpointMissingSelection =>
+      'Select an answer for each question.';
+
+  @override
+  String get adaptiveFlowEmptySkills => 'No skills tracked yet.';
+
+  @override
+  String adaptiveFlowDurationLabel(int minutes) {
+    return 'Duration: $minutes min';
+  }
+
+  @override
+  String adaptiveFlowSkillsLabel(String skills) {
+    return 'Skills: $skills';
+  }
+
+  @override
+  String adaptiveFlowLockedModule(String module) {
+    return 'Complete module $module to unlock this one.';
+  }
+
+  @override
+  String get adaptiveFlowLockedPremium => 'Unlock Premium to keep advancing.';
 }

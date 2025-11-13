@@ -332,16 +332,31 @@ class _AssessmentResultsScreenState extends State<AssessmentResultsScreen> {
   ) async {
     final message =
         l10n.assessmentResultShareMessage(level, topic, percentile);
-    final uri = Uri.https(
-      'aelion-c90d2.web.app',
-      '/share',
+    final slug = topic
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+    final deepLink = Uri.https(
+      'edaptia.app',
+      '/plan/share',
       {
-        'topic': topic,
+        'topic': slug.isEmpty ? 'topic' : slug,
         'level': level,
         'score': widget.scorePct.toString(),
       },
     );
-    await Share.share('$message\n${uri.toString()}');
+    final dynamicLink = Uri.https(
+      'edaptia.page.link',
+      '/',
+      {
+        'link': deepLink.toString(),
+        'apn': 'com.aelion.learning',
+        'ibi': 'com.aelion.learning',
+        'ofl': deepLink.toString(),
+      },
+    );
+    await Share.share('$message\n${dynamicLink.toString()}');
     await AnalyticsService().track(
       'share_results',
       properties: <String, Object?>{
@@ -349,6 +364,7 @@ class _AssessmentResultsScreenState extends State<AssessmentResultsScreen> {
         'level': level,
         'score_pct': widget.scorePct,
         'percentile': percentile,
+        'link': deepLink.toString(),
       },
     );
   }

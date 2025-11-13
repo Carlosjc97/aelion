@@ -11,10 +11,20 @@ class LanguagePreferences {
     return prefs.getString(_keyLanguageCode);
   }
 
+  /// Get the saved language code (alias for compatibility)
+  static Future<String?> getPreferredLanguageCode() async {
+    return getLanguageCode();
+  }
+
   /// Set the language code
   static Future<void> setLanguageCode(String languageCode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLanguageCode, languageCode);
+  }
+
+  /// Set the language code (alias for compatibility)
+  static Future<void> setPreferredLanguageCode(String languageCode) async {
+    return setLanguageCode(languageCode);
   }
 
   /// Clear the saved language preference
@@ -27,5 +37,10 @@ class LanguagePreferences {
   static Locale? getLocale(String? languageCode) {
     if (languageCode == null || languageCode.isEmpty) return null;
     return Locale(languageCode);
+  }
+
+  /// Resolve locale from language code (alias for compatibility)
+  static Locale? resolveLocale(String? languageCode) {
+    return getLocale(languageCode);
   }
 }

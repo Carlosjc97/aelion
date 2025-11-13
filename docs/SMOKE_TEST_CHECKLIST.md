@@ -96,11 +96,19 @@
 - [ ] Navegar al mismo curso
 - [ ] **Progreso persiste**
 
+### 9. Modulos generativos 2-6
+- [ ] Aprobar el gate quiz del mA3dulo previo (>=70%) antes de abrir el siguiente
+- [ ] Expandir M2 desbloqueado y verificar spinner en lugar de contenido legacy
+- [ ] Esperar la generaciA3n (2-5s) y confirmar lecciones nuevas (IDs `gen-2-*`, resumen LATAM, fuente OpenAI en Firestore)
+- [ ] Colapsar y reabrir M2: NO deberA-a reaparecer el spinner ni disparar otra llamada
+- [ ] Activar modo aviA3n y reabrir el outline: M2 conserva las lecciones generativas (cache local ok)
+- [ ] Repetir con M3 (tras aprobar el gate de M2) para validar que solo se genera al expandir
+
 ---
 
 ## 🔥 FLUJO ALTERNATIVO (Edge Cases)
 
-### 9. Sin Internet
+### 10. Sin Internet
 - [ ] Desactivar internet
 - [ ] Intentar generar plan
 - [ ] Error message claro
@@ -108,14 +116,14 @@
 - [ ] Reactivar internet
 - [ ] Retry funciona
 
-### 10. Back Button Stress Test
+### 11. Back Button Stress Test
 - [ ] En calibración: Back button funciona
 - [ ] En paywall: Back button NO disponible (barrierDismissible: false)
 - [ ] En outline: Back button funciona
 - [ ] En lesson: Back button funciona
 - [ ] No hay navigation stack corruption
 
-### 11. Trial Expiration (Manual)
+### 12. Trial Expiration (Manual)
 - [ ] Iniciar trial
 - [ ] Abrir DevTools / Flutter Inspector
 - [ ] Modificar `_trialStartedAt` a hace 8 días (mock)

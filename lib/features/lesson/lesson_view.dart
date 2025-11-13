@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/progress_service.dart';
+import 'package:edaptia/services/streak_service.dart';
+import 'package:edaptia/providers/streak_provider.dart';
 
 class LessonView extends StatefulWidget {
   static const routeName = '/lesson';
@@ -74,15 +78,15 @@ class _LessonViewState extends State<LessonView>
         lessonId: widget.lessonId,
       );
 
-      final streakUpdate = await svc.tickDailyStreak();
-      if (streakUpdate.incremented) {
+      final streakSnapshot = await _autoCheckIn('lesson_completion');
+      if (streakSnapshot?.incremented == true) {
         unawaited(
           AnalyticsService().track(
             'return_day',
             properties: <String, Object?>{
-              'day': streakUpdate.day,
+              'day': streakSnapshot!.streakDays,
               'source': 'lesson_completion',
-              'streak_len': streakUpdate.streakLength,
+              'streak_len': streakSnapshot.streakDays,
             },
             targets: const {AnalyticsService.targetPosthog},
           ),
@@ -262,6 +266,21 @@ class _LessonViewState extends State<LessonView>
         ],
       ),
     );
+  }
+
+  Future<StreakSnapshot?> _autoCheckIn(String source) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return null;
+    try {
+      final container = ProviderScope.containerOf(context, listen: false);
+      return await container
+          .read(streakProvider.notifier)
+          .checkIn(userId, silent: true);
+    } catch (error, stackTrace) {
+      debugPrint('[LessonView] streak auto check-in failed ($source): $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return null;
+    }
   }
 }
 

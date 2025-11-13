@@ -67,7 +67,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
   void _hydrateStreak() {
     final userId = _safeAuth()?.currentUser?.uid;
     if (userId == null) return;
-    unawaited(ref.read(streakProvider.notifier).refresh(userId));
+    Future.microtask(() {
+      if (!mounted) return;
+      // Defer provider write until after build to avoid Riverpod init crash.
+      unawaited(ref.read(streakProvider.notifier).refresh(userId));
+    });
   }
 
   @override
@@ -264,13 +268,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     }
   }
 
-  Future<void> _handleStreakCheckIn() async {
-    final userId = _safeAuth()?.currentUser?.uid;
-    if (userId == null) {
-      return;
-    }
-    await ref.read(streakProvider.notifier).checkIn(userId);
-  }
   Widget? _buildStreakCard(
     StreakState state,
     ThemeData theme,
@@ -287,9 +284,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
         : (isSpanish
             ? 'Último check-in: ${_formatDate(state.lastCheckIn!)}'
             : 'Last check-in: ${_formatDate(state.lastCheckIn!)}');
-    final buttonLabel = state.loading
-        ? (isSpanish ? 'Actualizando...' : 'Updating...')
-        : (isSpanish ? 'Marcar día completado' : 'Mark day complete');
+    final helperText = isSpanish
+        ? 'Tu racha se actualiza automáticamente al terminar una lección o módulo.'
+        : 'Your streak updates automatically after finishing a lesson or module.';
 
     return Card(
       child: Padding(
@@ -327,9 +324,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ],
             ),
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: state.loading ? null : _handleStreakCheckIn,
-              child: Text(buttonLabel),
+            if (state.loading) const LinearProgressIndicator(minHeight: 4),
+            if (state.loading) const SizedBox(height: 8),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
             if (state.error != null) ...[
               const SizedBox(height: 8),
