@@ -1,6 +1,6 @@
 {
   "@@locale": "es",
-  "appTitle": "Aelion",
+  "appTitle": "Edaptia",
   "loginTitle": "Aprende mas rapido con IA",
   "loginSubtitle": "Tu ruta de aprendizaje en pocos toques",
   "loginHighlightPersonalized": "Esquemas personalizados en minutos",
@@ -16,6 +16,7 @@
   "homeGreeting": "Que quieres aprender hoy?",
   "homeGreetingNamedShort": "Hola {name}",
   "homeGreetingWave": "Hola",
+  "homeTitle": "Inicio",
   "homeMotivation": "Sigue con tu impulso de aprendizaje hoy.",
   "homePromptTitle": "Que plan generamos hoy?",
   "homeInputHint": "Ejemplo: Algebra en 7 dias, ingles conversacional...",
@@ -28,6 +29,88 @@
   "homeShortcutLanguageSubtitle": "Vocabulario y gramatica practica",
   "homeShortcutProblem": "Resuelve un problema",
   "homeShortcutProblemSubtitle": "De la duda a un plan guiado",
+  "startCalibration": "Descubre tu nivel",
+  "module1Free": "Modulo 1 GRATIS",
+  "unlockPremium": "Desbloquear Premium",
+  "perMonth": "/mes",
+  "gateQuizPassed": "Aprobaste! Ya puedes continuar.",
+  "gateQuizFailed": "Necesitas 70% para avanzar.",
+  "gateQuizReviewTopics": "Refuerza estos temas:",
+  "gateQuizRetry": "Volver a intentar",
+  "gatePracticeUnlocked": "Modo práctica activado. Usa estas pistas antes de reintentar.",
+  "gatePracticeLocked": "El modo práctica se activa tras 3 intentos. ¡Sigue!",
+  "gatePracticeHintsTitle": "Pistas sugeridas:",
+  "gatePracticeAttempts": "Intentos usados: {count}/{total}",
+  "@gatePracticeAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "modulePremiumContent": "Contenido premium",
+  "modulePremiumUnlock": "Desbloquea el modulo {moduleNumber} iniciando tu prueba gratis.",
+  "@modulePremiumUnlock": {
+    "placeholders": {
+      "moduleNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "modulePremiumButton": "Desbloquear con Premium",
+  "moduleGatePending": "Quiz de modulo pendiente",
+  "moduleGateRequired": "Aprueba el quiz del modulo {moduleNumber} (>=70%) para avanzar.",
+  "@moduleGateRequired": {
+    "placeholders": {
+      "moduleNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "moduleGateTake": "Tomar quiz del modulo",
+  "homeEnglishComingTitle": "🌍 Ingles Tecnico para Devs",
+  "homeEnglishComingSubtitle": "PROXIMAMENTE\nAprende terminos tecnicos, code review English y mas.",
+  "homeEnglishNotifyCta": "NOTIFICARME",
+  "homeEnglishNotifyDone": "YA ESTAS",
+  "homeEnglishNotifySuccess": "Te avisaremos cuando este listo!",
+  "homeEnglishNotifyError": "No pudimos guardar tu solicitud. Intenta de nuevo.",
+  "assessmentResultTitle": "Tu nivel de {topic} en 60s",
+  "assessmentResultLevelLabel": "TU NIVEL {topic}",
+  "assessmentResultPercentile": "Top {percentile}% de 1,248 usuarios",
+  "@assessmentResultPercentile": {
+    "placeholders": {
+      "percentile": {
+        "type": "int"
+      }
+    }
+  },
+  "assessmentResultStrengthsTitle": "Habilidades que dominas",
+  "assessmentResultGapsTitle": "Lo que aprenderas despues",
+  "assessmentResultPlanTitle": "Ruta recomendada",
+  "assessmentResultShare": "Compartir en LinkedIn",
+  "assessmentResultCta": "Empezar mi plan personalizado",
+  "assessmentResultShareMessage": "Soy {level} en {topic} (Top {percentile}%) en @Edaptia dYZ_\\n\\nDescubre tu nivel: https://edaptia.io",
+  "@assessmentResultShareMessage": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "topic": {
+        "type": "String"
+      },
+      "percentile": {
+        "type": "int"
+      }
+    }
+  },
+  "assessmentResultClose": "Cerrar",
+  "assessmentResultResponsesTitle": "Tu desempeno en el quiz",
+  "settingsLanguageTitle": "Idioma / Language",
+  "settingsLanguageSpanish": "Espanol",
+  "settingsLanguageEnglish": "Ingles",
   "homeLogoutTooltip": "Cerrar sesion",
   "homeSignOutError": "No pudimos cerrar la sesion. Intenta de nuevo.",
   "homeUserFallback": "Usuario Aelion",
@@ -38,10 +121,40 @@
   "homePrefillCourse": "Curso rapido de Flutter",
   "homePrefillLanguage": "Ingles en 1 mes",
   "homePrefillProblem": "Resolver integrales",
+  "commonYes": "Si",
+  "commonNo": "No",
+  "onboardingTitle": "Cuentanos sobre ti",
+  "onboardingSkip": "Saltar",
+  "onboardingProgressLabel": "Pregunta",
+  "onboardingBack": "Anterior",
+  "onboardingNext": "Siguiente",
+  "onboardingStart": "Empezar",
+  "onboardingSelectLabel": "Selecciona una opcion",
+  "onboardingQuestionAge": "Cual es tu rango de edad?",
+  "onboardingQuestionInterests": "Que temas te interesan?",
+  "onboardingQuestionEducation": "Cual es tu nivel educativo?",
+  "onboardingQuestionFirstSql": "Es tu primera vez con SQL?",
+  "onboardingQuestionBeta": "Quieres ser beta tester?",
+  "onboardingAge18_24": "18-24 anos",
+  "onboardingAge25_34": "25-34 anos",
+  "onboardingAge35_44": "35-44 anos",
+  "onboardingAge45Plus": "45+",
+  "onboardingInterestSql": "SQL",
+  "onboardingInterestPython": "Python",
+  "onboardingInterestExcel": "Excel",
+  "onboardingInterestData": "Analisis de datos",
+  "onboardingInterestMarketing": "Marketing",
+  "onboardingEducationSecondary": "Secundaria",
+  "onboardingEducationUniversity": "Universidad",
+  "onboardingEducationPostgrad": "Posgrado",
+  "onboardingEducationSelfTaught": "Autodidacta",
+  "onboardingBetaDescription": "Edaptia esta en desarrollo activo. Como beta tester:\\n• Recibiras actualizaciones antes que nadie\\n• Tendras acceso a features experimentales\\n• Tu feedback nos ayuda a mejorar",
+  "onboardingBetaOptIn": "Si, quiero ser beta tester",
+  "onboardingError": "No pudimos guardar tus respuestas. Intenta de nuevo.",
   "notFoundRoute": "Ruta no encontrada",
   "commonRetry": "Reintentar",
   "dialogContinue": "Continuar",
-  "quizTitle": "Quiz de colocaciÃ³n",
+  "quizTitle": "Quiz de colocación",
   "quizHeaderTitle": "Calibra {topic}",
   "quizIntroDescription": "Responde 10 preguntas rapidas para calibrar tu plan.",
   "startQuiz": "Comenzar",
@@ -60,15 +173,18 @@
   "quizRecommendRefine": "Refinaremos tu plan para el nivel {band}.",
   "quizKeepCurrentPlan": "Tu plan actual ya coincide con el nivel {band}.",
   "quizDone": "Listo",
+  "quizNext": "Siguiente",
+  "quizSubmit": "Enviar",
+  "quizContinue": "Continuar",
   "quizUnknownError": "No pudimos cargar el quiz. Intenta de nuevo.",
   "quizBandBeginner": "Principiante",
   "quizBandIntermediate": "Intermedio",
   "quizBandAdvanced": "Avanzado",
   "courseEntryTitle": "Tomar un curso",
-  "courseEntrySubtitle": "Busca un tema y lanza un quiz de colocaciÃ³n rÃ¡pido.",
-  "courseEntryHint": "Ejemplo: Fundamentos de Flutter, Ã¡lgebra lineal, SQL...",
+  "courseEntrySubtitle": "Busca un tema y lanza un quiz de colocación rápido.",
+  "courseEntryHint": "Ejemplo: Fundamentos de Flutter, álgebra lineal, SQL...",
   "courseEntryStart": "Iniciar quiz",
-  "courseEntryFooter": "Los quizzes de colocaciÃ³n tienen solo 10 preguntas.",
+  "courseEntryFooter": "Los quizzes de colocación tienen solo 10 preguntas.",
   "courseEntryExampleFlutter": "Introducción a Flutter",
   "courseEntryExampleSql": "SQL para principiantes",
   "courseEntryExampleDataScience": "Ciencia de datos 101",
@@ -80,12 +196,12 @@
   "moduleOutlineFallbackTopic": "Tema predeterminado",
   "outlineUpdatePlan": "Actualizar plan",
   "refinePlan": "Refinar plan",
-  "outlineRefineRebuild": "El nuevo plan usarÃ¡ el nivel {band}.",
+  "outlineRefineRebuild": "El nuevo plan usará el nivel {band}.",
   "outlineRefineNoChanges": "El plan actual ya corresponde al nivel {band}.",
   "outlineErrorGeneric": "No pudimos cargar el plan.",
   "outlineErrorEmpty": "No hay un plan disponible para este tema.",
   "outlineErrorNoContent": "No hay contenido disponible para este tema.",
-  "outlineSourceCached": "Plan en cachÃ©",
+  "outlineSourceCached": "Plan en caché",
   "outlineSavedLabel": "Guardado {timestamp}",
   "outlineStaleBadge": "Caducado",
   "outlineMetaBand": "Nivel: {band}",
@@ -95,13 +211,13 @@
   "outlineMetaDepth": "Profundidad: {depth}",
   "outlineLessonCount": "{count} lecciones",
   "outlineLessonLanguage": "Idioma: {language}",
-  "outlineModuleFallback": "MÃ³dulo {index}",
-  "outlineLessonFallback": "LecciÃ³n {index}",
-  "homeGreetingNamed": "Hola {name}, Â¿quÃ© quieres aprender hoy?",
+  "outlineModuleFallback": "Módulo {index}",
+  "outlineLessonFallback": "Lección {index}",
+  "homeGreetingNamed": "Hola {name}, ¿qué quieres aprender hoy?",
   "homeRecentTitle": "Planes recientes",
-  "homeRecentEmpty": "AÃºn no tienes planes guardados.",
+  "homeRecentEmpty": "Aún no tienes planes guardados.",
   "homeRecentView": "Ver plan",
-  "homeRecentMoreCount": "+{count} mÃ³dulos mÃ¡s",
+  "homeRecentMoreCount": "+{count} módulos más",
   "homeRecentSaved": "Guardado {timestamp}",
   "homeDepthIntro": "Nivel introductorio",
   "homeDepthMedium": "Profundidad intermedia",
@@ -561,5 +677,102 @@
         "type": "String"
       }
     }
-  }
+  },
+  "@assessmentResultTitle": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      }
+    }
+  },
+  "@assessmentResultLevelLabel": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowCta": "Flujo adaptativo",
+  "adaptiveFlowTitle": "Recorrido adaptativo",
+  "adaptiveFlowLoading": "Cargando plan adaptativo...",
+  "adaptiveFlowError": "No pudimos cargar el plan adaptativo. Intenta de nuevo.",
+  "adaptiveFlowNoPlan": "Aún no tienes plan adaptativo. Généralo para comenzar.",
+  "adaptiveFlowLearnerState": "Estado del alumno",
+  "adaptiveFlowPlanSection": "Módulos sugeridos",
+  "adaptiveFlowModuleSection": "Módulo",
+  "adaptiveFlowCheckpointSection": "Checkpoint",
+  "adaptiveFlowBoosterSection": "Refuerzo",
+  "adaptiveFlowGenerateModule": "Generar módulo",
+  "adaptiveFlowGenerateCheckpoint": "Crear checkpoint",
+  "adaptiveFlowSubmitAnswers": "Evaluar checkpoint",
+  "adaptiveFlowBoosterCta": "Pedir refuerzo",
+  "adaptiveFlowWeakSkills": "Habilidades débiles: {skills}",
+  "@adaptiveFlowWeakSkills": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowScoreLabel": "Puntaje: {score}%",
+  "@adaptiveFlowScoreLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "adaptiveFlowActionAdvance": "¡Genial! Avanza al siguiente módulo.",
+  "adaptiveFlowActionBooster": "Necesitas un refuerzo antes de avanzar.",
+  "adaptiveFlowActionReplan": "Repite este módulo con más andamiaje.",
+  "adaptiveFlowCheckpointMissingSelection": "Selecciona una respuesta por pregunta.",
+  "adaptiveFlowEmptySkills": "Aún no hay dominio registrado.",
+  "adaptiveFlowDurationLabel": "Duración: {minutes} min",
+  "@adaptiveFlowDurationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adaptiveFlowSkillsLabel": "Habilidades: {skills}",
+  "@adaptiveFlowSkillsLabel": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowLockedModule": "Completa el módulo {module} para desbloquearlo.",
+  "@adaptiveFlowLockedModule": {
+    "placeholders": {
+      "module": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowLockedPremium": "Activa Premium para seguir avanzando.",
+
+  "assessmentResultTitle": "Tu nivel: {level}",
+  "assessmentResultClose": "Cerrar",
+  "assessmentResultStrengthsTitle": "Fortalezas",
+  "assessmentResultGapsTitle": "Áreas de mejora",
+  "assessmentResultShare": "Compartir resultados",
+  "assessmentResultCta": "Generar mi plan de aprendizaje",
+  "assessmentResultLevelLabel": "Nivel detectado: {level}",
+  "assessmentResultPercentile": "Obtuviste mejor puntaje que el {percentile}% de los aprendices",
+  "assessmentResultResponsesTitle": "Tus respuestas",
+  "assessmentResultPlanTitle": "Plan sugerido",
+  "assessmentResultShareMessage": "¡Acabo de completar mi evaluación de {topic} en Edaptia! Nivel: {level}, Puntuación: {score}%",
+
+  "homeEnglishNotifySuccess": "¡Te notificaremos cuando lance Inglés Técnico!",
+  "homeEnglishNotifyError": "No se pudo registrar la notificación",
+  "homeEnglishNotifyDone": "Ya registrado",
+  "homeEnglishNotifyCta": "Notificarme",
+  "homeEnglishComingTitle": "Acceso Anticipado",
+  "homeEnglishComingSubtitle": "Sé el primero en probar nuevas funciones y sugerir mejoras",
+
+  "settingsLanguageSpanish": "Español",
+  "settingsLanguageEnglish": "Inglés",
+  "settingsLanguageTitle": "Idioma de la App"
 }

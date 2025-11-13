@@ -9,11 +9,10 @@ import { z } from "zod";
 import { createHash } from "node:crypto";
 import { getCached, setCached, generateCacheKey } from "./cache-service";
 import { savePlacementSession, getPlacementSession } from "./session-store";
+import { getSQLMarketingTemplate } from "./templates/sql-marketing";
 type AssessmentModule = typeof import("./assessment");
-type SqlTemplateModule = typeof import("./templates/sql-marketing");
 
 let assessmentModule: AssessmentModule | null = null;
-let sqlTemplateModule: SqlTemplateModule | null = null;
 
 function getAssessment(): AssessmentModule {
   if (!assessmentModule) {
@@ -21,14 +20,6 @@ function getAssessment(): AssessmentModule {
     assessmentModule = require("./assessment") as AssessmentModule;
   }
   return assessmentModule;
-}
-
-function getSqlTemplates(): SqlTemplateModule {
-  if (!sqlTemplateModule) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    sqlTemplateModule = require("./templates/sql-marketing") as SqlTemplateModule;
-  }
-  return sqlTemplateModule;
 }
 
 if (!getApps().length) {
@@ -601,7 +592,7 @@ async function resolveOutlineDocument(input: OutlineResolutionInput): Promise<Ou
   if (slug === "sql-marketing" || input.topic.toLowerCase().includes("sql")) {
     const templateSlug = "sql-marketing";
     const body = adaptTemplateToResponse(
-      getSqlTemplates().getSQLMarketingTemplate(input.band),
+      getSQLMarketingTemplate(input.band),
       input,
       templateSlug,
     );

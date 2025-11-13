@@ -11,7 +11,6 @@ import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/providers/streak_provider.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course/models.dart';
-import 'package:edaptia/services/course/placement_band.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/entitlements_service.dart';
 
@@ -441,9 +440,11 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         onTrialStarted: _reloadEntitlements,
       );
       if (!granted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.adaptiveFlowLockedPremium)),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.adaptiveFlowLockedPremium)),
+          );
+        }
         return;
       }
       await _reloadEntitlements();
@@ -617,7 +618,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                 ? colorScheme.secondaryContainer
                 : isActive
                     ? colorScheme.primaryContainer
-                    : colorScheme.surfaceVariant;
+                    : colorScheme.surfaceContainerHighest;
             final foreground = tile.completed
                 ? colorScheme.onSecondaryContainer
                 : isActive
@@ -770,7 +771,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                       Text(item.stem),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _checkpointAnswers[item.id]?.isEmpty ?? true
+                        initialValue: _checkpointAnswers[item.id]?.isEmpty ?? true
                             ? null
                             : _checkpointAnswers[item.id],
                         decoration: InputDecoration(
@@ -925,7 +926,7 @@ class _LessonCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

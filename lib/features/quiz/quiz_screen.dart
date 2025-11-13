@@ -5,18 +5,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/features/assessment/assessment_results_screen.dart';
-import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/modules/adaptive/adaptive_journey_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/course/models.dart';
-import 'package:edaptia/services/local_outline_storage.dart';
 import 'package:edaptia/services/local_quiz_cache.dart';
 import 'package:edaptia/services/quiz_attempt_storage.dart';
-import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:edaptia/widgets/skeleton.dart';
-// GATING ADDED - DÍA 4: Post-calibration paywall
-import 'package:edaptia/features/paywall/paywall_helper.dart';
 
 typedef PlacementQuizLoader = Future<PlacementQuizStartResponse> Function({
   required String topic,
@@ -170,7 +166,8 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   String get _currentUserId {
-    return (widget.firebaseAuth ?? FirebaseAuth.instance).currentUser?.uid ?? 'anonymous';
+    return (widget.firebaseAuth ?? FirebaseAuth.instance).currentUser?.uid ??
+        'anonymous';
   }
 
   void _onOptionSelected(int questionIndex, int? value) {
@@ -295,75 +292,17 @@ class _QuizScreenState extends State<QuizScreen> {
         band: grade.band,
       );
 
-      final outlineFetcher =
-          widget.outlineGenerator ?? CourseApiService.generateOutline;
-      final depth = CourseApiService.depthForBand(grade.band);
-      final outlineResponse = await outlineFetcher(
-        topic: topic,
-        language: language,
-        depth: depth,
-        band: grade.band,
-      );
-      await _maybeTweakOutline(outlineResponse, language);
-
-      final now = DateTime.now();
-      await LocalOutlineStorage.instance.save(
-        topic: topic,
-        payload: outlineResponse,
-      );
-
-      final responseBand = outlineResponse['band']?.toString() ??
-          CourseApiService.placementBandToString(grade.band);
-      final responseDepth =
-          outlineResponse['depth']?.toString() ?? grade.suggestedDepth;
-      final responseLanguage =
-          outlineResponse['language']?.toString() ?? language;
-      final outlineList = _extractOutlineList(outlineResponse['outline']);
-
-      final metadata = RecentOutlineMetadata(
-        id: RecentOutlineMetadata.buildId(
-          topic: topic,
-          language: responseLanguage,
-          band: responseBand,
-          depth: responseBand.isEmpty ? responseDepth : null,
-        ),
-        topic: topic,
-        language: responseLanguage,
-        band: responseBand.isNotEmpty ? responseBand : null,
-        depth: responseDepth,
-        savedAt: now,
-      );
-      await RecentOutlinesStorage.instance.upsert(metadata);
-
       if (!mounted) return;
 
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.quizPlanCreated)),
-      );
+      setState(() => _submitting = false);
 
-      // GATING ADDED - DÍA 4: Show paywall after calibration
-      // This is an informative paywall to drive trial starts
-      // Users can still access M1 for free even if they dismiss
-      await PaywallHelper.checkAndShowPaywall(
-        context,
-        trigger: 'post_calibration',
-      );
-
-      if (!mounted) return;
-
-      await Navigator.of(context).pushReplacementNamed(
-        ModuleOutlineView.routeName,
-        arguments: ModuleOutlineArgs(
-          topic: topic,
-          language: responseLanguage,
-          depth: responseDepth,
-          preferredBand: responseBand,
-          initialOutline: outlineList,
-          initialResponse: outlineResponse,
-          initialSource: outlineResponse['source']?.toString(),
-          initialSavedAt: now,
-          recommendRegenerate: false,
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => AdaptiveJourneyScreen(
+            topic: topic,
+            target: topic,
+            initialBand: grade.band,
+          ),
         ),
       );
     } catch (error) {
@@ -426,113 +365,8 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Future<void> _maybeTweakOutline(
-    Map<String, dynamic> outlineResponse,
-    String language,
-  ) async {
-    if (_detectedGaps.isEmpty) {
-      return;
-    }
-
-    final outline = _extractOutlineList(outlineResponse['outline']);
-    if (outline.isEmpty) {
-      return;
-    }
-
-    final summary = outline.map((module) {
-      final title = module['title']?.toString() ?? '';
-      final summaryText = module['summary']?.toString() ?? '';
-      return '$title: $summaryText';
-    }).join('\n');
-
-    final loaderMessage = language == 'es'
-        ? 'Ajustando tu plan con IA...'
-        : 'Fine-tuning your plan with AI...';
-
-    var messageShown = false;
-    Timer? loaderTimer;
-    loaderTimer = Timer(const Duration(seconds: 5), () {
-      messageShown = true;
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              duration: const Duration(seconds: 4),
-              content: Text(loaderMessage),
-            ),
-          );
-      }
-    });
-
-    try {
-      final tweak = await CourseApiService.tweakOutlinePlan(
-        topic: widget.topic,
-        outlineSummary: summary,
-        gaps: _detectedGaps,
-        language: language,
-      );
-      loaderTimer.cancel();
-      if (!mounted) return;
-      _mergeTweakIntoOutline(outlineResponse, tweak);
-    } catch (error, stackTrace) {
-      loaderTimer.cancel();
-      debugPrint('[QuizScreen] tweakOutline failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    } finally {
-      if (messageShown && mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      }
-    }
-  }
-
-  void _mergeTweakIntoOutline(
-    Map<String, dynamic> outlineResponse,
-    OutlineTweakResult tweak,
-  ) {
-    final outline = _extractOutlineList(outlineResponse['outline']);
-    if (outline.isEmpty || tweak.modules.isEmpty) {
-      return;
-    }
-
-    final desiredCount = math.max(
-      outline.length,
-      math.max(tweak.recommendedModules, tweak.modules.length),
-    );
-
-    while (outline.length < desiredCount) {
-      outline.add({
-        'moduleId': 'dyn-${outline.length + 1}',
-        'title': 'M${outline.length + 1}',
-        'summary': '',
-        'lessons': <Map<String, dynamic>>[],
-        'locked': outline.isNotEmpty,
-        'source': 'tweak',
-      });
-    }
-
-    for (final module in tweak.modules) {
-      final index = module.moduleNumber.clamp(1, outline.length) - 1;
-      final updated = Map<String, dynamic>.from(outline[index] as Map);
-      updated['title'] = module.title;
-      updated['summary'] = module.objective;
-      updated['focus'] = module.focus;
-      outline[index] = updated;
-    }
-
-    final meta = outlineResponse['meta'] is Map
-        ? Map<String, dynamic>.from(outlineResponse['meta'] as Map)
-        : <String, dynamic>{};
-    meta['tweak'] = {
-      'summary': tweak.summary,
-      'recommendedModules': tweak.recommendedModules,
-      'promptVersion': tweak.promptVersion,
-    };
-
-    outlineResponse
-      ..['outline'] = outline
-      ..['meta'] = meta;
-  }
+  // Removed _maybeTweakOutline and _mergeTweakIntoOutline
+  // Functionality moved to adaptive flow in adaptive_journey_screen.dart
 
   Future<bool> _handleWillPop() async {
     if (_submitting) {

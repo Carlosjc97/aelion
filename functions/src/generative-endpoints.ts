@@ -29,13 +29,12 @@ import {
   enforceRateLimit,
   resolveRateLimitKey,
 } from "./request-guard";
+import { getSQLMarketingTemplate } from "./templates/sql-marketing";
 type OpenAIServiceModule = typeof import("./openai-service");
 type AssessmentModule = typeof import("./assessment");
-type SqlTemplateModule = typeof import("./templates/sql-marketing");
 
 let openaiModule: OpenAIServiceModule | null = null;
 let assessmentModule: AssessmentModule | null = null;
-let sqlTemplateModule: SqlTemplateModule | null = null;
 
 function getOpenAI(): OpenAIServiceModule {
   if (!openaiModule) {
@@ -51,14 +50,6 @@ function getAssessment(): AssessmentModule {
     assessmentModule = require("./assessment") as AssessmentModule;
   }
   return assessmentModule;
-}
-
-function getSqlTemplates(): SqlTemplateModule {
-  if (!sqlTemplateModule) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    sqlTemplateModule = require("./templates/sql-marketing") as SqlTemplateModule;
-  }
-  return sqlTemplateModule;
 }
 
 if (!getApps().length) {
@@ -902,7 +893,7 @@ export const fetchNextModule = onRequest({ cors: true, timeoutSeconds: 300, memo
           error: openaiError instanceof Error ? openaiError.message : String(openaiError),
         });
 
-        const template = getSqlTemplates().getSQLMarketingTemplate(level);
+        const template = getSQLMarketingTemplate(level);
         const moduleTemplate = template.modules[moduleNumber - 1];
 
         if (!moduleTemplate) {
