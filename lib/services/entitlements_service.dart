@@ -12,6 +12,7 @@ class EntitlementsService {
   bool _loaded = false;
   DateTime? _lastFetchedAt;
   Future<void>? _loadFuture;
+  bool _testingMode = false;
 
   bool get isPremium => _isPremium || isInTrial;
 
@@ -44,6 +45,12 @@ class EntitlementsService {
   }
 
   Future<void> _fetchEntitlements() async {
+    if (_testingMode) {
+      _loaded = true;
+      _lastFetchedAt = DateTime.now();
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       _resetLocal();
@@ -85,9 +92,17 @@ class EntitlementsService {
   }
 
   Future<void> startTrial() async {
+    final trialEnds = DateTime.now().add(const Duration(days: 7));
+
+    if (_testingMode) {
+      _trialEndsAt = trialEnds;
+      _loaded = true;
+      _lastFetchedAt = DateTime.now();
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final trialEnds = DateTime.now().add(const Duration(days: 7));
     try {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'entitlements': {
@@ -106,6 +121,7 @@ class EntitlementsService {
   }
 
   void configureForTesting({bool memoryOnly = true}) {
+    _testingMode = true;
     reset();
   }
 
@@ -130,5 +146,10 @@ class EntitlementsService {
   void _resetLocal() {
     _isPremium = false;
     _trialEndsAt = null;
+  }
+
+  void exitTestingMode() {
+    _testingMode = false;
+    reset();
   }
 }

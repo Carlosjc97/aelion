@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
@@ -16,56 +17,58 @@ void main() {
 
   testWidgets('tap first lesson opens detail', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: ModuleOutlineView(
-          topic: 'Physics',
-          language: 'en',
-          initialOutline: const [
-            {
-              'title': 'Module 1',
-              'lessons': [
-                {'title': 'Lesson Alpha', 'content': 'Content body'},
-                {'title': 'Lesson Beta', 'content': 'Content beta'},
-              ],
-            },
-          ],
-          outlineFetcher: ({
-            required String topic,
-            String? goal,
-            String? level,
-            required String language,
-            required String depth,
-            PlacementBand? band,
-          }) async =>
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ModuleOutlineView(
+            topic: 'Physics',
+            language: 'en',
+            initialOutline: const [
               {
-                'topic': topic,
-                'language': language,
-                'depth': depth,
-                'band': 'beginner',
-                'source': 'test',
-                'outline': const [
-                  {
-                    'title': 'Module 1',
-                    'lessons': [
-                      {'title': 'Lesson Alpha', 'content': 'Content body'},
-                      {'title': 'Lesson Beta', 'content': 'Content beta'},
-                    ],
-                  },
+                'title': 'Module 1',
+                'lessons': [
+                  {'title': 'Lesson Alpha', 'content': 'Content body'},
+                  {'title': 'Lesson Beta', 'content': 'Content beta'},
                 ],
               },
+            ],
+            outlineFetcher: ({
+              required String topic,
+              String? goal,
+              String? level,
+              required String language,
+              required String depth,
+              PlacementBand? band,
+            }) async =>
+                {
+                  'topic': topic,
+                  'language': language,
+                  'depth': depth,
+                  'band': 'beginner',
+                  'source': 'test',
+                  'outline': const [
+                    {
+                      'title': 'Module 1',
+                      'lessons': [
+                        {'title': 'Lesson Alpha', 'content': 'Content body'},
+                        {'title': 'Lesson Beta', 'content': 'Content beta'},
+                      ],
+                    },
+                  ],
+                },
+          ),
+          onGenerateRoute: (settings) {
+            if (settings.name == LessonDetailPage.routeName) {
+              final args = settings.arguments as LessonDetailArgs;
+              return MaterialPageRoute<void>(
+                builder: (_) => LessonDetailPage(args: args),
+                settings: settings,
+              );
+            }
+            return null;
+          },
         ),
-        onGenerateRoute: (settings) {
-          if (settings.name == LessonDetailPage.routeName) {
-            final args = settings.arguments as LessonDetailArgs;
-            return MaterialPageRoute<void>(
-              builder: (_) => LessonDetailPage(args: args),
-              settings: settings,
-            );
-          }
-          return null;
-        },
       ),
     );
 

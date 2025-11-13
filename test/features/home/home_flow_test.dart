@@ -9,6 +9,7 @@ import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -118,48 +119,50 @@ void main() {
     QuizScreenArgs? capturedQuizArgs;
 
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        navigatorObservers: [routeTracker],
-        onGenerateRoute: (settings) {
-          switch (settings.name) {
-            case '/':
-              return MaterialPageRoute<void>(
-                builder: (_) => const HomeView(),
-                settings: settings,
-              );
-            case QuizScreen.routeName:
-              capturedQuizArgs = settings.arguments as QuizScreenArgs;
-              return MaterialPageRoute<void>(
-                builder: (context) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.of(context).pushNamed(
-                      ModuleOutlineView.routeName,
-                      arguments: ModuleOutlineArgs(
-                        topic: capturedQuizArgs!.topic,
-                        language: capturedQuizArgs!.language,
-                        preferredBand: 'intermediate',
-                        recommendRegenerate: true,
-                      ),
-                    );
-                  });
-                  return const Scaffold(body: SizedBox.shrink());
-                },
-                settings: settings,
-              );
-            case ModuleOutlineView.routeName:
-              capturedModuleArgs = settings.arguments as ModuleOutlineArgs;
-              return MaterialPageRoute<void>(
-                builder: (_) => const Scaffold(
-                  body: Center(child: Text('Module Outline Stub')),
-                ),
-                settings: settings,
-              );
-          }
-          return null;
-        },
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          navigatorObservers: [routeTracker],
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              case '/':
+                return MaterialPageRoute<void>(
+                  builder: (_) => const HomeView(),
+                  settings: settings,
+                );
+              case QuizScreen.routeName:
+                capturedQuizArgs = settings.arguments as QuizScreenArgs;
+                return MaterialPageRoute<void>(
+                  builder: (context) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Navigator.of(context).pushNamed(
+                        ModuleOutlineView.routeName,
+                        arguments: ModuleOutlineArgs(
+                          topic: capturedQuizArgs!.topic,
+                          language: capturedQuizArgs!.language,
+                          preferredBand: 'intermediate',
+                          recommendRegenerate: true,
+                        ),
+                      );
+                    });
+                    return const Scaffold(body: SizedBox.shrink());
+                  },
+                  settings: settings,
+                );
+              case ModuleOutlineView.routeName:
+                capturedModuleArgs = settings.arguments as ModuleOutlineArgs;
+                return MaterialPageRoute<void>(
+                  builder: (_) => const Scaffold(
+                    body: Center(child: Text('Module Outline Stub')),
+                  ),
+                  settings: settings,
+                );
+            }
+            return null;
+          },
+        ),
       ),
     );
 
@@ -215,34 +218,36 @@ void main() {
     ModuleOutlineArgs? capturedModuleArgs;
 
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        navigatorObservers: [routeTracker],
-        onGenerateRoute: (settings) {
-          switch (settings.name) {
-            case '/':
-              return MaterialPageRoute<void>(
-                builder: (_) => const HomeView(),
-                settings: settings,
-              );
-            case QuizScreen.routeName:
-              return MaterialPageRoute<void>(
-                builder: (_) => const Scaffold(body: SizedBox.shrink()),
-                settings: settings,
-              );
-            case ModuleOutlineView.routeName:
-              capturedModuleArgs = settings.arguments as ModuleOutlineArgs;
-              return MaterialPageRoute<void>(
-                builder: (_) => const Scaffold(
-                  body: Center(child: Text('Module Outline Stub')),
-                ),
-                settings: settings,
-              );
-          }
-          return null;
-        },
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          navigatorObservers: [routeTracker],
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              case '/':
+                return MaterialPageRoute<void>(
+                  builder: (_) => const HomeView(),
+                  settings: settings,
+                );
+              case QuizScreen.routeName:
+                return MaterialPageRoute<void>(
+                  builder: (_) => const Scaffold(body: SizedBox.shrink()),
+                  settings: settings,
+                );
+              case ModuleOutlineView.routeName:
+                capturedModuleArgs = settings.arguments as ModuleOutlineArgs;
+                return MaterialPageRoute<void>(
+                  builder: (_) => const Scaffold(
+                    body: Center(child: Text('Module Outline Stub')),
+                  ),
+                  settings: settings,
+                );
+            }
+            return null;
+          },
+        ),
       ),
     );
 

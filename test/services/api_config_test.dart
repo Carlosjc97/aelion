@@ -15,7 +15,7 @@ void main() {
     ];
     for (final u in urls) {
       expect(
-        u.startsWith('https://us-east4-aelion-c90d2.cloudfunctions.net'),
+        u.startsWith('https://us-central1-aelion-c90d2.cloudfunctions.net'),
         true,
       );
       expect(u.contains('http://'), false);

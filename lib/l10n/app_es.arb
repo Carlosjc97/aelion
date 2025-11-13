@@ -77,35 +77,6 @@
   "homeEnglishNotifyDone": "YA ESTAS",
   "homeEnglishNotifySuccess": "Te avisaremos cuando este listo!",
   "homeEnglishNotifyError": "No pudimos guardar tu solicitud. Intenta de nuevo.",
-  "assessmentResultTitle": "Tu nivel de {topic} en 60s",
-  "assessmentResultLevelLabel": "TU NIVEL {topic}",
-  "assessmentResultPercentile": "Top {percentile}% de 1,248 usuarios",
-  "@assessmentResultPercentile": {
-    "placeholders": {
-      "percentile": {
-        "type": "int"
-      }
-    }
-  },
-  "assessmentResultStrengthsTitle": "Habilidades que dominas",
-  "assessmentResultGapsTitle": "Lo que aprenderas despues",
-  "assessmentResultPlanTitle": "Ruta recomendada",
-  "assessmentResultShare": "Compartir en LinkedIn",
-  "assessmentResultCta": "Empezar mi plan personalizado",
-  "assessmentResultShareMessage": "Soy {level} en {topic} (Top {percentile}%) en @Edaptia dYZ_\\n\\nDescubre tu nivel: https://edaptia.io",
-  "@assessmentResultShareMessage": {
-    "placeholders": {
-      "level": {
-        "type": "String"
-      },
-      "topic": {
-        "type": "String"
-      },
-      "percentile": {
-        "type": "int"
-      }
-    }
-  },
   "assessmentResultClose": "Cerrar",
   "assessmentResultResponsesTitle": "Tu desempeno en el quiz",
   "settingsLanguageTitle": "Idioma / Language",
@@ -678,20 +649,6 @@
       }
     }
   },
-  "@assessmentResultTitle": {
-    "placeholders": {
-      "topic": {
-        "type": "String"
-      }
-    }
-  },
-  "@assessmentResultLevelLabel": {
-    "placeholders": {
-      "topic": {
-        "type": "String"
-      }
-    }
-  },
   "adaptiveFlowCta": "Flujo adaptativo",
   "adaptiveFlowTitle": "Recorrido adaptativo",
   "adaptiveFlowLoading": "Cargando plan adaptativo...",
@@ -754,16 +711,50 @@
   "adaptiveFlowLockedPremium": "Activa Premium para seguir avanzando.",
 
   "assessmentResultTitle": "Tu nivel: {level}",
+  "@assessmentResultTitle": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
   "assessmentResultClose": "Cerrar",
   "assessmentResultStrengthsTitle": "Fortalezas",
   "assessmentResultGapsTitle": "Áreas de mejora",
   "assessmentResultShare": "Compartir resultados",
   "assessmentResultCta": "Generar mi plan de aprendizaje",
   "assessmentResultLevelLabel": "Nivel detectado: {level}",
+  "@assessmentResultLevelLabel": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
   "assessmentResultPercentile": "Obtuviste mejor puntaje que el {percentile}% de los aprendices",
+  "@assessmentResultPercentile": {
+    "placeholders": {
+      "percentile": {
+        "type": "int"
+      }
+    }
+  },
   "assessmentResultResponsesTitle": "Tus respuestas",
   "assessmentResultPlanTitle": "Plan sugerido",
   "assessmentResultShareMessage": "¡Acabo de completar mi evaluación de {topic} en Edaptia! Nivel: {level}, Puntuación: {score}%",
+  "@assessmentResultShareMessage": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      },
+      "score": {
+        "type": "int"
+      }
+    }
+  },
 
   "homeEnglishNotifySuccess": "¡Te notificaremos cuando lance Inglés Técnico!",
   "homeEnglishNotifyError": "No se pudo registrar la notificación",
