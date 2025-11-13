@@ -49,9 +49,9 @@ void main() {
     final gate = built! as AuthGate;
     expect(gate.child, isA<OnboardingGate>());
     // Router now wraps in OnboardingGate -> ModuleOutlineView
-    final onboardingGate = gate.child! as OnboardingGate;
+    final onboardingGate = gate.child as OnboardingGate;
     expect(onboardingGate.child, isA<ModuleOutlineView>());
-    final moduleView = onboardingGate.child! as ModuleOutlineView;
+    final moduleView = onboardingGate.child as ModuleOutlineView;
     expect(moduleView.initialOutline, isNotNull);
     expect(moduleView.initialSource, 'cache');
   });
