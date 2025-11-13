@@ -150,6 +150,3 @@ lib/l10n/app_localizations_*.dart
 # Backup files
 *.backup
 **/*.backup
-
-# Function tests
-functions/test/
