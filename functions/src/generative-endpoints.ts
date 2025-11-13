@@ -5,24 +5,18 @@
 
 import { onRequest } from "firebase-functions/v2/https";
 import { getApps, initializeApp } from "firebase-admin/app";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import * as logger from "firebase-functions/logger";
-import {
-  generateCalibrationQuiz,
-  generateModule,
-  validateChallengeResponse,
-  tweakOutlinePlan,
+import type {
+  LearnerState,
+  ModuleOut,
+  AdaptivePlanDraft,
+  CheckpointQuiz,
+  EvaluationResult,
+  Band,
 } from "./openai-service";
-import { getCached, setCached, generateCacheKey } from "./cache-service";
-import {
-  loadQuestionBank,
-  selectCalibrationQuestions,
-  selectModuleQuestions,
-  gradeModuleQuiz,
-  generateQuizId,
-} from "./assessment";
-import { getSQLMarketingTemplate } from "./templates/sql-marketing";
+import { getCached, setCached, generateCacheKey, invalidateCache } from "./cache-service";
 import {
   savePlacementSession,
   getPlacementSession,
@@ -35,6 +29,37 @@ import {
   enforceRateLimit,
   resolveRateLimitKey,
 } from "./request-guard";
+type OpenAIServiceModule = typeof import("./openai-service");
+type AssessmentModule = typeof import("./assessment");
+type SqlTemplateModule = typeof import("./templates/sql-marketing");
+
+let openaiModule: OpenAIServiceModule | null = null;
+let assessmentModule: AssessmentModule | null = null;
+let sqlTemplateModule: SqlTemplateModule | null = null;
+
+function getOpenAI(): OpenAIServiceModule {
+  if (!openaiModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    openaiModule = require("./openai-service") as OpenAIServiceModule;
+  }
+  return openaiModule;
+}
+
+function getAssessment(): AssessmentModule {
+  if (!assessmentModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    assessmentModule = require("./assessment") as AssessmentModule;
+  }
+  return assessmentModule;
+}
+
+function getSqlTemplates(): SqlTemplateModule {
+  if (!sqlTemplateModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    sqlTemplateModule = require("./templates/sql-marketing") as SqlTemplateModule;
+  }
+  return sqlTemplateModule;
+}
 
 if (!getApps().length) {
   initializeApp();
@@ -42,6 +67,7 @@ if (!getApps().length) {
 
 const firestore = getFirestore();
 const authClient = getAuth();
+const DAILY_AI_CAP = 20;
 
 interface UserEntitlements {
   isPremium: boolean;
@@ -108,6 +134,17 @@ function gateDocRef(userId: string, moduleNumber: number) {
     .doc(`module-${moduleNumber}`);
 }
 
+function gateAttemptRef(userId: string, moduleNumber: number) {
+  return firestore
+    .collection("user_gates_attempts")
+    .doc(`${userId}_module_${moduleNumber}`);
+}
+
+interface GateAttemptState {
+  attempts: number;
+  practiceUnlocked: boolean;
+}
+
 async function ensureGatePassed(
   userId: string,
   previousModuleNumber: number,
@@ -130,6 +167,239 @@ async function ensureGatePassed(
     scorePct: typeof data.scorePct === "number" ? data.scorePct : 70,
     errors: Array.isArray(data.incorrectTags) ? data.incorrectTags : [],
   };
+}
+
+const DEFAULT_LEARNER_STATE: LearnerState = {
+  level_band: "basic",
+  skill_mastery: {},
+  history: {
+    passedModules: [],
+    failedModules: [],
+    commonErrors: [],
+  },
+  target: "general",
+};
+
+function learnerStateDoc(userId: string) {
+  return firestore
+    .collection("users")
+    .doc(userId)
+    .collection("adaptiveState")
+    .doc("summary");
+}
+
+function checkpointDoc(userId: string, moduleNumber: number) {
+  return firestore
+    .collection("users")
+    .doc(userId)
+    .collection("adaptiveCheckpoints")
+    .doc(`module-${moduleNumber}`);
+}
+
+function createLearnerStateSnapshot(overrides: Partial<LearnerState> = {}): LearnerState {
+  return {
+    level_band: (overrides.level_band as Band) ?? DEFAULT_LEARNER_STATE.level_band,
+    skill_mastery: overrides.skill_mastery ?? {},
+    history: {
+      passedModules: overrides.history?.passedModules ?? [],
+      failedModules: overrides.history?.failedModules ?? [],
+      commonErrors: overrides.history?.commonErrors ?? [],
+    },
+    target: overrides.target ?? DEFAULT_LEARNER_STATE.target,
+  };
+}
+
+async function loadLearnerState(userId: string): Promise<LearnerState> {
+  const snapshot = await learnerStateDoc(userId).get();
+  if (!snapshot.exists) {
+    return createLearnerStateSnapshot();
+  }
+  const data = snapshot.data() ?? {};
+  return createLearnerStateSnapshot({
+    level_band: data.level_band as Band,
+    skill_mastery: typeof data.skill_mastery === "object" ? data.skill_mastery : {},
+    history: {
+      passedModules: Array.isArray(data.history?.passedModules) ? data.history.passedModules : [],
+      failedModules: Array.isArray(data.history?.failedModules) ? data.history.failedModules : [],
+      commonErrors: Array.isArray(data.history?.commonErrors) ? data.history.commonErrors : [],
+    },
+    target: typeof data.target === "string" ? data.target : DEFAULT_LEARNER_STATE.target,
+  });
+}
+
+async function saveLearnerState(userId: string, state: LearnerState): Promise<void> {
+  await learnerStateDoc(userId).set(
+    {
+      ...state,
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: false },
+  );
+}
+
+async function updateLearnerState(
+  userId: string,
+  updates: Partial<LearnerState>,
+): Promise<LearnerState> {
+  const current = await loadLearnerState(userId);
+  const next: LearnerState = {
+    ...current,
+    ...updates,
+    skill_mastery: {
+      ...current.skill_mastery,
+      ...(updates.skill_mastery ?? {}),
+    },
+    history: {
+      ...current.history,
+      ...(updates.history ?? {}),
+      passedModules: updates.history?.passedModules ?? current.history.passedModules,
+      failedModules: updates.history?.failedModules ?? current.history.failedModules,
+      commonErrors: updates.history?.commonErrors ?? current.history.commonErrors,
+    },
+  };
+  await saveLearnerState(userId, next);
+  return next;
+}
+
+function rankSkillDeficits(state: LearnerState, limit = 3): string[] {
+  const entries = Object.entries(state.skill_mastery);
+  if (!entries.length) {
+    return [];
+  }
+  return entries
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, limit)
+    .map(([skill]) => skill);
+}
+
+interface StoredCheckpointMeta {
+  key: Record<string, "A" | "B" | "C" | "D">;
+  skillMap: Record<string, { skillTag: string; difficulty: "easy" | "medium" | "hard" }>;
+  skillsTargeted: string[];
+  topic: string;
+  band: Band;
+}
+
+async function saveCheckpointMeta(
+  userId: string,
+  moduleNumber: number,
+  meta: StoredCheckpointMeta,
+): Promise<void> {
+  await checkpointDoc(userId, moduleNumber).set({
+    ...meta,
+    moduleNumber,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+}
+
+async function readCheckpointMeta(
+  userId: string,
+  moduleNumber: number,
+): Promise<StoredCheckpointMeta | null> {
+  const snapshot = await checkpointDoc(userId, moduleNumber).get();
+  if (!snapshot.exists) {
+    return null;
+  }
+  const data = snapshot.data() ?? {};
+  if (!data.key || !data.skillMap) {
+    return null;
+  }
+  return {
+    key: data.key,
+    skillMap: data.skillMap,
+    skillsTargeted: Array.isArray(data.skillsTargeted) ? data.skillsTargeted : [],
+    topic: data.topic ?? "",
+    band: (data.band as Band) ?? "basic",
+  };
+}
+
+async function getGateAttemptState(userId: string, moduleNumber: number): Promise<GateAttemptState> {
+  try {
+    const snapshot = await gateAttemptRef(userId, moduleNumber).get();
+    if (!snapshot.exists) {
+      return { attempts: 0, practiceUnlocked: false };
+    }
+    const data = snapshot.data() ?? {};
+    return {
+      attempts: typeof data.attempts === "number" ? data.attempts : 0,
+      practiceUnlocked: Boolean(data.practiceUnlocked),
+    };
+  } catch (error) {
+    logger.warn("Failed to load gate attempts", {
+      userId,
+      moduleNumber,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { attempts: 0, practiceUnlocked: false };
+  }
+}
+
+async function updateGateAttemptState(options: {
+  userId: string;
+  moduleNumber: number;
+  passed: boolean;
+}): Promise<GateAttemptState> {
+  const { userId, moduleNumber, passed } = options;
+  const ref = gateAttemptRef(userId, moduleNumber);
+
+  if (passed) {
+    try {
+      await ref.delete();
+    } catch {
+      await ref.set(
+        {
+          attempts: 0,
+          practiceUnlocked: false,
+          updatedAt: Timestamp.now(),
+        },
+        { merge: true },
+      );
+    }
+    return { attempts: 0, practiceUnlocked: false };
+  }
+
+  const state = await firestore.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    const data = snapshot.data() ?? {};
+    let attempts = typeof data.attempts === "number" ? data.attempts : 0;
+    attempts += 1;
+    const practiceUnlocked = data.practiceUnlocked === true || attempts >= 3;
+
+    transaction.set(
+      ref,
+      {
+        attempts,
+        practiceUnlocked,
+        updatedAt: Timestamp.now(),
+      },
+      { merge: true },
+    );
+
+    return { attempts, practiceUnlocked };
+  });
+
+  return state;
+}
+
+async function loadGateErrorTags(userId: string, moduleNumber: number): Promise<string[]> {
+  try {
+    const snapshot = await gateDocRef(userId, moduleNumber).get();
+    if (!snapshot.exists) {
+      return [];
+    }
+    const data = snapshot.data() ?? {};
+    const tags = Array.isArray(data.incorrectTags)
+      ? data.incorrectTags.map((tag: unknown) => (typeof tag === "string" ? tag : String(tag ?? ""))).filter(Boolean)
+      : [];
+    return Array.from(new Set(tags));
+  } catch (error) {
+    logger.warn("Failed to load gate error tags", {
+      userId,
+      moduleNumber,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return [];
+  }
 }
 
 async function recordUserBadge(options: {
@@ -173,7 +443,7 @@ async function persistGateResult(options: {
  * Body: { topic: string, lang: string }
  * Returns: { quizId, questions: [...], expiresAt, policy, meta }
  */
-export const placementQuizStartLive = onRequest({ cors: true }, async (req, res) => {
+export const placementQuizStartLive = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -192,11 +462,19 @@ export const placementQuizStartLive = onRequest({ cors: true }, async (req, res)
         key: rateKey,
         limit: 10, // Increased from 5 for testing
         windowSeconds: 300, // 5 minutes instead of 1 minute
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
       });
     } catch (limitError) {
-      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
-        res.status(429).json({ error: "Too many placement quiz requests" });
-        return;
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many placement quiz requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
       }
       throw limitError;
     }
@@ -209,7 +487,7 @@ export const placementQuizStartLive = onRequest({ cors: true }, async (req, res)
     }
 
     const language = lang === "es" ? "es" : "en";
-    const quizId = generateQuizId();
+    const quizId = getAssessment().generateQuizId();
     const createdAt = Date.now();
     const expiresAt = createdAt + 60 * 60 * 1000; // 1 hour
 
@@ -230,7 +508,7 @@ export const placementQuizStartLive = onRequest({ cors: true }, async (req, res)
     } else {
       // Generate with OpenAI
       try {
-        const generated = await generateCalibrationQuiz({
+        const generated = await getOpenAI().generateCalibrationQuiz({
           topic,
           lang: language,
           userId: authContext.userId,
@@ -272,15 +550,23 @@ export const placementQuizStartLive = onRequest({ cors: true }, async (req, res)
           throw openaiError instanceof Error ? openaiError : new Error(errorMessage);
         }
 
-        logger.warn("OpenAI unavailable, using curated fallback question bank", {
-          topic,
-          language,
-          error: errorMessage,
-        });
+        logger.warn(
+          "placementQuizStart fallback: OpenAI unavailable, using curated bank",
+          {
+            topic,
+            language,
+            error: errorMessage,
+          },
+        );
+
+        // Invalidate cache so next attempt regenerates with OpenAI
+        await invalidateCache(cacheKey);
+        logger.info(`Invalidated cache ${cacheKey} due to fallback`);
 
         try {
-          const bank = loadQuestionBank(language);
-          const selected = selectCalibrationQuestions(bank, 10);
+          const assessment = getAssessment();
+          const bank = assessment.loadQuestionBank(language);
+          const selected = assessment.selectCalibrationQuestions(bank, 10);
           questions = selected.map((q) => ({
             id: q.id,
             text: q.question,
@@ -360,7 +646,7 @@ export const placementQuizStartLive = onRequest({ cors: true }, async (req, res)
  * Body: { topic: string, band: string, lang: string, errors?: string[], quizScore?: number }
  * Returns: { module: {...}, cacheKey, source, meta }
  */
-export const outlineGenerative = onRequest({ cors: true }, async (req, res) => {
+export const outlineGenerative = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -379,11 +665,19 @@ export const outlineGenerative = onRequest({ cors: true }, async (req, res) => {
         key: rateKey,
         limit: 10, // Increased for testing
         windowSeconds: 300, // 5 minutes
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
       });
     } catch (limitError) {
-      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
-        res.status(429).json({ error: "Too many outline requests" });
-        return;
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many outline requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
       }
       throw limitError;
     }
@@ -417,7 +711,7 @@ export const outlineGenerative = onRequest({ cors: true }, async (req, res) => {
     } else {
       // Generate with OpenAI
       try {
-        const generated = await generateModule({
+        const generated = await getOpenAI().generateModule({
           moduleNumber: 1,
           topic,
           band: level,
@@ -501,7 +795,7 @@ export const outlineGenerative = onRequest({ cors: true }, async (req, res) => {
  * Body: { topic, moduleNumber, band, lang, previousScore, errors?, isPaid }
  * Returns: { module: {...}, cacheKey, source, meta }
  */
-export const fetchNextModule = onRequest({ cors: true }, async (req, res) => {
+export const fetchNextModule = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -520,11 +814,19 @@ export const fetchNextModule = onRequest({ cors: true }, async (req, res) => {
         key: rateKey,
         limit: 10, // Increased for testing
         windowSeconds: 300, // 5 minutes
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
       });
     } catch (limitError) {
-      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
-        res.status(429).json({ error: "Too many module requests" });
-        return;
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many module requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
       }
       throw limitError;
     }
@@ -572,7 +874,7 @@ export const fetchNextModule = onRequest({ cors: true }, async (req, res) => {
     } else {
       // Generate with OpenAI
       try {
-        const generated = await generateModule({
+        const generated = await getOpenAI().generateModule({
           moduleNumber,
           topic,
           band: level,
@@ -600,7 +902,7 @@ export const fetchNextModule = onRequest({ cors: true }, async (req, res) => {
           error: openaiError instanceof Error ? openaiError.message : String(openaiError),
         });
 
-        const template = getSQLMarketingTemplate(level);
+        const template = getSqlTemplates().getSQLMarketingTemplate(level);
         const moduleTemplate = template.modules[moduleNumber - 1];
 
         if (!moduleTemplate) {
@@ -671,7 +973,7 @@ export const fetchNextModule = onRequest({ cors: true }, async (req, res) => {
 /**
  * Gate quiz start for modules (post-lesson assessments)
  */
-export const moduleQuizStart = onRequest({ cors: true }, async (req, res) => {
+export const moduleQuizStart = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -708,13 +1010,36 @@ export const moduleQuizStart = onRequest({ cors: true }, async (req, res) => {
     }
 
     const language = lang === "es" ? "es" : "en";
-    const bank = loadQuestionBank(language);
+    const assessment = getAssessment();
+    const bank = assessment.loadQuestionBank(language);
     const moduleKey = moduleId?.toString() || `module-${normalizedModuleNumber}`;
-    const questions = selectModuleQuestions(bank, moduleKey);
+    const questions = assessment.selectModuleQuestions(bank, moduleKey);
 
-    const quizId = generateQuizId();
+    const quizId = assessment.generateQuizId();
     const createdAt = Date.now();
     const expiresAt = createdAt + 30 * 60 * 1000;
+
+    const attemptState = await getGateAttemptState(authContext.userId, normalizedModuleNumber);
+    let practiceHints: string[] | undefined;
+    if (attemptState.practiceUnlocked) {
+      const hintTopic = typeof topic === "string" && topic.trim().length > 0 ? topic.trim() : "learning";
+      const recentTags = await loadGateErrorTags(authContext.userId, normalizedModuleNumber);
+      try {
+        practiceHints = await getOpenAI().generateGateHints({
+          topic: hintTopic,
+          moduleNumber: normalizedModuleNumber,
+          lang: language,
+          errors: recentTags,
+          userId: authContext.userId,
+        });
+      } catch (hintError) {
+        logger.warn("generateGateHints failed", {
+          userId: authContext.userId,
+          moduleNumber: normalizedModuleNumber,
+          error: hintError instanceof Error ? hintError.message : String(hintError),
+        });
+      }
+    }
 
     await saveModuleSession({
       quizId,
@@ -748,6 +1073,15 @@ export const moduleQuizStart = onRequest({ cors: true }, async (req, res) => {
       policy: {
         passingScore: 70,
         numQuestions: questions.length,
+        practiceMode: attemptState.practiceUnlocked,
+        attempts: attemptState.attempts,
+        maxAttempts: 3,
+      },
+      practice: {
+        enabled: attemptState.practiceUnlocked,
+        hints: attemptState.practiceUnlocked ? practiceHints ?? [] : [],
+        attempts: attemptState.attempts,
+        maxAttempts: 3,
       },
     });
   } catch (error) {
@@ -758,7 +1092,7 @@ export const moduleQuizStart = onRequest({ cors: true }, async (req, res) => {
   }
 });
 
-export const moduleQuizGrade = onRequest({ cors: true }, async (req, res) => {
+export const moduleQuizGrade = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -820,7 +1154,8 @@ export const moduleQuizGrade = onRequest({ cors: true }, async (req, res) => {
       }
     });
 
-    const result = gradeModuleQuiz(
+    const assessment = getAssessment();
+    const result = assessment.gradeModuleQuiz(
       session.questions.map((question) => ({
         id: question.id,
         question: question.question,
@@ -854,12 +1189,20 @@ export const moduleQuizGrade = onRequest({ cors: true }, async (req, res) => {
       incorrectTags,
     });
 
+    const attemptState = await updateGateAttemptState({
+      userId: authContext.userId,
+      moduleNumber: session.moduleNumber,
+      passed: result.passed,
+    });
+
     res.status(200).json({
       passed: result.passed,
       scorePct: result.scorePct,
       incorrectQuestions: result.incorrectQuestions,
       incorrectTags,
       nextModuleUnlocked: result.passed,
+      attempts: attemptState.attempts,
+      practiceUnlocked: attemptState.practiceUnlocked,
     });
   } catch (error) {
     logger.error("moduleQuizGrade error:", error);
@@ -871,7 +1214,7 @@ export const moduleQuizGrade = onRequest({ cors: true }, async (req, res) => {
 
 // Quiz sessions are now persisted in Firestore via session-store helpers
 
-export const validateChallenge = onRequest({ cors: true }, async (req, res) => {
+export const validateChallenge = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -890,11 +1233,19 @@ export const validateChallenge = onRequest({ cors: true }, async (req, res) => {
         key: rateKey,
         limit: 20,
         windowSeconds: 300,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
       });
     } catch (limitError) {
-      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
-        res.status(429).json({ error: "Too many challenge validations" });
-        return;
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many challenge validations" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
       }
       throw limitError;
     }
@@ -913,7 +1264,7 @@ export const validateChallenge = onRequest({ cors: true }, async (req, res) => {
 
     const language = lang === "es" ? "es" : "en";
 
-    const validation = await validateChallengeResponse({
+    const validation = await getOpenAI().validateChallengeResponse({
       topic,
       lang: language,
       challengeDesc,
@@ -953,7 +1304,7 @@ export const validateChallenge = onRequest({ cors: true }, async (req, res) => {
   }
 });
 
-export const outlineTweak = onRequest({ cors: true }, async (req, res) => {
+export const outlineTweak = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -972,11 +1323,19 @@ export const outlineTweak = onRequest({ cors: true }, async (req, res) => {
         key: rateKey,
         limit: 6,
         windowSeconds: 600,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
       });
     } catch (limitError) {
-      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
-        res.status(429).json({ error: "Too many tweak requests" });
-        return;
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many tweak requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
       }
       throw limitError;
     }
@@ -994,7 +1353,7 @@ export const outlineTweak = onRequest({ cors: true }, async (req, res) => {
     }
 
     const language = lang === "es" ? "es" : "en";
-    const tweak = await tweakOutlinePlan({
+    const tweak = await getOpenAI().tweakOutlinePlan({
       topic,
       lang: language,
       gaps: Array.isArray(gaps) ? gaps.map((gap: any) => gap?.toString() ?? "") : [],
@@ -1010,6 +1369,501 @@ export const outlineTweak = onRequest({ cors: true }, async (req, res) => {
     });
   } catch (error) {
     logger.error("outlineTweak error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+export const adaptivePlanDraft = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:adaptive_plan`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 20,
+        windowSeconds: 300,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many adaptive plan drafts" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
+      }
+      throw limitError;
+    }
+
+    const { topic, band, target, persona } = req.body ?? {};
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    if (!target || typeof target !== "string" || target.trim().length < 2) {
+      res.status(400).json({ error: "Invalid target" });
+      return;
+    }
+
+    const normalizedBand: Band =
+      band === "intermediate" || band === "advanced" ? band : "basic";
+
+    const learnerState = await updateLearnerState(authContext.userId, {
+      level_band: normalizedBand,
+      target: target.trim(),
+    });
+
+    const plan: AdaptivePlanDraft = await getOpenAI().generateAdaptivePlanDraft({
+      topic: topic.trim(),
+      band: normalizedBand,
+      target: target.trim(),
+      persona: typeof persona === "string" ? persona.trim() : undefined,
+      userId: authContext.userId,
+    });
+
+    res.status(200).json({
+      plan,
+      learnerState,
+    });
+  } catch (error) {
+    logger.error("adaptivePlanDraft error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+export const adaptiveModuleGenerate = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:adaptive_module`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 8,
+        windowSeconds: 600,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many module requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
+      }
+      throw limitError;
+    }
+
+    const { topic, moduleNumber, focusSkills } = req.body ?? {};
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    const learnerState = await loadLearnerState(authContext.userId);
+    const fallbackModuleNumber =
+      Math.max(0, ...(learnerState.history.passedModules ?? []), ...(learnerState.history.failedModules ?? [])) + 1;
+    const resolvedModuleNumber =
+      Number.isInteger(moduleNumber) && moduleNumber > 0 ? moduleNumber : fallbackModuleNumber;
+
+    await ensurePremiumAccess(authContext.userId, resolvedModuleNumber);
+
+    const focusList: string[] = Array.isArray(focusSkills)
+      ? focusSkills.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
+      : [];
+    const deficits = focusList.length > 0 ? focusList : rankSkillDeficits(learnerState, 3);
+
+    const moduleData: ModuleOut = await getOpenAI().generateModuleAdaptive({
+      topic: topic.trim(),
+      learnerState,
+      nextModuleNumber: resolvedModuleNumber,
+      topDeficits: deficits,
+      target: learnerState.target,
+      userId: authContext.userId,
+    });
+
+    res.status(200).json({
+      module: moduleData,
+      learnerState,
+      focusSkills: deficits,
+    });
+  } catch (error) {
+    logger.error("adaptiveModuleGenerate error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+export const adaptiveCheckpointQuiz = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:adaptive_checkpoint`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 6,
+        windowSeconds: 600,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many checkpoint requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
+      }
+      throw limitError;
+    }
+
+    const { topic, moduleNumber, skillsTargeted } = req.body ?? {};
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    if (!Number.isInteger(moduleNumber) || moduleNumber <= 0) {
+      res.status(400).json({ error: "moduleNumber must be a positive integer" });
+      return;
+    }
+
+    const skills: string[] = Array.isArray(skillsTargeted)
+      ? skillsTargeted.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
+      : [];
+
+    if (!skills.length) {
+      res.status(400).json({ error: "skillsTargeted is required" });
+      return;
+    }
+
+    const learnerState = await loadLearnerState(authContext.userId);
+    const quiz: CheckpointQuiz = await getOpenAI().generateCheckpointQuiz({
+      topic: topic.trim(),
+      moduleNumber,
+      skillsTargeted: skills,
+      band: learnerState.level_band,
+      userId: authContext.userId,
+    });
+
+    const answerKey: Record<string, "A" | "B" | "C" | "D"> = {};
+    const skillMap: Record<string, { skillTag: string; difficulty: "easy" | "medium" | "hard" }> = {};
+
+    quiz.items.forEach((item) => {
+      answerKey[item.id] = item.correct;
+      skillMap[item.id] = {
+        skillTag: item.skillTag,
+        difficulty: item.difficulty,
+      };
+    });
+
+    await saveCheckpointMeta(authContext.userId, moduleNumber, {
+      key: answerKey,
+      skillMap,
+      skillsTargeted: skills,
+      topic: topic.trim(),
+      band: learnerState.level_band,
+    });
+
+    res.status(200).json({
+      quiz,
+      learnerState,
+    });
+  } catch (error) {
+    logger.error("adaptiveCheckpointQuiz error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+export const adaptiveEvaluateCheckpoint = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:adaptive_evaluate`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 12,
+        windowSeconds: 600,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many evaluation requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
+      }
+      throw limitError;
+    }
+
+    const { moduleNumber, answers, skillsTargeted } = req.body ?? {};
+
+    if (!Number.isInteger(moduleNumber) || moduleNumber <= 0) {
+      res.status(400).json({ error: "moduleNumber must be a positive integer" });
+      return;
+    }
+
+    if (!Array.isArray(answers) || answers.length === 0) {
+      res.status(400).json({ error: "answers array is required" });
+      return;
+    }
+
+    const normalizedAnswers = answers
+      .map((entry: any) => ({
+        id: entry?.id?.toString() ?? "",
+        choice: typeof entry?.choice === "string" ? entry.choice.toUpperCase().trim() : "",
+      }))
+      .filter((entry: { id: string; choice: string }) => entry.id && ["A", "B", "C", "D"].includes(entry.choice));
+
+    if (!normalizedAnswers.length) {
+      res.status(400).json({ error: "answers must include id and choice" });
+      return;
+    }
+
+    const checkpointMeta = await readCheckpointMeta(authContext.userId, moduleNumber);
+    if (!checkpointMeta) {
+      res.status(404).json({ error: "Checkpoint not found or expired" });
+      return;
+    }
+
+    const learnerState = await loadLearnerState(authContext.userId);
+    const skills: string[] =
+      Array.isArray(skillsTargeted) && skillsTargeted.length
+        ? skillsTargeted.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
+        : checkpointMeta.skillsTargeted.length > 0
+          ? checkpointMeta.skillsTargeted
+          : Array.from(new Set(Object.values(checkpointMeta.skillMap).map((meta) => meta.skillTag)));
+
+    const evaluation: EvaluationResult = await getOpenAI().evaluateCheckpoint({
+      previousMastery: learnerState.skill_mastery,
+      answers: normalizedAnswers,
+      key: checkpointMeta.key,
+      skillMap: checkpointMeta.skillMap,
+      targetedSkills: skills,
+      userId: authContext.userId,
+      moduleNumber,
+    });
+
+    const passedSet = new Set(learnerState.history.passedModules ?? []);
+    const failedSet = new Set(learnerState.history.failedModules ?? []);
+
+    if (evaluation.recommendation === "advance") {
+      passedSet.add(moduleNumber);
+      failedSet.delete(moduleNumber);
+    } else {
+      failedSet.add(moduleNumber);
+      passedSet.delete(moduleNumber);
+    }
+
+    const combinedErrors = Array.from(
+      new Set([...(evaluation.weakSkills ?? []), ...(learnerState.history.commonErrors ?? [])]),
+    ).slice(0, 10);
+
+    const updatedState = await updateLearnerState(authContext.userId, {
+      skill_mastery: evaluation.updatedMastery,
+      history: {
+        passedModules: Array.from(passedSet),
+        failedModules: Array.from(failedSet),
+        commonErrors: combinedErrors,
+      },
+    });
+
+    let action: "advance" | "booster" | "replan";
+    if (evaluation.score < 50) {
+      action = "replan";
+    } else if (evaluation.recommendation === "advance") {
+      action = "advance";
+    } else {
+      action = "booster";
+    }
+
+    try {
+      await checkpointDoc(authContext.userId, moduleNumber).delete();
+    } catch (cleanupError) {
+      logger.warn("Failed to delete checkpoint doc", {
+        userId: authContext.userId,
+        moduleNumber,
+        error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+      });
+    }
+
+    res.status(200).json({
+      result: evaluation,
+      learnerState: updatedState,
+      action,
+    });
+  } catch (error) {
+    logger.error("adaptiveEvaluateCheckpoint error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+export const adaptiveBooster = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:adaptive_booster`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 6,
+        windowSeconds: 600,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error) {
+        if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Too many booster requests" });
+          return;
+        }
+        if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+          res.status(429).json({ error: "Daily AI limit reached, try tomorrow" });
+          return;
+        }
+      }
+      throw limitError;
+    }
+
+    const { topic, moduleNumber, weakSkills } = req.body ?? {};
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    if (!moduleNumber || typeof moduleNumber !== "number") {
+      res.status(400).json({ error: "Invalid moduleNumber" });
+      return;
+    }
+
+    // Check booster attempts for this module (max 3)
+    const attemptState = await getGateAttemptState(authContext.userId, moduleNumber);
+    if (!attemptState.practiceUnlocked && attemptState.attempts >= 3) {
+      res.status(403).json({
+        error: "Maximum booster attempts reached (3)",
+        attempts: attemptState.attempts,
+      });
+      return;
+    }
+
+    const learnerState = await loadLearnerState(authContext.userId);
+
+    const incomingWeak: string[] = Array.isArray(weakSkills)
+      ? weakSkills.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
+      : [];
+
+    const fallbackWeak = rankSkillDeficits(learnerState, 3).filter(
+      (skill) => (learnerState.skill_mastery[skill] ?? 0) < 0.6,
+    );
+
+    const skillsForBooster = incomingWeak.length > 0 ? incomingWeak : fallbackWeak;
+
+    if (!skillsForBooster.length) {
+      res.status(400).json({ error: "No weak skills available for booster" });
+      return;
+    }
+
+    const booster = await getOpenAI().generateRemedialBooster({
+      topic: topic.trim(),
+      weakSkills: skillsForBooster,
+      userId: authContext.userId,
+    });
+
+    const updatedState = await updateLearnerState(authContext.userId, {
+      history: {
+        passedModules: learnerState.history.passedModules,
+        failedModules: learnerState.history.failedModules,
+        commonErrors: Array.from(
+          new Set([...skillsForBooster, ...(learnerState.history.commonErrors ?? [])]),
+        ).slice(0, 10),
+      },
+    });
+
+    res.status(200).json({
+      booster,
+      learnerState: updatedState,
+      attemptsRemaining: 3 - (attemptState.attempts + 1),
+    });
+  } catch (error) {
+    logger.error("adaptiveBooster error:", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : "Internal server error",
     });

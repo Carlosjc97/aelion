@@ -134,3 +134,22 @@ functions/node_modules
 /test_tree.txt
 functions/src/test_write.txt
 
+# Claude Code local settings
+.claude/settings.local.json
+
+# Firebase project-specific
+.firebaserc
+
+# Generated Flutter files
+macos/Flutter/GeneratedPluginRegistrant.swift
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_*.dart
+
+# Backup files
+*.backup
+**/*.backup
+
+# Function tests
+functions/test/

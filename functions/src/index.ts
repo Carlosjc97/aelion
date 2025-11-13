@@ -7,16 +7,29 @@ import { getStorage } from "firebase-admin/storage";
 import * as logger from "firebase-functions/logger";
 import { z } from "zod";
 import { createHash } from "node:crypto";
-import { getSQLMarketingTemplate } from "./templates/sql-marketing";
-import {
-  loadQuestionBank,
-  selectCalibrationQuestions,
-  gradeQuiz,
-  generateQuizId,
-} from "./assessment";
-import { generateCalibrationQuiz, generateModule } from "./openai-service";
 import { getCached, setCached, generateCacheKey } from "./cache-service";
 import { savePlacementSession, getPlacementSession } from "./session-store";
+type AssessmentModule = typeof import("./assessment");
+type SqlTemplateModule = typeof import("./templates/sql-marketing");
+
+let assessmentModule: AssessmentModule | null = null;
+let sqlTemplateModule: SqlTemplateModule | null = null;
+
+function getAssessment(): AssessmentModule {
+  if (!assessmentModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    assessmentModule = require("./assessment") as AssessmentModule;
+  }
+  return assessmentModule;
+}
+
+function getSqlTemplates(): SqlTemplateModule {
+  if (!sqlTemplateModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    sqlTemplateModule = require("./templates/sql-marketing") as SqlTemplateModule;
+  }
+  return sqlTemplateModule;
+}
 
 if (!getApps().length) {
   initializeApp();
@@ -587,7 +600,11 @@ async function resolveOutlineDocument(input: OutlineResolutionInput): Promise<Ou
 
   if (slug === "sql-marketing" || input.topic.toLowerCase().includes("sql")) {
     const templateSlug = "sql-marketing";
-    const body = adaptTemplateToResponse(getSQLMarketingTemplate(input.band), input, templateSlug);
+    const body = adaptTemplateToResponse(
+      getSqlTemplates().getSQLMarketingTemplate(input.band),
+      input,
+      templateSlug,
+    );
     return {
       body,
       counters,
@@ -959,13 +976,14 @@ export const placementQuizStart = onRequest({ cors: true }, async (req, res) => 
     }
 
     const language = lang === "es" ? "es" : "en";
-    const quizId = generateQuizId();
+    const assessment = getAssessment();
+    const quizId = assessment.generateQuizId();
     const createdAt = Date.now();
     const expiresAt = createdAt + 60 * 60 * 1000; // 1 hour
 
     // Load question bank and select calibration questions
-    const bank = loadQuestionBank(language);
-    const selectedQuestions = selectCalibrationQuestions(bank, 10);
+    const bank = assessment.loadQuestionBank(language);
+    const selectedQuestions = assessment.selectCalibrationQuestions(bank, 10);
 
     // Store session in Firestore
     await savePlacementSession({
@@ -1067,7 +1085,7 @@ export const placementQuizGrade = onRequest({ cors: true }, async (req, res) => 
     });
 
     // Grade quiz
-    const result = gradeQuiz(session.questions, answerMap);
+    const result = getAssessment().gradeQuiz(session.questions, answerMap);
 
     // Session cleanup happens via TTL or maintenance job
 
@@ -1101,5 +1119,10 @@ export {
   validateChallenge,
   outlineTweak,
   openaiUsageMetrics,
+  adaptivePlanDraft,
+  adaptiveModuleGenerate,
+  adaptiveCheckpointQuiz,
+  adaptiveEvaluateCheckpoint,
+  adaptiveBooster,
 } from "./generative-endpoints";
 export { cleanupAiCache } from "./maintenance";

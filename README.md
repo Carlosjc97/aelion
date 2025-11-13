@@ -2,13 +2,16 @@
 
 Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Gen‑2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
-## What's New
+## What's New (Jan 2025)
 
-- **Adaptive engagement** � Placement quizzes now cache locally/offline, forward detected gaps to an OpenAI "tweak" call before persisting, and expose shareable, topic-aware results.
-- **Interactive lessons** � Lesson detail screens render AI-authored markdown hooks and validate user submissions through the `validateChallenge` endpoint to unlock badges.
-- **Gamification** � Daily streaks are stored in Firestore via a Riverpod provider and can trigger FCM reminders for lapsed learners.
-- **Cost transparency** � The new usage dashboard consumes `openaiUsageMetrics` to visualize token/cost spend per endpoint with `fl_chart`.
-- **Safer paywall UX** � Paywall helper/modal handle entitlement failures gracefully, emit GA4 `paywall_dismissed`, and expose a callback for additional tracking.
+- **⚡ Performance Boost** – Migrated from GPT-4o to GPT-4o-mini for calibration quiz, adaptive plans, and module generation. **3x faster response times, 16x cost reduction** (~$0.012 vs ~$0.19 per user journey).
+- **🚀 Timeout Fix** – Extended Firebase Functions timeout from 60s to 300s for all generative endpoints. Eliminated connection abort errors during plan generation.
+- **📈 Rate Limit Optimization** – Increased rate limits for development (20 requests/5min for adaptive plans, 10 requests/5min for placement quizzes).
+- **Adaptive engagement** – Placement quizzes now cache locally/offline, forward detected gaps to an OpenAI "tweak" call before persisting, and expose shareable, topic-aware results.
+- **Interactive lessons** – Lesson detail screens render AI-authored markdown hooks and validate user submissions through the `validateChallenge` endpoint to unlock badges.
+- **Gamification** – Daily streaks are stored in Firestore via a Riverpod provider and can trigger FCM reminders for lapsed learners.
+- **Cost transparency** – The new usage dashboard consumes `openaiUsageMetrics` to visualize token/cost spend per endpoint with `fl_chart`.
+- **Safer paywall UX** – Paywall helper/modal handle entitlement failures gracefully, emit GA4 `paywall_dismissed`, and expose a callback for additional tracking.
 
 ## 🚀 Production Services
 
