@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/assessment/assessment_results_screen.dart';
+import 'package:edaptia/features/modules/adaptive/adaptive_journey_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
-import 'package:edaptia/services/local_outline_storage.dart';
+import 'package:edaptia/services/course/models.dart';
+import 'package:edaptia/services/local_quiz_cache.dart';
 import 'package:edaptia/services/quiz_attempt_storage.dart';
-import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:edaptia/widgets/skeleton.dart';
 
@@ -74,6 +75,8 @@ class _QuizScreenState extends State<QuizScreen> {
   int _currentIndex = 0;
   bool _submitting = false;
   String? _error;
+  // ignore: unused_field
+  List<String> _detectedGaps = const [];
 
   @override
   void dispose() {
@@ -90,6 +93,8 @@ class _QuizScreenState extends State<QuizScreen> {
       _currentIndex = 0;
     });
 
+    final userId = _currentUserId;
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final loader = widget.startLoader ?? CourseApiService.startPlacementQuiz;
       final language = widget.language.trim().toLowerCase();
@@ -107,6 +112,18 @@ class _QuizScreenState extends State<QuizScreen> {
         language: quizLang,
       );
 
+      await LocalQuizCache.instance.saveSession(
+        userId: userId,
+        session: CachedQuizSession(
+          quizId: session.quizId,
+          topic: widget.topic,
+          language: quizLang,
+          expiresAt: session.expiresAt,
+          questions: session.questions,
+          answers: _answers,
+        ),
+      );
+
       if (!mounted) return;
 
       setState(() {
@@ -120,6 +137,25 @@ class _QuizScreenState extends State<QuizScreen> {
         _controller.jumpToPage(0);
       }
     } catch (error) {
+      final language = widget.language.trim().toLowerCase();
+      final cached = await LocalQuizCache.instance.restoreSession(
+        userId: userId,
+        topic: widget.topic,
+        language: language,
+      );
+      if (cached != null && !cached.isExpired) {
+        if (!mounted) return;
+        _loadCachedSession(cached);
+        final message = language == 'es'
+            ? 'Reanudamos tu quiz sin conexion'
+            : 'Resumed cached quiz offline';
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _session = null;
@@ -129,11 +165,17 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  String get _currentUserId {
+    return (widget.firebaseAuth ?? FirebaseAuth.instance).currentUser?.uid ??
+        'anonymous';
+  }
+
   void _onOptionSelected(int questionIndex, int? value) {
     if (_stage != _QuizStage.questions || value == null) return;
     setState(() {
       _answers[questionIndex] = value;
     });
+    unawaited(_persistCachedAnswers());
   }
 
   void _onPageChanged(int index) {
@@ -203,6 +245,11 @@ class _QuizScreenState extends State<QuizScreen> {
         quizId: session.quizId,
         answers: answers,
       );
+      await LocalQuizCache.instance.clear(
+        userId: _currentUserId,
+        topic: widget.topic,
+        language: widget.language,
+      );
 
       if (!mounted) return;
       setState(() {
@@ -245,64 +292,17 @@ class _QuizScreenState extends State<QuizScreen> {
         band: grade.band,
       );
 
-      final outlineFetcher =
-          widget.outlineGenerator ?? CourseApiService.generateOutline;
-      final depth = CourseApiService.depthForBand(grade.band);
-      final outlineResponse = await outlineFetcher(
-        topic: topic,
-        language: language,
-        depth: depth,
-        band: grade.band,
-      );
-
-      final now = DateTime.now();
-      await LocalOutlineStorage.instance.save(
-        topic: topic,
-        payload: outlineResponse,
-      );
-
-      final responseBand = outlineResponse['band']?.toString() ??
-          CourseApiService.placementBandToString(grade.band);
-      final responseDepth =
-          outlineResponse['depth']?.toString() ?? grade.suggestedDepth;
-      final responseLanguage =
-          outlineResponse['language']?.toString() ?? language;
-      final outlineList = _extractOutlineList(outlineResponse['outline']);
-
-      final metadata = RecentOutlineMetadata(
-        id: RecentOutlineMetadata.buildId(
-          topic: topic,
-          language: responseLanguage,
-          band: responseBand,
-          depth: responseBand.isEmpty ? responseDepth : null,
-        ),
-        topic: topic,
-        language: responseLanguage,
-        band: responseBand.isNotEmpty ? responseBand : null,
-        depth: responseDepth,
-        savedAt: now,
-      );
-      await RecentOutlinesStorage.instance.upsert(metadata);
-
       if (!mounted) return;
 
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.quizPlanCreated)),
-      );
+      setState(() => _submitting = false);
 
-      await Navigator.of(context).pushReplacementNamed(
-        ModuleOutlineView.routeName,
-        arguments: ModuleOutlineArgs(
-          topic: topic,
-          language: responseLanguage,
-          depth: responseDepth,
-          preferredBand: responseBand,
-          initialOutline: outlineList,
-          initialResponse: outlineResponse,
-          initialSource: outlineResponse['source']?.toString(),
-          initialSavedAt: now,
-          recommendRegenerate: false,
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => AdaptiveJourneyScreen(
+            topic: topic,
+            target: topic,
+            initialBand: grade.band,
+          ),
         ),
       );
     } catch (error) {
@@ -328,6 +328,45 @@ class _QuizScreenState extends State<QuizScreen> {
       'apply': apply,
     });
   }
+
+  void _loadCachedSession(CachedQuizSession cached) {
+    final restored = PlacementQuizStartResponse(
+      quizId: cached.quizId,
+      expiresAt: cached.expiresAt,
+      maxMinutes: 15,
+      questions: cached.questions,
+      numQuestions: cached.questions.length,
+    );
+
+    final restoredAnswers = cached.answers.length == restored.questions.length
+        ? List<int?>.from(cached.answers)
+        : List<int?>.filled(restored.questions.length, null);
+
+    setState(() {
+      _session = restored;
+      _answers = restoredAnswers;
+      _stage = _QuizStage.questions;
+      _currentIndex = 0;
+    });
+
+    if (_controller.hasClients) {
+      _controller.jumpToPage(0);
+    }
+  }
+
+  Future<void> _persistCachedAnswers() async {
+    final session = _session;
+    if (session == null) return;
+    await LocalQuizCache.instance.saveAnswers(
+      userId: _currentUserId,
+      topic: widget.topic,
+      language: widget.language,
+      answers: _answers,
+    );
+  }
+
+  // Removed _maybeTweakOutline and _mergeTweakIntoOutline
+  // Functionality moved to adaptive flow in adaptive_journey_screen.dart
 
   Future<bool> _handleWillPop() async {
     if (_submitting) {
@@ -514,6 +553,27 @@ class _QuizScreenState extends State<QuizScreen> {
     if (grade == null) {
       return _buildIntro(l10n);
     }
+    if (!widget.autoOpenOutline) {
+      return _buildLegacyResult(l10n, grade);
+    }
+
+    return AssessmentResultsScreen(
+      theta: _resolveTheta(grade),
+      responseCorrectness: _buildResponseCorrectness(grade),
+      bandLabel: _bandLabel(l10n, grade.band),
+      scorePct: grade.scorePct,
+      isGeneratingPlan: _submitting,
+      onStartPlan: _finalizePlan,
+      onClose: () => Navigator.of(context).maybePop(),
+      topic: widget.topic,
+      onGapsResolved: (gaps) => _detectedGaps = List<String>.from(gaps),
+    );
+  }
+
+  Widget _buildLegacyResult(
+    AppLocalizations l10n,
+    PlacementQuizGrade grade,
+  ) {
     final bandLabel = _bandLabel(l10n, grade.band);
     final scoreText = l10n.quizScorePercentage(grade.scorePct);
 
@@ -523,15 +583,7 @@ class _QuizScreenState extends State<QuizScreen> {
         leading: IconButton(
           key: const Key('quiz-exit'),
           icon: const Icon(Icons.close),
-          onPressed: _submitting
-              ? null
-              : () {
-                  if (widget.autoOpenOutline) {
-                    Navigator.of(context).maybePop();
-                  } else {
-                    _returnResult(apply: false);
-                  }
-                },
+          onPressed: _submitting ? null : () => _returnResult(apply: false),
         ),
       ),
       body: Padding(
@@ -558,52 +610,27 @@ class _QuizScreenState extends State<QuizScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const Spacer(),
-            if (widget.autoOpenOutline) ...[
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  key: const Key('quiz-open-plan'),
-                  onPressed: _submitting ? null : _finalizePlan,
-                  child: _submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.quizOpenPlan),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                key: const Key('quiz-result-done'),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('quiz-apply-results'),
                 onPressed:
-                    _submitting ? null : () => Navigator.of(context).maybePop(),
-                child: Text(l10n.quizDone),
+                    _submitting ? null : () => _returnResult(apply: true),
+                child: _submitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.quizApplyResults),
               ),
-            ] else ...[
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  key: const Key('quiz-apply-results'),
-                  onPressed:
-                      _submitting ? null : () => _returnResult(apply: true),
-                  child: _submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.quizApplyResults),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                key: const Key('quiz-result-done'),
-                onPressed:
-                    _submitting ? null : () => _returnResult(apply: false),
-                child: Text(l10n.quizDone),
-              ),
-            ],
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              key: const Key('quiz-result-done'),
+              onPressed: _submitting ? null : () => _returnResult(apply: false),
+              child: Text(l10n.quizDone),
+            ),
           ],
         ),
       ),
@@ -615,6 +642,30 @@ class _QuizScreenState extends State<QuizScreen> {
       topic: widget.topic,
       message: _error ?? l10n.quizUnknownError,
       onRetry: _beginQuiz,
+    );
+  }
+
+  double _resolveTheta(PlacementQuizGrade grade) {
+    final theta = grade.theta;
+    if (theta != null) {
+      return theta.clamp(-3.0, 3.0);
+    }
+    final fraction = grade.scoreFraction;
+    final mapped = (fraction * 4) - 2;
+    return mapped.clamp(-3.0, 3.0);
+  }
+
+  List<bool> _buildResponseCorrectness(PlacementQuizGrade grade) {
+    final provided = grade.responseCorrectness;
+    if (provided.isNotEmpty) {
+      return provided;
+    }
+    final total = _session?.questions.length ?? 10;
+    final correct = ((grade.scorePct / 100) * total).round().clamp(0, total);
+    return List<bool>.generate(
+      total,
+      (index) => index < correct,
+      growable: false,
     );
   }
 
@@ -659,13 +710,7 @@ String _bandLabel(AppLocalizations l10n, PlacementBand band) {
   }
 }
 
-List<Map<String, dynamic>> _extractOutlineList(dynamic raw) {
-  if (raw is! List) return <Map<String, dynamic>>[];
-  return raw
-      .whereType<Map>()
-      .map((module) => Map<String, dynamic>.from(module))
-      .toList(growable: false);
-}
+// Removed _extractOutlineList - functionality moved to adaptive flow
 
 class _QuizProgressHeader extends StatelessWidget {
   const _QuizProgressHeader({
@@ -803,4 +848,3 @@ class _QuizSkeleton extends StatelessWidget {
     );
   }
 }
-

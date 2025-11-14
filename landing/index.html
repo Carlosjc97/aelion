@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aprende SQL en 3 semanas con planes personalizados y adaptados a tu nivel. Prueba gratis por 7 días.">
+    <title>Aelion - Aprende SQL en 3 semanas, no en 3 meses</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 18px 48px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .trial-note {
+            margin-top: 20px;
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+
+        /* Benefits Section */
+        .benefits {
+            background: white;
+            padding: 80px 20px;
+        }
+
+        .benefits h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: #667eea;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .benefit-card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: transform 0.3s;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .benefit-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .benefit-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .benefit-card p {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* Pricing */
+        .pricing {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .pricing h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .price-box {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .price {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .price-note {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .features-list {
+            text-align: left;
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .features-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .features-list li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background: #2d3748;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .benefits h2,
+            .pricing h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Aprende SQL en 3 semanas,<br>no en 3 meses</h1>
+            <p class="subtitle">Plan personalizado adaptado a tu nivel. Domina SQL para entrevistas técnicas en tiempo récord.</p>
+            <a href="#" class="cta-button">Empieza gratis</a>
+            <p class="trial-note">7 días gratis • Sin tarjeta requerida • Cancela cuando quieras</p>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits">
+        <div class="container">
+            <h2>¿Por qué Aelion?</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🎯</div>
+                    <h3>Plan Personalizado</h3>
+                    <p>Evaluación inicial adapta el contenido a tu nivel exacto. Sin perder tiempo en lo que ya sabes.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">⚡</div>
+                    <h3>Aprendizaje Adaptativo</h3>
+                    <p>Algoritmo IRT ajusta la dificultad en tiempo real. Progresas más rápido que con cursos estáticos.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">💼</div>
+                    <h3>Enfoque en Entrevistas</h3>
+                    <p>100 preguntas SQL curadas para Marketing Analytics. Mock exam simula entrevistas reales.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing">
+        <div class="container">
+            <h2>Empieza gratis hoy</h2>
+            <div class="price-box">
+                <div class="price">$0</div>
+                <p class="price-note">7 días de prueba gratis</p>
+                <ul class="features-list">
+                    <li>Acceso completo a 6 módulos SQL</li>
+                    <li>100+ preguntas adaptativas</li>
+                    <li>Mock exam de práctica</li>
+                    <li>Cheat sheet PDF descargable</li>
+                    <li>Progreso guardado automáticamente</li>
+                </ul>
+                <a href="#" class="cta-button">Comenzar ahora</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Aelion. Todos los derechos reservados.</p>
+            <p style="margin-top: 10px;">
+                <a href="#">Términos de Servicio</a> |
+                <a href="#">Política de Privacidad</a> |
+                <a href="mailto:support@aelion.dev">Contacto</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Simple Analytics (opcional) -->
+    <script>
+        // Track CTA clicks
+        document.querySelectorAll('.cta-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                // TODO: Replace with actual app download/signup link
+                alert('¡Próximamente! La app estará disponible en TestFlight.');
+
+                // Optional: Track with GA4
+                if (window.gtag) {
+                    gtag('event', 'cta_click', {
+                        'event_category': 'engagement',
+                        'event_label': 'landing_page'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Aelion",
+  "appTitle": "Edaptia",
   "loginTitle": "Learn faster with AI",
   "loginSubtitle": "Your learning path in a few taps",
   "loginHighlightPersonalized": "Personalized outlines in minutes",
@@ -16,6 +16,7 @@
   "homeGreeting": "What do you want to learn today?",
   "homeGreetingNamedShort": "Hi {name}",
   "homeGreetingWave": "Hello",
+  "homeTitle": "Home",
   "homeMotivation": "Let's keep your learning streak going today.",
   "homePromptTitle": "What plan should we craft next?",
   "homeInputHint": "Example: Algebra in 7 days, conversational English...",
@@ -28,6 +29,88 @@
   "homeShortcutLanguageSubtitle": "Vocabulary and practical grammar",
   "homeShortcutProblem": "Solve a problem",
   "homeShortcutProblemSubtitle": "From question to guided plan",
+  "startCalibration": "Discover your level",
+  "module1Free": "Module 1 FREE",
+  "unlockPremium": "Unlock Premium",
+  "perMonth": "/month",
+  "gateQuizPassed": "You passed! You can continue.",
+  "gateQuizFailed": "You need 70% to advance.",
+  "gateQuizReviewTopics": "Review these topics:",
+  "gateQuizRetry": "Try again",
+  "gatePracticeUnlocked": "Practice mode unlocked! Use these hints before retrying.",
+  "gatePracticeLocked": "Practice mode unlocks after 3 attempts. Keep going!",
+  "gatePracticeHintsTitle": "Try these mini missions:",
+  "gatePracticeAttempts": "Attempts used: {count}/{total}",
+  "@gatePracticeAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "modulePremiumContent": "Premium content",
+  "modulePremiumUnlock": "Unlock module {moduleNumber} by starting your free trial.",
+  "@modulePremiumUnlock": {
+    "placeholders": {
+      "moduleNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "modulePremiumButton": "Unlock with Premium",
+  "moduleGatePending": "Module quiz pending",
+  "moduleGateRequired": "Pass the module {moduleNumber} quiz (>=70%) to advance.",
+  "@moduleGateRequired": {
+    "placeholders": {
+      "moduleNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "moduleGateTake": "Take module quiz",
+  "homeEnglishComingTitle": "🌍 Technical English for Devs",
+  "homeEnglishComingSubtitle": "COMING SOON\nLearn technical terms, code review English, and more.",
+  "homeEnglishNotifyCta": "NOTIFY ME",
+  "homeEnglishNotifyDone": "YOU'RE IN",
+  "homeEnglishNotifySuccess": "We'll let you know when it's ready!",
+  "homeEnglishNotifyError": "We couldn't save your request. Try again.",
+  "assessmentResultTitle": "Your {topic} level in 60s",
+  "assessmentResultLevelLabel": "YOUR {topic} LEVEL",
+  "assessmentResultPercentile": "Top {percentile}% of 1,248 learners",
+  "@assessmentResultPercentile": {
+    "placeholders": {
+      "percentile": {
+        "type": "int"
+      }
+    }
+  },
+  "assessmentResultStrengthsTitle": "Skills you already have",
+  "assessmentResultGapsTitle": "Next skills to unlock",
+  "assessmentResultPlanTitle": "Personalized next steps",
+  "assessmentResultShare": "Share on LinkedIn",
+  "assessmentResultCta": "Start my personalized plan",
+  "assessmentResultShareMessage": "I'm {level} in {topic} (Top {percentile}%) on @Edaptia dYZ_\\n\\nDiscover your level: https://edaptia.io",
+  "@assessmentResultShareMessage": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "topic": {
+        "type": "String"
+      },
+      "percentile": {
+        "type": "int"
+      }
+    }
+  },
+  "assessmentResultClose": "Close",
+  "assessmentResultResponsesTitle": "Quiz performance",
+  "settingsLanguageTitle": "Language / Idioma",
+  "settingsLanguageSpanish": "Spanish",
+  "settingsLanguageEnglish": "English",
   "homeLogoutTooltip": "Sign out",
   "homeSignOutError": "We could not sign you out. Try again.",
   "homeUserFallback": "Aelion user",
@@ -38,6 +121,36 @@
   "homePrefillCourse": "Quick Flutter course",
   "homePrefillLanguage": "English in 1 month",
   "homePrefillProblem": "Solve integrals",
+  "commonYes": "Yes",
+  "commonNo": "No",
+  "onboardingTitle": "Tell us about you",
+  "onboardingSkip": "Skip",
+  "onboardingProgressLabel": "Question",
+  "onboardingBack": "Back",
+  "onboardingNext": "Next",
+  "onboardingStart": "Start learning",
+  "onboardingSelectLabel": "Select an option",
+  "onboardingQuestionAge": "What's your age range?",
+  "onboardingQuestionInterests": "Which topics interest you?",
+  "onboardingQuestionEducation": "What's your education background?",
+  "onboardingQuestionFirstSql": "Is this your first time learning SQL?",
+  "onboardingQuestionBeta": "Do you want to be a beta tester?",
+  "onboardingAge18_24": "18-24",
+  "onboardingAge25_34": "25-34",
+  "onboardingAge35_44": "35-44",
+  "onboardingAge45Plus": "45+",
+  "onboardingInterestSql": "SQL",
+  "onboardingInterestPython": "Python",
+  "onboardingInterestExcel": "Excel",
+  "onboardingInterestData": "Data analysis",
+  "onboardingInterestMarketing": "Marketing",
+  "onboardingEducationSecondary": "High school",
+  "onboardingEducationUniversity": "University",
+  "onboardingEducationPostgrad": "Postgraduate",
+  "onboardingEducationSelfTaught": "Self-taught",
+  "onboardingBetaDescription": "Edaptia is in active development. As a beta tester:\\n• You get updates before everyone else\\n• You unlock experimental features\\n• Your feedback helps us improve",
+  "onboardingBetaOptIn": "Yes, I want to be a beta tester",
+  "onboardingError": "We couldn't save your answers. Please try again.",
   "notFoundRoute": "Route not found",
   "commonRetry": "Retry",
   "dialogContinue": "Continue",
@@ -60,6 +173,9 @@
   "quizRecommendRefine": "We will refine your plan for the {band} level.",
   "quizKeepCurrentPlan": "Your current plan already matches the {band} level.",
   "quizDone": "Done",
+  "quizNext": "Next",
+  "quizSubmit": "Submit",
+  "quizContinue": "Continue",
   "quizUnknownError": "We could not load the quiz. Try again.",
   "quizBandBeginner": "Beginner",
   "quizBandIntermediate": "Intermediate",
@@ -561,5 +677,136 @@
         "type": "String"
       }
     }
-  }
+  },
+  "@assessmentResultTitle": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      }
+    }
+  },
+  "@assessmentResultLevelLabel": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowCta": "Adaptive flow",
+  "adaptiveFlowTitle": "Adaptive journey",
+  "adaptiveFlowLoading": "Loading adaptive plan...",
+  "adaptiveFlowError": "We couldn't load the adaptive plan. Try again.",
+  "adaptiveFlowNoPlan": "No adaptive plan yet. Generate one to get started.",
+  "adaptiveFlowLearnerState": "Learner state",
+  "adaptiveFlowPlanSection": "Suggested modules",
+  "adaptiveFlowModuleSection": "Module",
+  "adaptiveFlowCheckpointSection": "Checkpoint",
+  "adaptiveFlowBoosterSection": "Booster",
+  "adaptiveFlowGenerateModule": "Generate module",
+  "adaptiveFlowGenerateCheckpoint": "Create checkpoint",
+  "adaptiveFlowSubmitAnswers": "Evaluate checkpoint",
+  "adaptiveFlowBoosterCta": "Request booster",
+  "adaptiveFlowWeakSkills": "Weak skills: {skills}",
+  "@adaptiveFlowWeakSkills": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowScoreLabel": "Score: {score}%",
+  "@adaptiveFlowScoreLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "adaptiveFlowActionAdvance": "Great! Advance to the next module.",
+  "adaptiveFlowActionBooster": "Booster recommended before moving on.",
+  "adaptiveFlowActionReplan": "Repeating this module with more scaffolding.",
+  "adaptiveFlowCheckpointMissingSelection": "Select an answer for each question.",
+  "adaptiveFlowEmptySkills": "No skills tracked yet.",
+  "adaptiveFlowDurationLabel": "Duration: {minutes} min",
+  "@adaptiveFlowDurationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adaptiveFlowSkillsLabel": "Skills: {skills}",
+  "@adaptiveFlowSkillsLabel": {
+    "placeholders": {
+      "skills": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowLockedModule": "Complete module {module} to unlock this one.",
+  "@adaptiveFlowLockedModule": {
+    "placeholders": {
+      "module": {
+        "type": "String"
+      }
+    }
+  },
+  "adaptiveFlowLockedPremium": "Unlock Premium to keep advancing.",
+
+  "assessmentResultTitle": "Your level: {level}",
+  "@assessmentResultTitle": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "assessmentResultClose": "Close",
+  "assessmentResultStrengthsTitle": "Strengths",
+  "assessmentResultGapsTitle": "Areas to improve",
+  "assessmentResultShare": "Share results",
+  "assessmentResultCta": "Generate my learning plan",
+  "assessmentResultLevelLabel": "Detected level: {level}",
+  "@assessmentResultLevelLabel": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "assessmentResultPercentile": "You scored better than {percentile}% of learners",
+  "@assessmentResultPercentile": {
+    "placeholders": {
+      "percentile": {
+        "type": "int"
+      }
+    }
+  },
+  "assessmentResultResponsesTitle": "Your answers",
+  "assessmentResultPlanTitle": "Suggested plan",
+  "assessmentResultShareMessage": "I just completed my {topic} assessment on Edaptia! Level: {level}, Score: {score}%",
+  "@assessmentResultShareMessage": {
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      },
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+
+  "homeEnglishNotifySuccess": "You'll be notified when Technical English launches!",
+  "homeEnglishNotifyError": "Could not register notification",
+  "homeEnglishNotifyDone": "Already registered",
+  "homeEnglishNotifyCta": "Notify me",
+  "homeEnglishComingTitle": "Early Access",
+  "homeEnglishComingSubtitle": "Be the first to try new features and suggest improvements",
+
+  "settingsLanguageSpanish": "Spanish",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageTitle": "App Language"
 }

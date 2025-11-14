@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
 import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
@@ -13,6 +15,9 @@ import 'package:edaptia/services/quiz_attempt_storage.dart';
 import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:edaptia/widgets/skeleton.dart';
+// GATING ADDED - DÍA 3
+import 'package:edaptia/features/paywall/paywall_helper.dart';
+import 'package:edaptia/services/entitlements_service.dart';
 
 part 'module_outline_controller.dart';
 part 'module_outline_controller_actions.dart';

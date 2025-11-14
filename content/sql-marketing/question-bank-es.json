@@ -1,0 +1,2726 @@
+{
+  "metadata": {
+    "track": "sql-marketing",
+    "version": "1.0",
+    "language": "es",
+    "total_questions": 100,
+    "generated_date": "2025-11-04",
+    "author": "AI-generated for Edaptia MVP"
+  },
+  "questions": [
+    {
+      "id": "sql-m1-001",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 1.95,
+        "b": 1.38,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-002",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.94,
+        "b": -1.34,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-003",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.26,
+        "b": 0.35,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02"
+      ],
+      "correct_answer": 3,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Linio en CDMX, presupuestos en CLP",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-004",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.02,
+        "b": -0.67,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "WHERE ctr >= '2%'",
+        "WHERE ctr > 0.02"
+      ],
+      "correct_answer": 3,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para DiDi en Monterrey, presupuestos en PEN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-005",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.11,
+        "b": -0.51,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr >= '2%'",
+        "HAVING ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02"
+      ],
+      "correct_answer": 3,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-006",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.58,
+        "b": -0.14,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'",
+        "FILTER ctr > 0.02"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Nubank en Lima, presupuestos en MXN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-007",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.43,
+        "b": 0.49,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 2,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Falabella en Santiago, presupuestos en ARS",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-008",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.08,
+        "b": 0.6,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 2,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-009",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.96,
+        "b": -0.59,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Ualá en Buenos Aires, presupuestos en COP",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-010",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.74,
+        "b": -0.1,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "WHERE ctr >= '2%'",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Kavak en Guadalajara, presupuestos en MXN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-011",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.68,
+        "b": -0.08,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr >= '2%'",
+        "HAVING ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02"
+      ],
+      "correct_answer": 3,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Platzi en Guadalajara, presupuestos en PEN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-012",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.07,
+        "b": -0.96,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr >= '2%'",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr > 0.02"
+      ],
+      "correct_answer": 3,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Liverpool en Monterrey, presupuestos en MXN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-013",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.8,
+        "b": -0.78,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'",
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02"
+      ],
+      "correct_answer": 2,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Falabella en Buenos Aires, presupuestos en PEN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-014",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.86,
+        "b": -0.74,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr >= '2%'",
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02"
+      ],
+      "correct_answer": 1,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Linio en CDMX, presupuestos en PEN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-015",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.17,
+        "b": -0.62,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr >= '2%'",
+        "HAVING ctr > 0.02",
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02"
+      ],
+      "correct_answer": 2,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-016",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.73,
+        "b": 0.45,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro correcto selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 2,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Crehana en Bogotá, presupuestos en PEN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-017",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.18,
+        "b": -1.33,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Cencosud en Medellín, presupuestos en COP",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-018",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.96,
+        "b": -0.83,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "WHERE ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Coursera (LATAM) en Guadalajara, presupuestos en MXN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-019",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.81,
+        "b": -0.95,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02",
+        "WHERE ctr >= '2%'"
+      ],
+      "correct_answer": 2,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Mercado Libre en Bogotá, presupuestos en MXN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m1-020",
+      "module": "M1",
+      "module_name": "Fundamentos SELECT",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.83,
+        "b": -1.26,
+        "c": 0.25
+      },
+      "question": "¿Cuál filtro básico selecciona campañas con CTR > 2% en la tabla campaigns?",
+      "options": [
+        "HAVING ctr > 0.02",
+        "WHERE ctr >= '2%'",
+        "FILTER ctr > 0.02",
+        "WHERE ctr > 0.02"
+      ],
+      "correct_answer": 3,
+      "explanation": "WHERE aplica filtros fila a fila con operadores (=, >, <, BETWEEN, IN). Combina condiciones con AND/OR y valida el orden lógico con paréntesis para evitar ambigüedades.",
+      "context": "Consulta básica de campañas de email marketing para Nubank en Buenos Aires, presupuestos en PEN",
+      "tags": [
+        "select",
+        "filter",
+        "basic"
+      ]
+    },
+    {
+      "id": "sql-m2-001",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.88,
+        "b": -0.96,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "INNER JOIN",
+        "CROSS JOIN",
+        "LEFT JOIN",
+        "RIGHT JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Kavak en Lima, presupuestos en CLP",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-002",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.23,
+        "b": 0.5,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "INNER JOIN",
+        "LEFT JOIN"
+      ],
+      "correct_answer": 3,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-003",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.49,
+        "b": -0.29,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "LEFT JOIN",
+        "INNER JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Mercado Libre en Buenos Aires, presupuestos en CLP",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-004",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.91,
+        "b": -0.8,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "LEFT JOIN",
+        "RIGHT JOIN",
+        "INNER JOIN",
+        "CROSS JOIN"
+      ],
+      "correct_answer": 0,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Linio en Guadalajara, presupuestos en COP",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-005",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.03,
+        "b": -0.96,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "INNER JOIN",
+        "CROSS JOIN",
+        "LEFT JOIN",
+        "RIGHT JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Mercado Libre en CDMX, presupuestos en PEN",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-006",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.4,
+        "b": 0.6,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "CROSS JOIN",
+        "RIGHT JOIN",
+        "LEFT JOIN",
+        "INNER JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para DiDi en Santiago, presupuestos en CLP",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-007",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.57,
+        "b": -0.08,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "CROSS JOIN",
+        "LEFT JOIN",
+        "RIGHT JOIN",
+        "INNER JOIN"
+      ],
+      "correct_answer": 1,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Falabella en Monterrey, presupuestos en ARS",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-008",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.44,
+        "b": 0.17,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "CROSS JOIN",
+        "INNER JOIN",
+        "LEFT JOIN",
+        "RIGHT JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Clip en Bogotá, presupuestos en MXN",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-009",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.0,
+        "b": -1.37,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "INNER JOIN",
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "LEFT JOIN"
+      ],
+      "correct_answer": 3,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Rappi en Santiago, presupuestos en ARS",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-010",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.57,
+        "b": 0.49,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "LEFT JOIN",
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "INNER JOIN"
+      ],
+      "correct_answer": 0,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Mercado Libre en Lima, presupuestos en MXN",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-011",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.65,
+        "b": -0.34,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "INNER JOIN",
+        "CROSS JOIN",
+        "LEFT JOIN",
+        "RIGHT JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Nubank en Monterrey, presupuestos en COP",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-012",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.9,
+        "b": -0.59,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "LEFT JOIN",
+        "INNER JOIN",
+        "CROSS JOIN",
+        "RIGHT JOIN"
+      ],
+      "correct_answer": 0,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Liverpool en Medellín, presupuestos en ARS",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-013",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.05,
+        "b": -1.24,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "INNER JOIN",
+        "LEFT JOIN"
+      ],
+      "correct_answer": 3,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Falabella en Medellín, presupuestos en PEN",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-014",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.02,
+        "b": -0.67,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "INNER JOIN",
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "LEFT JOIN"
+      ],
+      "correct_answer": 3,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Kavak en Medellín, presupuestos en COP",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-015",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.74,
+        "b": -0.29,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "CROSS JOIN",
+        "LEFT JOIN",
+        "INNER JOIN",
+        "RIGHT JOIN"
+      ],
+      "correct_answer": 1,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Rappi en Monterrey, presupuestos en PEN",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-016",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.48,
+        "b": 1.72,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "CROSS JOIN",
+        "RIGHT JOIN",
+        "LEFT JOIN",
+        "INNER JOIN"
+      ],
+      "correct_answer": 2,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-017",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.11,
+        "b": -1.09,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "LEFT JOIN",
+        "CROSS JOIN",
+        "RIGHT JOIN",
+        "INNER JOIN"
+      ],
+      "correct_answer": 0,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing para Éxito en Santiago, presupuestos en ARS",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m2-018",
+      "module": "M2",
+      "module_name": "JOINs y Relaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.4,
+        "b": 0.83,
+        "c": 0.25
+      },
+      "question": "Unir users u con orders o para obtener TODOS los usuarios, hayan comprado o no. ¿Qué JOIN usarías?",
+      "options": [
+        "RIGHT JOIN",
+        "CROSS JOIN",
+        "INNER JOIN",
+        "LEFT JOIN"
+      ],
+      "correct_answer": 3,
+      "explanation": "La elección del JOIN determina qué filas se conservan. LEFT JOIN mantiene todas las filas de la tabla izquierda y rellena con NULL cuando no hay coincidencias; INNER JOIN solo devuelve coincidencias en ambas tablas; RIGHT JOIN es el espejo de LEFT.",
+      "context": "Análisis de conversión de embudos de marketing",
+      "tags": [
+        "join",
+        "left-join",
+        "null-handling"
+      ]
+    },
+    {
+      "id": "sql-m3-001",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.31,
+        "b": 0.46,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)",
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/SUM(conversions)"
+      ],
+      "correct_answer": 3,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Rappi en Medellín, presupuestos en ARS",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-002",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.95,
+        "b": -0.92,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost/conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Éxito en Medellín, presupuestos en MXN",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-003",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.46,
+        "b": 1.88,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost/conversions)",
+        "SUM(cost)/COUNT(conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Liverpool en Bogotá, presupuestos en ARS",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-004",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.08,
+        "b": -0.95,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Liverpool en Medellín, presupuestos en COP",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-005",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.38,
+        "b": -0.29,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost/conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Cencosud en Monterrey, presupuestos en CLP",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-006",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.51,
+        "b": 0.29,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost/conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI)",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-007",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.84,
+        "b": -0.55,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)",
+        "SUM(cost)/SUM(conversions)"
+      ],
+      "correct_answer": 3,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Ualá en Santiago, presupuestos en COP",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-008",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.19,
+        "b": -0.89,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost/conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/SUM(conversions)"
+      ],
+      "correct_answer": 3,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Crehana en Medellín, presupuestos en PEN",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-009",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.35,
+        "b": 0.16,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Linio en Bogotá, presupuestos en CLP",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-010",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 1.84,
+        "b": 0.87,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI)",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-011",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.18,
+        "b": -0.61,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost)/AVG(conversions)",
+        "AVG(cost/conversions)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Éxito en Medellín, presupuestos en PEN",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-012",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.12,
+        "b": 1.63,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI)",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-013",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.91,
+        "b": -1.42,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost/conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Ualá en Monterrey, presupuestos en ARS",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-014",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.43,
+        "b": -0.35,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost/conversions)"
+      ],
+      "correct_answer": 2,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Platzi en Medellín, presupuestos en ARS",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-015",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.7,
+        "b": -0.11,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost/conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 2,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Éxito en CDMX, presupuestos en PEN",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-016",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.38,
+        "b": -0.11,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost)/AVG(conversions)"
+      ],
+      "correct_answer": 2,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI)",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-017",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.36,
+        "b": -0.01,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "SUM(cost)/COUNT(conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "AVG(cost)/AVG(conversions)",
+        "AVG(cost/conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Liverpool en Medellín, presupuestos en COP",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m3-018",
+      "module": "M3",
+      "module_name": "Agregaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.43,
+        "b": 1.39,
+        "c": 0.25
+      },
+      "question": "Para calcular CAC por canal con ponderación correcta, la agregación adecuada es:",
+      "options": [
+        "AVG(cost)/AVG(conversions)",
+        "SUM(cost)/SUM(conversions)",
+        "SUM(cost)/COUNT(conversions)",
+        "AVG(cost/conversions)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Al agregar, usa GROUP BY para agrupar llaves y funciones como SUM/COUNT/AVG para calcular métricas. HAVING filtra agregados; WHERE filtra filas antes del agregado. Evita promediar promedios si buscas un promedio ponderado.",
+      "context": "KPIs de campañas (CTR, CAC, ROI) para Rappi en Medellín, presupuestos en COP",
+      "tags": [
+        "aggregation",
+        "metrics",
+        "group-by",
+        "cac"
+      ]
+    },
+    {
+      "id": "sql-m4-001",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.5,
+        "b": 1.02,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "TOUPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "UPPER(campaign_name)"
+      ],
+      "correct_answer": 3,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Linio en CDMX, presupuestos en MXN",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-002",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 1.97,
+        "b": 1.21,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "FORMAT_UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "UPPER(campaign_name)",
+        "TOUPPER(campaign_name)"
+      ],
+      "correct_answer": 2,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Nubank en Guadalajara, presupuestos en ARS",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-003",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.11,
+        "b": -1.34,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "FORMAT_UPPER(campaign_name)",
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "TOUPPER(campaign_name)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Cencosud en CDMX, presupuestos en ARS",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-004",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.25,
+        "b": 0.19,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "TOUPPER(campaign_name)",
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "FORMAT_UPPER(campaign_name)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Rappi en Lima, presupuestos en PEN",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-005",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.6,
+        "b": -0.43,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "FORMAT_UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "UPPER(campaign_name)"
+      ],
+      "correct_answer": 3,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Mercado Libre en Medellín, presupuestos en CLP",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-006",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.62,
+        "b": -0.06,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Liverpool en Lima, presupuestos en PEN",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-007",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.38,
+        "b": 1.39,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Nubank en Bogotá, presupuestos en ARS",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-008",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.4,
+        "b": -0.01,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "TOUPPER(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Crehana en Santiago, presupuestos en ARS",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-009",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.53,
+        "b": 0.02,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "UPCASE(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Nubank en Medellín, presupuestos en CLP",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-010",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.06,
+        "b": -1.01,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "TOUPPER(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Rappi en Lima, presupuestos en COP",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-011",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.48,
+        "b": 0.03,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "TOUPPER(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Éxito en Monterrey, presupuestos en ARS",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-012",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.34,
+        "b": 0.22,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "UPCASE(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Éxito en Buenos Aires, presupuestos en COP",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-013",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.79,
+        "b": 0.33,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "UPCASE(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Clip en Buenos Aires, presupuestos en ARS",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-014",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.19,
+        "b": -0.95,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPCASE(campaign_name)",
+        "UPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "TOUPPER(campaign_name)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Kavak en Guadalajara, presupuestos en MXN",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-015",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.98,
+        "b": -1.32,
+        "c": 0.25
+      },
+      "question": "Normaliza nombres de campaña a mayúsculas.",
+      "options": [
+        "UPPER(campaign_name)",
+        "FORMAT_UPPER(campaign_name)",
+        "TOUPPER(campaign_name)",
+        "UPCASE(campaign_name)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las funciones de cadena como CONCAT, UPPER/LOWER y SUBSTRING ayudan a normalizar y unir campos de texto. Recuerda manejar NULL con COALESCE para evitar resultados inesperados.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para DiDi en Guadalajara, presupuestos en MXN",
+      "tags": [
+        "string",
+        "upper",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m4-016",
+      "module": "M4",
+      "module_name": "Funciones y Transformaciones",
+      "type": "true_false",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.08,
+        "b": 0.61,
+        "c": 0.5
+      },
+      "question": "COALESCE(a, b) devuelve b cuando a es NULL.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "La respuesta correcta sigue las mejores prácticas SQL para este caso de uso en marketing analítico, optimizando claridad, exactitud y rendimiento.",
+      "context": "Limpieza de datos de Google Ads y Facebook Ads para Mercado Libre en Buenos Aires, presupuestos en COP",
+      "tags": [
+        "null",
+        "coalesce",
+        "transform"
+      ]
+    },
+    {
+      "id": "sql-m5-001",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.92,
+        "b": -0.88,
+        "c": 0.25
+      },
+      "question": "Encuentra usuarios cuya PRIMERA compra fue en los últimos 30 días.",
+      "options": [
+        "JOIN a una subconsulta con MIN(order_date) por user_id y filtrar >= CURRENT_DATE - 30",
+        "EXISTS con cualquier compra en los últimos 30 días",
+        "WHERE user_id IN (SELECT user_id FROM orders WHERE order_date >= CURRENT_DATE - 30)",
+        "Filtrar orders y luego DISTINCT user_id"
+      ],
+      "correct_answer": 0,
+      "explanation": "DATE_TRUNC estandariza al período (día/mes), DATE_DIFF calcula diferencias entre fechas, y EXTRACT obtiene componentes. Cuida la zona horaria y el tipo DATE vs TIMESTAMP según el motor (BigQuery/Snowflake).",
+      "context": "Segmentación avanzada de audiencias para Éxito en Bogotá, presupuestos en COP",
+      "tags": [
+        "subquery",
+        "date",
+        "first-purchase",
+        "cohort"
+      ]
+    },
+    {
+      "id": "sql-m5-002",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 1.91,
+        "b": 0.76,
+        "c": 0.25
+      },
+      "question": "Encuentra usuarios cuya PRIMERA compra fue en los últimos 30 días.",
+      "options": [
+        "WHERE user_id IN (SELECT user_id FROM orders WHERE order_date >= CURRENT_DATE - 30)",
+        "JOIN a una subconsulta con MIN(order_date) por user_id y filtrar >= CURRENT_DATE - 30",
+        "Filtrar orders y luego DISTINCT user_id",
+        "EXISTS con cualquier compra en los últimos 30 días"
+      ],
+      "correct_answer": 1,
+      "explanation": "DATE_TRUNC estandariza al período (día/mes), DATE_DIFF calcula diferencias entre fechas, y EXTRACT obtiene componentes. Cuida la zona horaria y el tipo DATE vs TIMESTAMP según el motor (BigQuery/Snowflake).",
+      "context": "Segmentación avanzada de audiencias para Mercado Libre en Medellín, presupuestos en CLP",
+      "tags": [
+        "subquery",
+        "date",
+        "first-purchase",
+        "cohort"
+      ]
+    },
+    {
+      "id": "sql-m5-003",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.92,
+        "b": -1.22,
+        "c": 0.25
+      },
+      "question": "Encuentra usuarios cuya PRIMERA compra fue en los últimos 30 días.",
+      "options": [
+        "WHERE user_id IN (SELECT user_id FROM orders WHERE order_date >= CURRENT_DATE - 30)",
+        "Filtrar orders y luego DISTINCT user_id",
+        "JOIN a una subconsulta con MIN(order_date) por user_id y filtrar >= CURRENT_DATE - 30",
+        "EXISTS con cualquier compra en los últimos 30 días"
+      ],
+      "correct_answer": 2,
+      "explanation": "DATE_TRUNC estandariza al período (día/mes), DATE_DIFF calcula diferencias entre fechas, y EXTRACT obtiene componentes. Cuida la zona horaria y el tipo DATE vs TIMESTAMP según el motor (BigQuery/Snowflake).",
+      "context": "Segmentación avanzada de audiencias",
+      "tags": [
+        "subquery",
+        "date",
+        "first-purchase",
+        "cohort"
+      ]
+    },
+    {
+      "id": "sql-m5-004",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.46,
+        "b": 0.04,
+        "c": 0.25
+      },
+      "question": "Encuentra usuarios cuya PRIMERA compra fue en los últimos 30 días.",
+      "options": [
+        "EXISTS con cualquier compra en los últimos 30 días",
+        "JOIN a una subconsulta con MIN(order_date) por user_id y filtrar >= CURRENT_DATE - 30",
+        "Filtrar orders y luego DISTINCT user_id",
+        "WHERE user_id IN (SELECT user_id FROM orders WHERE order_date >= CURRENT_DATE - 30)"
+      ],
+      "correct_answer": 1,
+      "explanation": "DATE_TRUNC estandariza al período (día/mes), DATE_DIFF calcula diferencias entre fechas, y EXTRACT obtiene componentes. Cuida la zona horaria y el tipo DATE vs TIMESTAMP según el motor (BigQuery/Snowflake).",
+      "context": "Segmentación avanzada de audiencias para Coursera (LATAM) en Lima, presupuestos en COP",
+      "tags": [
+        "subquery",
+        "date",
+        "first-purchase",
+        "cohort"
+      ]
+    },
+    {
+      "id": "sql-m5-005",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.56,
+        "b": 0.32,
+        "c": 0.25
+      },
+      "question": "Encuentra usuarios cuya PRIMERA compra fue en los últimos 30 días.",
+      "options": [
+        "EXISTS con cualquier compra en los últimos 30 días",
+        "WHERE user_id IN (SELECT user_id FROM orders WHERE order_date >= CURRENT_DATE - 30)",
+        "Filtrar orders y luego DISTINCT user_id",
+        "JOIN a una subconsulta con MIN(order_date) por user_id y filtrar >= CURRENT_DATE - 30"
+      ],
+      "correct_answer": 3,
+      "explanation": "DATE_TRUNC estandariza al período (día/mes), DATE_DIFF calcula diferencias entre fechas, y EXTRACT obtiene componentes. Cuida la zona horaria y el tipo DATE vs TIMESTAMP según el motor (BigQuery/Snowflake).",
+      "context": "Segmentación avanzada de audiencias",
+      "tags": [
+        "subquery",
+        "date",
+        "first-purchase",
+        "cohort"
+      ]
+    },
+    {
+      "id": "sql-m5-006",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "true_false",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.27,
+        "b": 0.19,
+        "c": 0.5
+      },
+      "question": "EXISTS verifica la existencia de al menos una fila que cumple la condición.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Ualá en Guadalajara, presupuestos en CLP",
+      "tags": [
+        "subquery",
+        "exists"
+      ]
+    },
+    {
+      "id": "sql-m5-007",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "true_false",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.22,
+        "b": 1.83,
+        "c": 0.5
+      },
+      "question": "EXISTS verifica la existencia de al menos una fila que cumple la condición.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Cencosud en Lima, presupuestos en MXN",
+      "tags": [
+        "subquery",
+        "exists"
+      ]
+    },
+    {
+      "id": "sql-m5-008",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "true_false",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.34,
+        "b": 0.17,
+        "c": 0.5
+      },
+      "question": "EXISTS verifica la existencia de al menos una fila que cumple la condición.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias",
+      "tags": [
+        "subquery",
+        "exists"
+      ]
+    },
+    {
+      "id": "sql-m5-009",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "true_false",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.5,
+        "b": 1.51,
+        "c": 0.5
+      },
+      "question": "EXISTS verifica la existencia de al menos una fila que cumple la condición.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Mercado Libre en Buenos Aires, presupuestos en CLP",
+      "tags": [
+        "subquery",
+        "exists"
+      ]
+    },
+    {
+      "id": "sql-m5-010",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_select",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.58,
+        "b": -0.01,
+        "c": 0.15
+      },
+      "question": "Selecciona patrones correctos de subconsulta en WHERE.",
+      "options": [
+        "WHERE IN (SELECT *) FROM vip_users",
+        "WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.user_id)",
+        "WHERE user_id IN (SELECT user_id FROM vip_users)",
+        "WHERE (SELECT user_id FROM vip_users)"
+      ],
+      "correct_answer": [
+        1,
+        2
+      ],
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Clip en Medellín, presupuestos en ARS",
+      "tags": [
+        "subquery",
+        "where"
+      ]
+    },
+    {
+      "id": "sql-m5-011",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_select",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.96,
+        "b": -1.0,
+        "c": 0.15
+      },
+      "question": "Selecciona patrones correctos de subconsulta en WHERE.",
+      "options": [
+        "WHERE (SELECT user_id FROM vip_users)",
+        "WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.user_id)",
+        "WHERE IN (SELECT *) FROM vip_users",
+        "WHERE user_id IN (SELECT user_id FROM vip_users)"
+      ],
+      "correct_answer": [
+        1,
+        3
+      ],
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Platzi en CDMX, presupuestos en CLP",
+      "tags": [
+        "subquery",
+        "where"
+      ]
+    },
+    {
+      "id": "sql-m5-012",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_select",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.27,
+        "b": 0.27,
+        "c": 0.15
+      },
+      "question": "Selecciona patrones correctos de subconsulta en WHERE.",
+      "options": [
+        "WHERE user_id IN (SELECT user_id FROM vip_users)",
+        "WHERE IN (SELECT *) FROM vip_users",
+        "WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.user_id)",
+        "WHERE (SELECT user_id FROM vip_users)"
+      ],
+      "correct_answer": [
+        0,
+        2
+      ],
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias",
+      "tags": [
+        "subquery",
+        "where"
+      ]
+    },
+    {
+      "id": "sql-m5-013",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_select",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.31,
+        "b": -0.14,
+        "c": 0.15
+      },
+      "question": "Selecciona patrones correctos de subconsulta en WHERE.",
+      "options": [
+        "WHERE (SELECT user_id FROM vip_users)",
+        "WHERE user_id IN (SELECT user_id FROM vip_users)",
+        "WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.user_id)",
+        "WHERE IN (SELECT *) FROM vip_users"
+      ],
+      "correct_answer": [
+        1,
+        2
+      ],
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Liverpool en Guadalajara, presupuestos en MXN",
+      "tags": [
+        "subquery",
+        "where"
+      ]
+    },
+    {
+      "id": "sql-m5-014",
+      "module": "M5",
+      "module_name": "Subconsultas",
+      "type": "multiple_select",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.45,
+        "b": 1.16,
+        "c": 0.15
+      },
+      "question": "Selecciona patrones correctos de subconsulta en WHERE.",
+      "options": [
+        "WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.user_id)",
+        "WHERE user_id IN (SELECT user_id FROM vip_users)",
+        "WHERE IN (SELECT *) FROM vip_users",
+        "WHERE (SELECT user_id FROM vip_users)"
+      ],
+      "correct_answer": [
+        0,
+        1
+      ],
+      "explanation": "Las subconsultas pueden ir en WHERE/SELECT/FROM. EXISTS comprueba existencia eficiente sin materializar grandes conjuntos; usa MIN/MAX en subconsultas para primeras/últimas fechas.",
+      "context": "Segmentación avanzada de audiencias para Rappi en CDMX, presupuestos en PEN",
+      "tags": [
+        "subquery",
+        "where"
+      ]
+    },
+    {
+      "id": "sql-m6-001",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_choice",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.16,
+        "b": 0.91,
+        "c": 0.25
+      },
+      "question": "Asigna un ranking de ventas por canal dentro de cada país sin saltos en empates.",
+      "options": [
+        "DENSE_RANK() OVER (PARTITION BY country ORDER BY sales DESC)",
+        "RANK() OVER (PARTITION BY channel ORDER BY sales)",
+        "RANK() OVER (ORDER BY sales DESC)",
+        "ROW_NUMBER() OVER (ORDER BY sales)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención",
+      "tags": [
+        "window",
+        "dense_rank",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-002",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.43,
+        "b": 0.42,
+        "c": 0.25
+      },
+      "question": "Asigna un ranking de ventas por canal dentro de cada país sin saltos en empates.",
+      "options": [
+        "RANK() OVER (PARTITION BY channel ORDER BY sales)",
+        "DENSE_RANK() OVER (PARTITION BY country ORDER BY sales DESC)",
+        "RANK() OVER (ORDER BY sales DESC)",
+        "ROW_NUMBER() OVER (ORDER BY sales)"
+      ],
+      "correct_answer": 1,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Coursera (LATAM) en Buenos Aires, presupuestos en MXN",
+      "tags": [
+        "window",
+        "dense_rank",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-003",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_choice",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.69,
+        "b": -0.22,
+        "c": 0.25
+      },
+      "question": "Asigna un ranking de ventas por canal dentro de cada país sin saltos en empates.",
+      "options": [
+        "DENSE_RANK() OVER (PARTITION BY country ORDER BY sales DESC)",
+        "RANK() OVER (PARTITION BY channel ORDER BY sales)",
+        "ROW_NUMBER() OVER (ORDER BY sales)",
+        "RANK() OVER (ORDER BY sales DESC)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Cencosud en Guadalajara, presupuestos en COP",
+      "tags": [
+        "window",
+        "dense_rank",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-004",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_choice",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 1.02,
+        "b": -0.96,
+        "c": 0.25
+      },
+      "question": "Asigna un ranking de ventas por canal dentro de cada país sin saltos en empates.",
+      "options": [
+        "DENSE_RANK() OVER (PARTITION BY country ORDER BY sales DESC)",
+        "RANK() OVER (PARTITION BY channel ORDER BY sales)",
+        "ROW_NUMBER() OVER (ORDER BY sales)",
+        "RANK() OVER (ORDER BY sales DESC)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Clip en Santiago, presupuestos en COP",
+      "tags": [
+        "window",
+        "dense_rank",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-005",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "true_false",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.34,
+        "b": 0.28,
+        "c": 0.5
+      },
+      "question": "LAG accede al valor de la fila anterior según el ORDER BY de la ventana.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Éxito en Guadalajara, presupuestos en CLP",
+      "tags": [
+        "window",
+        "lag"
+      ]
+    },
+    {
+      "id": "sql-m6-006",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "true_false",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.49,
+        "b": 1.69,
+        "c": 0.5
+      },
+      "question": "LAG accede al valor de la fila anterior según el ORDER BY de la ventana.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Kavak en Guadalajara, presupuestos en MXN",
+      "tags": [
+        "window",
+        "lag"
+      ]
+    },
+    {
+      "id": "sql-m6-007",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "true_false",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.15,
+        "b": 1.39,
+        "c": 0.5
+      },
+      "question": "LAG accede al valor de la fila anterior según el ORDER BY de la ventana.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención",
+      "tags": [
+        "window",
+        "lag"
+      ]
+    },
+    {
+      "id": "sql-m6-008",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "true_false",
+      "difficulty": "easy",
+      "irt_params": {
+        "a": 0.84,
+        "b": -0.59,
+        "c": 0.5
+      },
+      "question": "LAG accede al valor de la fila anterior según el ORDER BY de la ventana.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Kavak en Medellín, presupuestos en COP",
+      "tags": [
+        "window",
+        "lag"
+      ]
+    },
+    {
+      "id": "sql-m6-009",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "true_false",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.13,
+        "b": 1.95,
+        "c": 0.5
+      },
+      "question": "LAG accede al valor de la fila anterior según el ORDER BY de la ventana.",
+      "options": [
+        "Verdadero",
+        "Falso"
+      ],
+      "correct_answer": 0,
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Éxito en Medellín, presupuestos en MXN",
+      "tags": [
+        "window",
+        "lag"
+      ]
+    },
+    {
+      "id": "sql-m6-010",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_select",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.72,
+        "b": -0.46,
+        "c": 0.15
+      },
+      "question": "Selecciona funciones de ventana que requieren PARTITION BY para separar mercados.",
+      "options": [
+        "ROW_NUMBER() OVER (PARTITION BY market ORDER BY revenue DESC)",
+        "SUM(revenue)",
+        "SUM(revenue) OVER (PARTITION BY market ORDER BY date)",
+        "COUNT(*) GROUP BY market"
+      ],
+      "correct_answer": [
+        0,
+        2
+      ],
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Liverpool en Lima, presupuestos en COP",
+      "tags": [
+        "window",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-011",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_select",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.47,
+        "b": 0.19,
+        "c": 0.15
+      },
+      "question": "Selecciona funciones de ventana que requieren PARTITION BY para separar mercados.",
+      "options": [
+        "SUM(revenue) OVER (PARTITION BY market ORDER BY date)",
+        "SUM(revenue)",
+        "ROW_NUMBER() OVER (PARTITION BY market ORDER BY revenue DESC)",
+        "COUNT(*) GROUP BY market"
+      ],
+      "correct_answer": [
+        0,
+        2
+      ],
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención",
+      "tags": [
+        "window",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-012",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_select",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.05,
+        "b": 1.15,
+        "c": 0.15
+      },
+      "question": "Selecciona funciones de ventana que requieren PARTITION BY para separar mercados.",
+      "options": [
+        "COUNT(*) GROUP BY market",
+        "SUM(revenue) OVER (PARTITION BY market ORDER BY date)",
+        "ROW_NUMBER() OVER (PARTITION BY market ORDER BY revenue DESC)",
+        "SUM(revenue)"
+      ],
+      "correct_answer": [
+        1,
+        2
+      ],
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención para Platzi en Buenos Aires, presupuestos en COP",
+      "tags": [
+        "window",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-013",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_select",
+      "difficulty": "medium",
+      "irt_params": {
+        "a": 1.57,
+        "b": -0.26,
+        "c": 0.15
+      },
+      "question": "Selecciona funciones de ventana que requieren PARTITION BY para separar mercados.",
+      "options": [
+        "COUNT(*) GROUP BY market",
+        "SUM(revenue) OVER (PARTITION BY market ORDER BY date)",
+        "SUM(revenue)",
+        "ROW_NUMBER() OVER (PARTITION BY market ORDER BY revenue DESC)"
+      ],
+      "correct_answer": [
+        1,
+        3
+      ],
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención",
+      "tags": [
+        "window",
+        "partition-by"
+      ]
+    },
+    {
+      "id": "sql-m6-014",
+      "module": "M6",
+      "module_name": "Window Functions",
+      "type": "multiple_select",
+      "difficulty": "hard",
+      "irt_params": {
+        "a": 2.12,
+        "b": 1.5,
+        "c": 0.15
+      },
+      "question": "Selecciona funciones de ventana que requieren PARTITION BY para separar mercados.",
+      "options": [
+        "ROW_NUMBER() OVER (PARTITION BY market ORDER BY revenue DESC)",
+        "SUM(revenue)",
+        "COUNT(*) GROUP BY market",
+        "SUM(revenue) OVER (PARTITION BY market ORDER BY date)"
+      ],
+      "correct_answer": [
+        0,
+        3
+      ],
+      "explanation": "Las window functions calculan métricas sobre particiones definidas por PARTITION BY manteniendo el detalle fila a fila. ORDER BY dentro de OVER define el orden lógico para funciones como ROW_NUMBER, LAG, LEAD o SUM acumulado.",
+      "context": "Análisis de cohortes y retención",
+      "tags": [
+        "window",
+        "partition-by"
+      ]
+    }
+  ]
+}

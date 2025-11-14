@@ -28,6 +28,8 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
   String? _activeLanguage;
 
   final Set<String> _reportedModuleStarts = <String>{};
+  final Set<int> _generatingModules = <int>{};
+  final Set<int> _hydratedModules = <int>{};
 
   @override
   void initState() {
@@ -124,28 +126,7 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     if (!expanded) {
       return;
     }
-
-    final String rawId = module['id']?.toString() ?? '';
-
-    final String moduleId =
-        rawId.trim().isNotEmpty ? rawId.trim() : 'module-$moduleIndex';
-
-    if (!_reportedModuleStarts.add(moduleId)) {
-      return;
-    }
-
-    final String? band = module['band']?.toString() ?? _preferredBand;
-
-    final int lessonCount = _lessonCount(module);
-
-    unawaited(
-      AnalyticsService().trackModuleStarted(
-        moduleId: moduleId,
-        topic: _courseId,
-        band: band,
-        lessonCount: lessonCount,
-      ),
-    );
+    unawaited(_onModuleExpansionAsync(module, moduleIndex));
   }
 
   int _lessonCount(Map<String, dynamic> module) {
@@ -301,7 +282,21 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
         _activeDepth = responseDepth;
 
         _activeLanguage = responseLanguage;
+
+        _generatingModules.clear();
+        _hydratedModules
+          ..clear()
+          ..addAll(_detectGeneratedModules(response['outline']));
       });
+
+      if (!_hydratedModules.contains(1)) {
+        unawaited(
+          _fetchGenerativeModule(
+            moduleNumber: 1,
+            language: responseLanguage,
+          ),
+        );
+      }
 
       final int latencyMs =
           (DateTime.now().difference(requestStartedAt).inMilliseconds)
@@ -341,6 +336,321 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     }
   }
 
+  Future<void> _onModuleExpansionAsync(
+    Map<String, dynamic> module,
+    int moduleIndex,
+  ) async {
+    final String rawId = module['id']?.toString() ?? '';
+
+    final String moduleId =
+        rawId.trim().isNotEmpty ? rawId.trim() : 'module-$moduleIndex';
+
+    if (_reportedModuleStarts.add(moduleId)) {
+      final String? band = module['band']?.toString() ?? _preferredBand;
+      final int lessonCount = _lessonCount(module);
+
+      unawaited(
+        AnalyticsService().trackModuleStarted(
+          moduleId: moduleId,
+          topic: _courseId,
+          band: band,
+          lessonCount: lessonCount,
+        ),
+      );
+    }
+
+    final int moduleNumber = moduleIndex + 1;
+
+    if (moduleNumber > 1 &&
+        !_hydratedModules.contains(moduleNumber) &&
+        !_generatingModules.contains(moduleNumber)) {
+      final allowed = await _ensureModuleAccess(moduleNumber);
+      if (!allowed) {
+        return;
+      }
+    }
+
+    if (moduleNumber <= 1 ||
+        _hydratedModules.contains(moduleNumber) ||
+        _generatingModules.contains(moduleNumber)) {
+      return;
+    }
+
+    final String resolvedLanguage =
+        _resolveModuleLanguage(module['language']?.toString());
+
+    unawaited(
+      _fetchGenerativeModule(
+        moduleNumber: moduleNumber,
+        language: resolvedLanguage,
+      ),
+    );
+  }
+
+  Future<bool> _ensureModuleAccess(int moduleNumber) async {
+    if (moduleNumber <= 1) {
+      return true;
+    }
+    final entitlements = EntitlementsService();
+    try {
+      await entitlements.ensureLoaded();
+      if (entitlements.isPremium) {
+        return true;
+      }
+    } catch (error, stackTrace) {
+      debugPrint('[ModuleOutline] entitlements ensure failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    if (!mounted) {
+      return false;
+    }
+
+    return PaywallHelper.checkAndShowPaywall(
+      context,
+      trigger: 'module_detected',
+    );
+  }
+
+  Future<void> _fetchGenerativeModule({
+    required int moduleNumber,
+    String? language,
+  }) async {
+    if (_generatingModules.contains(moduleNumber) ||
+        _hydratedModules.contains(moduleNumber)) {
+      return;
+    }
+
+    if (!mounted) return;
+
+    try {
+      final resolvedLanguage = _resolveModuleLanguage(language);
+      final previousModuleId = _resolvePreviousModuleId(moduleNumber);
+
+      if (moduleNumber > 1 && previousModuleId == null) {
+        debugPrint(
+          '[ModuleOutline] Unable to resolve previous module id for M$moduleNumber',
+        );
+        return;
+      }
+
+      setState(() {
+        _generatingModules.add(moduleNumber);
+      });
+
+      final moduleResponse = await CourseApiService.fetchGenerativeModule(
+        topic: _courseId,
+        moduleNumber: moduleNumber,
+        band: _activeBand,
+        language: resolvedLanguage,
+        previousModuleId: previousModuleId,
+      );
+      final moduleData = moduleResponse['module'];
+      if (!mounted || moduleData is! Map) {
+        if (mounted) {
+          setState(() {
+            _generatingModules.remove(moduleNumber);
+          });
+
+          _showModuleGenerationError(moduleNumber);
+        }
+        return;
+      }
+
+      setState(() {
+        _applyGenerativeModuleData(
+          moduleNumber,
+          Map<String, dynamic>.from(moduleData),
+        );
+        _generatingModules.remove(moduleNumber);
+        _hydratedModules.add(moduleNumber);
+      });
+
+      unawaited(_persistOutline());
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      debugPrint('Failed to fetch module $moduleNumber: $error');
+
+      setState(() {
+        _generatingModules.remove(moduleNumber);
+      });
+
+      _showModuleGenerationError(moduleNumber);
+    }
+  }
+
+  void _applyGenerativeModuleData(
+    int moduleNumber,
+    Map<String, dynamic> moduleData,
+  ) {
+    final outline = _outlineResponse?['outline'];
+    if (outline is! List) return;
+
+    final moduleIndex = moduleNumber - 1;
+    if (moduleIndex < 0 || moduleIndex >= outline.length) {
+      return;
+    }
+
+    final lessons = (moduleData['lessons'] as List?)
+            ?.whereType<Map>()
+            .toList(growable: false) ??
+        const [];
+
+    final mappedLessons = lessons.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final lesson = Map<String, dynamic>.from(entry.value);
+      final content = lesson['content']?.toString() ?? '';
+      final estimated = lesson['estimatedTime'] is num
+          ? (lesson['estimatedTime'] as num).toInt().clamp(1, 60)
+          : 4;
+      return <String, dynamic>{
+        'id': lesson['id']?.toString() ?? 'gen-$moduleNumber-$idx',
+        'title': lesson['title']?.toString() ?? 'Lesson ${idx + 1}',
+        'summary': content,
+        'content': content,
+        'durationMinutes': estimated,
+        'objective': lesson['objective'],
+        'type': lesson['type'] ?? 'lesson',
+      };
+    }).toList(growable: false);
+
+    final updatedModule = Map<String, dynamic>.from(
+      (outline[moduleIndex] as Map?) ?? const <String, dynamic>{},
+    )..addAll({
+        'title': moduleData['title']?.toString() ??
+            (outline[moduleIndex] as Map?)?['title'],
+        'lessons': mappedLessons,
+        'challenge': moduleData['challenge'],
+        'test': moduleData['test'],
+        'source': moduleData['source'] ?? 'openai',
+      });
+
+    final newOutline = List<Map<String, dynamic>>.from(
+      outline.map((module) => Map<String, dynamic>.from(module as Map)),
+    );
+    newOutline[moduleIndex] = updatedModule;
+    _outlineResponse = {
+      ...?_outlineResponse,
+      'outline': newOutline,
+    };
+  }
+
+  Future<void> _persistOutline() async {
+    final response = _outlineResponse;
+    if (response == null) {
+      return;
+    }
+
+    try {
+      await LocalOutlineStorage.instance.save(
+        topic: _courseId,
+        payload: Map<String, dynamic>.from(response),
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[ModuleOutline] Failed to persist outline: $error\n$stackTrace',
+      );
+    }
+  }
+
+  Set<int> _detectGeneratedModules(dynamic outline) {
+    if (outline is! List) {
+      return <int>{};
+    }
+
+    final detected = <int>{};
+    for (var i = 0; i < outline.length; i++) {
+      final module = outline[i];
+      if (module is! Map) continue;
+
+      final source = module['source']?.toString().toLowerCase();
+      if (source != null && source.contains('openai')) {
+        detected.add(i + 1);
+        continue;
+      }
+
+      final lessons = module['lessons'];
+      if (lessons is List &&
+          lessons.isNotEmpty &&
+          lessons.every((lesson) {
+            if (lesson is! Map) return false;
+            final id = lesson['id']?.toString();
+            return id != null && id.startsWith('gen-');
+          })) {
+        detected.add(i + 1);
+      }
+    }
+    return detected;
+  }
+
+  String? _resolvePreviousModuleId(int moduleNumber) {
+    if (moduleNumber <= 1) {
+      return null;
+    }
+
+    final outline = _outlineResponse?['outline'];
+    if (outline is! List) {
+      return null;
+    }
+
+    final previousIndex = moduleNumber - 2;
+    if (previousIndex < 0 || previousIndex >= outline.length) {
+      return null;
+    }
+
+    final previousModule = outline[previousIndex];
+    if (previousModule is! Map) {
+      return null;
+    }
+
+    final candidates = <String?>[
+      previousModule['id']?.toString(),
+      previousModule['moduleId']?.toString(),
+      'module-${moduleNumber - 1}',
+    ];
+
+    for (final candidate in candidates) {
+      final trimmed = candidate?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return null;
+  }
+
+  String _resolveModuleLanguage(String? moduleLanguage) {
+    final candidates = <String?>[
+      moduleLanguage,
+      _activeLanguage,
+      widget.language,
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate != null && candidate.trim().isNotEmpty) {
+        return candidate.trim();
+      }
+    }
+
+    return Localizations.localeOf(context).languageCode;
+  }
+
+  void _showModuleGenerationError(int moduleNumber) {
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    final moduleLabel =
+        l10n?.outlineModuleFallback(moduleNumber) ?? 'Module $moduleNumber';
+    final generic =
+        l10n?.outlineErrorGeneric ?? 'We could not load the outline.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$generic ($moduleLabel)')),
+    );
+  }
+
   void _applyCachedOutline(StoredOutline cached) {
     final response = Map<String, dynamic>.from(cached.rawResponse);
 
@@ -364,6 +674,11 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
       _activeLanguage = cached.lang ?? _activeLanguage;
 
       _isLoading = false;
+
+      _generatingModules.clear();
+      _hydratedModules
+        ..clear()
+        ..addAll(_detectGeneratedModules(response['outline']));
     });
 
     final language = cached.lang ?? _activeLanguage ?? 'en';

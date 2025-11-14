@@ -1,74 +1,152 @@
-# General
-.DS_Store
+# Miscellaneous
 *.class
 *.log
 *.pyc
 *.swp
-*.tar.gz
-*.zip
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
 migrate_working_dir/
 
-# IDE / Editor
-.idea/
-.vscode/
+# IntelliJ related
 *.iml
 *.ipr
 *.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
 
 # Flutter / Dart
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .metadata
+build/
+ios/Pods/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Secrets
+.env
+.env.*
+# --- Flutter ---
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
 .packages
 .melos_tool/
-build/
-coverage/
-ios/Flutter/.last_build_id
-ios/Pods/
-macos/Pods/
 **/Generated.xcconfig
 **/Flutter.podspec
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+macos/Pods/
+*.iml
+*.lock
+*.log
 
-# Android
-android/app/debug
-android/app/profile
-android/app/release
-android/app/google-services.json
+# --- Android ---
 **/local.properties
 **/key.properties
 **/captures/
 
-# Node / Functions
-node_modules/
-functions/lib/
-functions/node_modules/
+# --- VSCode/JetBrains ---
+.vscode/
+.idea/
+
+# --- Node (server) ---
 server/node_modules/
 server/npm-debug.log*
 server/yarn.lock
-firebase-debug.log
 
-# Firebase / Data Connect caches
-.firebase/
-dataconnect/
-
-# GitHub Actions self-hosted runner
-actions-runner/
-
-# Env secrets (anywhere)
+# --- Env secrets (en cualquier carpeta) ---
 .env
-.env.*
 **/.env
 **/.env.local
 server/.env
-
-# Tooling outputs
+/.env
 gitleaks
 gitleaks.exe
 gitleaks-*
 gitleaks-temp/
 *.sarif
 results.sarif
+*.tar.gz
+*.zip
+android/app/google-services.json
+.gitignore
+PROMPT_*.md
+BUGFIX*.md
+FIX_*.md
+DEPLOY_STATUS_FINAL.md
+docs/PROMPT_*.md
+docs/GENERATIVE_SETUP.md
+docs/EDAPTIA_SUMMARY.md
+docs/ESTADO_FINAL_PROYECTO.md
+docs/archive/
+sql_marketing_questions*.json
+functions/data/
+functions/scripts/
+functions/nul
+nul
+get_test_token.cjs
+clear_rate_limits.cjs
+test_smoke_generative.cjs
 
-# Generated or vendored binaries
-functions/test/tmp/
+functions/lib
+functions/node_modules
+/analyze_feat.txt
+/diff_vs_main.txt
+/tests_feat.txt
+/project_tree*.txt
+/test_tree.txt
+functions/src/test_write.txt
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Firebase project-specific
+.firebaserc
+
+# Generated Flutter files
+macos/Flutter/GeneratedPluginRegistrant.swift
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_*.dart
+
+# Backup files
+*.backup
+**/*.backup

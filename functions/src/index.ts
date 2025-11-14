@@ -7,6 +7,20 @@ import { getStorage } from "firebase-admin/storage";
 import * as logger from "firebase-functions/logger";
 import { z } from "zod";
 import { createHash } from "node:crypto";
+import { getCached, setCached, generateCacheKey } from "./cache-service";
+import { savePlacementSession, getPlacementSession } from "./session-store";
+import { getSQLMarketingTemplate } from "./templates/sql-marketing";
+type AssessmentModule = typeof import("./assessment");
+
+let assessmentModule: AssessmentModule | null = null;
+
+function getAssessment(): AssessmentModule {
+  if (!assessmentModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    assessmentModule = require("./assessment") as AssessmentModule;
+  }
+  return assessmentModule;
+}
 
 if (!getApps().length) {
   initializeApp();
@@ -115,7 +129,7 @@ interface AnalyticsCostSample {
 interface OutlineResolutionResult {
   body: OutlineResponseBody;
   counters: AnalyticsCallCounters;
-  resolution: "firestore" | "storage" | "template";
+  resolution: "firestore" | "storage" | "template" | "template_sql";
 }
 
 interface TrendingResolutionResult {
@@ -538,7 +552,12 @@ function adaptTemplateToResponse(template: OutlineTemplate, input: OutlineResolu
     .map((lesson) => lesson.durationMinutes ?? 20)
     .reduce((sum, value) => sum + value, 0);
   const depthMultiplier = input.depth === "deep" ? 1.2 : input.depth === "intro" ? 0.75 : 1;
-  const estimatedHours = Math.max(4, Math.round((estimatedMinutes / 60) * depthMultiplier));
+  const templateEstimatedHours =
+    typeof template.estimatedHours === "number" ? template.estimatedHours : undefined;
+  const baseEstimatedHours = templateEstimatedHours ?? estimatedMinutes / 60;
+  const estimatedHours = templateEstimatedHours
+    ? Number((baseEstimatedHours * depthMultiplier).toFixed(1))
+    : Math.max(4, Math.round((baseEstimatedHours) * depthMultiplier));
 
   const goal = input.goal && input.goal.trim().length > 0 ? input.goal.trim() : template.goal;
 
@@ -562,9 +581,27 @@ function adaptTemplateToResponse(template: OutlineTemplate, input: OutlineResolu
   };
 }
 
+// Outline resolution prefers curated sources (Firestore, Storage) and rehydrates metadata
+// before falling back to template content. If a stored outline is missing lessons, it clones
+// a fallback template by slug. When no persisted artifacts exist, it synthesizes a response
+// from curated templates so clients always receive a structured plan.
 async function resolveOutlineDocument(input: OutlineResolutionInput): Promise<OutlineResolutionResult> {
   const counters = createCounters();
   const slug = slugifyTopic(input.topic);
+
+  if (slug === "sql-marketing" || input.topic.toLowerCase().includes("sql")) {
+    const templateSlug = "sql-marketing";
+    const body = adaptTemplateToResponse(
+      getSQLMarketingTemplate(input.band),
+      input,
+      templateSlug,
+    );
+    return {
+      body,
+      counters,
+      resolution: "template_sql",
+    };
+  }
 
   const fromFirestore = await loadOutlineFromFirestore(slug, counters);
   if (fromFirestore) {
@@ -904,4 +941,179 @@ export const trending = onRequest({ cors: true }, async (req, res) => {
   }
 });
 
+// ============================================================
+// PLACEMENT QUIZ ENDPOINTS
+// ============================================================
+
+// In-memory storage imported from session store (shared with generative endpoints)
+
+/**
+ * POST /placementQuizStart
+ * Body: { topic: string, lang: string }
+ * Returns: { quizId, expiresAt, maxMinutes, questions: [{ id, text, choices }] }
+ */
+export const placementQuizStart = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const { topic, lang } = req.body;
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    const language = lang === "es" ? "es" : "en";
+    const assessment = getAssessment();
+    const quizId = assessment.generateQuizId();
+    const createdAt = Date.now();
+    const expiresAt = createdAt + 60 * 60 * 1000; // 1 hour
+
+    // Load question bank and select calibration questions
+    const bank = assessment.loadQuestionBank(language);
+    const selectedQuestions = assessment.selectCalibrationQuestions(bank, 10);
+
+    // Store session in Firestore
+    await savePlacementSession({
+      quizId,
+      topic: topic.trim(),
+      language,
+      questions: selectedQuestions,
+      createdAt,
+      expiresAt,
+    });
+
+    // Return questions without correct answers
+    const questionsForClient = selectedQuestions.map(q => ({
+      id: q.id,
+      text: q.question,
+      choices: q.options,
+    }));
+
+    res.status(200).json({
+      quizId,
+      expiresAt,
+      maxMinutes: 15,
+      questions: questionsForClient,
+      policy: {
+        numQuestions: 10,
+        maxMinutes: 15,
+      },
+    });
+
+    logger.info(`placementQuizStart: ${quizId} for topic "${topic}" in ${language}`);
+  } catch (error) {
+    logger.error("placementQuizStart error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+/**
+ * POST /placementQuizGrade
+ * Body: { quizId: string, answers: [{ id: string, selectedIndex: number }] }
+ * Returns: { band, scorePct, theta, suggestedDepth, recommendRegenerate, responses: boolean[] }
+ */
+export const placementQuizGrade = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const { quizId, answers } = req.body;
+
+    if (!quizId || typeof quizId !== "string") {
+      res.status(400).json({ error: "Invalid quizId" });
+      return;
+    }
+
+    if (!Array.isArray(answers) || answers.length === 0) {
+      res.status(400).json({ error: "Invalid answers" });
+      return;
+    }
+
+    // Retrieve quiz session from Firestore
+    const session = await getPlacementSession(quizId);
+    if (!session) {
+      res.status(404).json({ error: "Quiz session not found or expired" });
+      return;
+    }
+
+    // Check expiration
+    if (Date.now() > session.expiresAt) {
+      res.status(410).json({ error: "Quiz session expired" });
+      return;
+    }
+
+    // Build answer map
+    const answerMap = new Map<string, number>();
+    answers.forEach((ans: any) => {
+      if (ans.id && typeof ans.choiceIndex === "number") {
+        answerMap.set(ans.id, ans.choiceIndex);
+      }
+    });
+
+    // Debug logging for grading investigation
+    logger.info("Grading quiz - detailed debug info", {
+      quizId,
+      totalQuestions: session.questions.length,
+      totalAnswers: answerMap.size,
+      sampleQuestion: session.questions[0] ? {
+        id: session.questions[0].id,
+        correctAnswer: session.questions[0].correct_answer,
+        correctAnswerType: typeof session.questions[0].correct_answer,
+      } : null,
+      sampleUserAnswer: answerMap.size > 0 ? {
+        id: session.questions[0]?.id,
+        value: answerMap.get(session.questions[0]?.id),
+        valueType: typeof answerMap.get(session.questions[0]?.id),
+      } : null,
+    });
+
+    // Grade quiz
+    const result = getAssessment().gradeQuiz(session.questions, answerMap);
+
+    // Session cleanup happens via TTL or maintenance job
+
+    res.status(200).json({
+      band: result.band,
+      scorePct: result.scorePct,
+      theta: result.theta,
+      suggestedDepth: result.suggestedDepth,
+      recommendRegenerate: false,
+      responses: result.responseCorrectness,
+    });
+
+    logger.info(`placementQuizGrade: ${quizId} -> band=${result.band}, theta=${result.theta.toFixed(2)}, score=${result.scorePct}%`);
+  } catch (error) {
+    logger.error("placementQuizGrade error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
 export const api = outline;
+
+// Export generative endpoints
+export {
+  placementQuizStartLive,
+  outlineGenerative,
+  fetchNextModule,
+  moduleQuizStart,
+  moduleQuizGrade,
+  validateChallenge,
+  outlineTweak,
+  openaiUsageMetrics,
+  adaptivePlanDraft,
+  adaptiveModuleGenerate,
+  adaptiveCheckpointQuiz,
+  adaptiveEvaluateCheckpoint,
+  adaptiveBooster,
+} from "./generative-endpoints";
+export { cleanupAiCache } from "./maintenance";

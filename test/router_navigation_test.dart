@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:edaptia/core/router.dart';
 import 'package:edaptia/features/auth/auth_gate.dart';
 import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/onboarding/onboarding_gate.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 
 Widget _app({Locale locale = const Locale('es')}) => MaterialApp(
@@ -46,8 +47,11 @@ void main() {
 
     expect(built, isA<AuthGate>());
     final gate = built! as AuthGate;
-    expect(gate.child, isA<ModuleOutlineView>());
-    final moduleView = gate.child as ModuleOutlineView;
+    expect(gate.child, isA<OnboardingGate>());
+    // Router now wraps in OnboardingGate -> ModuleOutlineView
+    final onboardingGate = gate.child as OnboardingGate;
+    expect(onboardingGate.child, isA<ModuleOutlineView>());
+    final moduleView = onboardingGate.child as ModuleOutlineView;
     expect(moduleView.initialOutline, isNotNull);
     expect(moduleView.initialSource, 'cache');
   });

@@ -5,10 +5,13 @@ import 'package:edaptia/features/courses/course_entry_view.dart';
 import 'package:edaptia/features/home/home_view.dart';
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
 import 'package:edaptia/features/modules/outline/module_outline_view.dart';
+import 'package:edaptia/features/onboarding/onboarding_gate.dart';
+import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
 import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/features/settings/settings_view.dart';
 import 'package:edaptia/features/support/help_support_screen.dart';
 import 'package:edaptia/features/topics/topic_search_view.dart';
+import 'package:edaptia/features/usage/usage_dashboard_page.dart';
 import 'package:edaptia/widgets/not_found_view.dart';
 
 class AppRouter {
@@ -122,10 +125,34 @@ class AppRouter {
             arguments: args,
           ),
         );
+      case ModuleGateQuizScreen.routeName:
+        final gateArgs = settings.arguments;
+        if (gateArgs is! ModuleGateQuizArgs) {
+          return _invalidRoute(
+            settings,
+            'ModuleGateQuizScreen requires ModuleGateQuizArgs.',
+          );
+        }
+        return _guarded(
+          ModuleGateQuizScreen(
+            moduleNumber: gateArgs.moduleNumber,
+            topic: gateArgs.topic,
+            language: gateArgs.language,
+          ),
+          RouteSettings(
+            name: ModuleGateQuizScreen.routeName,
+            arguments: gateArgs,
+          ),
+        );
       case SettingsView.routeName:
         return _guarded(
           const SettingsView(),
           const RouteSettings(name: SettingsView.routeName),
+        );
+      case UsageDashboardPage.routeName:
+        return _guarded(
+          const UsageDashboardPage(),
+          const RouteSettings(name: UsageDashboardPage.routeName),
         );
       case HelpSupportScreen.routeName:
         return _guarded(
@@ -154,7 +181,9 @@ class AppRouter {
     RouteSettings settings,
   ) {
     return MaterialPageRoute<dynamic>(
-      builder: (_) => AuthGate(child: child),
+      builder: (_) => AuthGate(
+        child: OnboardingGate(child: child),
+      ),
       settings: settings,
     );
   }

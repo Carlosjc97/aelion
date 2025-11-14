@@ -1,13 +1,20 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
+import 'package:edaptia/services/api_config.dart';
 
 import 'course/course_api_client.dart';
 import 'course/models.dart';
+import 'course/course_normalizers.dart';
 import 'course/outline_service.dart' as outline_service;
 import 'course/placement_band.dart' as band_utils;
 import 'course/placement_band.dart';
 import 'course/quiz_service.dart' as quiz_service;
 import 'course/search_service.dart' as search_service;
 import 'course/trending_service.dart' as trending_service;
+import 'course/module_service.dart' as module_service;
+import 'course/adaptive_service.dart' as adaptive_service;
 
 export 'course/models.dart'
     show
@@ -17,11 +24,26 @@ export 'course/models.dart'
         TrendingTopic,
         QuizQuestionDto,
         PlacementQuizQuestion,
-        PlacementQuizAnswer;
+        PlacementQuizAnswer,
+        GatePracticeState,
+        ModuleQuizGradeResult,
+        ChallengeValidationResult,
+        OutlineTweakModule,
+        OutlineTweakResult,
+        UsageEntry,
+        UsageMetrics,
+        AdaptivePlanResponse,
+        AdaptiveLearnerState,
+        AdaptiveModuleResponse,
+        AdaptiveCheckpointResponse,
+        AdaptiveEvaluationResponse,
+        AdaptiveEvaluationResult,
+        AdaptiveBoosterResponse;
 export 'course/placement_band.dart' show PlacementBand;
 
 typedef PlacementQuizStartResponse = PlacementQuizStart;
 typedef PlacementQuizGradeResponse = PlacementQuizGrade;
+typedef ModuleQuizGradeResponse = ModuleQuizGradeResult;
 typedef OutlineFetcher = outline_service.OutlineFetcher;
 
 /// Backwards compatible façade over the modular course services.
@@ -88,6 +110,22 @@ class CourseApiService {
     );
   }
 
+  static Future<PlacementQuizStartResponse> startModuleGateQuiz({
+    required int moduleNumber,
+    required String topic,
+    String language = 'en',
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return quiz_service.QuizService.startModuleQuiz(
+      moduleNumber: moduleNumber,
+      topic: topic,
+      language: language,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
   static Future<PlacementQuizGradeResponse> gradePlacementQuiz({
     required String quizId,
     required List<PlacementQuizAnswer> answers,
@@ -95,6 +133,20 @@ class CourseApiService {
     int maxRetries = 1,
   }) {
     return quiz_service.QuizService.gradePlacementQuiz(
+      quizId: quizId,
+      answers: answers,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<ModuleQuizGradeResponse> gradeModuleQuiz({
+    required String quizId,
+    required List<PlacementQuizAnswer> answers,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return quiz_service.QuizService.gradeModuleQuiz(
       quizId: quizId,
       answers: answers,
       timeout: timeout,
@@ -128,6 +180,22 @@ class CourseApiService {
     );
   }
 
+  static Future<Map<String, dynamic>> fetchGenerativeModule({
+    required String topic,
+    required int moduleNumber,
+    PlacementBand? band,
+    String language = 'en',
+    String? previousModuleId,
+  }) {
+    return module_service.ModuleService.fetchGenerativeModule(
+      topic: topic,
+      moduleNumber: moduleNumber,
+      band: band,
+      language: language,
+      previousModuleId: previousModuleId,
+    );
+  }
+
   static Future<List<QuizQuestionDto>> generateQuiz({
     required String topic,
     int numQuestions = 10,
@@ -144,5 +212,160 @@ class CourseApiService {
       timeout: timeout,
       maxRetries: maxRetries,
     );
+  }
+
+  static Future<ChallengeValidationResult> validateChallenge({
+    required String topic,
+    required String challengeDescription,
+    required String expected,
+    required String answer,
+    String language = 'es',
+    Duration timeout = const Duration(seconds: 15),
+    int maxRetries = 1,
+  }) async {
+    final response = await CourseApiClient.postJson(
+      uri: Uri.parse(ApiConfig.validateChallenge()),
+      body: {
+        'topic': topic.trim(),
+        'lang': normalizeLanguage(language),
+        'challengeDesc': challengeDescription,
+        'expected': expected,
+        'answer': answer,
+      },
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw const FormatException('Invalid challenge validation payload.');
+    }
+    return ChallengeValidationResult.fromJson(
+      Map<String, dynamic>.from(decoded),
+    );
+  }
+
+  static Future<OutlineTweakResult> tweakOutlinePlan({
+    required String topic,
+    required String outlineSummary,
+    List<String> gaps = const <String>[],
+    String language = 'es',
+    Duration timeout = const Duration(seconds: 20),
+    int maxRetries = 1,
+  }) async {
+    final response = await CourseApiClient.postJson(
+      uri: Uri.parse(ApiConfig.outlineTweak()),
+      body: {
+        'topic': topic.trim(),
+        'lang': normalizeLanguage(language),
+        'gaps': gaps,
+        'outlineSummary': outlineSummary,
+      },
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw const FormatException('Invalid outline tweak payload.');
+    }
+    return OutlineTweakResult.fromJson(Map<String, dynamic>.from(decoded));
+  }
+
+  static Future<AdaptivePlanResponse> fetchAdaptivePlanDraft({
+    required String topic,
+    required PlacementBand band,
+    required String target,
+    String? persona,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.fetchPlanDraft(
+      topic: topic,
+      band: band,
+      target: target,
+      persona: persona,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveModuleResponse> generateAdaptiveModule({
+    required String topic,
+    required int moduleNumber,
+    List<String> focusSkills = const <String>[],
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.generateModule(
+      topic: topic,
+      moduleNumber: moduleNumber,
+      focusSkills: focusSkills,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveCheckpointResponse> generateAdaptiveCheckpoint({
+    required String topic,
+    required int moduleNumber,
+    required List<String> skillsTargeted,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.generateCheckpoint(
+      topic: topic,
+      moduleNumber: moduleNumber,
+      skillsTargeted: skillsTargeted,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveEvaluationResponse> evaluateAdaptiveCheckpoint({
+    required int moduleNumber,
+    required List<Map<String, String>> answers,
+    required List<String> skillsTargeted,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.evaluateCheckpoint(
+      moduleNumber: moduleNumber,
+      answers: answers,
+      skillsTargeted: skillsTargeted,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<AdaptiveBoosterResponse> requestAdaptiveBooster({
+    required String topic,
+    required List<String> weakSkills,
+    Duration timeout = _timeout,
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.requestBooster(
+      topic: topic,
+      weakSkills: weakSkills,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+  }
+
+  static Future<UsageMetrics> fetchOpenAiUsageMetrics({
+    Duration timeout = const Duration(seconds: 12),
+    int maxRetries = 1,
+  }) async {
+    final response = await CourseApiClient.get(
+      uri: Uri.parse(ApiConfig.openaiUsageMetrics()),
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw const FormatException('Invalid usage metrics payload.');
+    }
+    return UsageMetrics.fromJson(Map<String, dynamic>.from(decoded));
   }
 }

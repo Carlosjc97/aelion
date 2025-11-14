@@ -199,6 +199,25 @@ class AnalyticsService {
     );
   }
 
+  Future<void> trackTrialStarted(String trigger) {
+    return track(
+      'trial_start',
+      properties: <String, Object?>{
+        'trigger': trigger,
+        'trial_days': 7,
+      },
+      targets: const {targetGa4},
+    );
+  }
+
+  Future<void> trackPaywallDismissed(String trigger) {
+    return track(
+      'paywall_dismissed',
+      properties: <String, Object?>{'trigger': trigger},
+      targets: const {targetGa4},
+    );
+  }
+
   Future<void> trackPurchaseCompleted({
     required String plan,
     required double priceUsd,

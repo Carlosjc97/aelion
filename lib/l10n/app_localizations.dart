@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Aelion'**
+  /// **'Edaptia'**
   String get appTitle;
 
   /// No description provided for @loginTitle.
@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Hello'**
   String get homeGreetingWave;
 
+  /// No description provided for @homeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeTitle;
+
   /// No description provided for @homeMotivation.
   ///
   /// In en, this message translates to:
@@ -266,6 +272,234 @@ abstract class AppLocalizations {
   /// **'From question to guided plan'**
   String get homeShortcutProblemSubtitle;
 
+  /// No description provided for @startCalibration.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover your level'**
+  String get startCalibration;
+
+  /// No description provided for @module1Free.
+  ///
+  /// In en, this message translates to:
+  /// **'Module 1 FREE'**
+  String get module1Free;
+
+  /// No description provided for @unlockPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Premium'**
+  String get unlockPremium;
+
+  /// No description provided for @perMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'/month'**
+  String get perMonth;
+
+  /// No description provided for @gateQuizPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'You passed! You can continue.'**
+  String get gateQuizPassed;
+
+  /// No description provided for @gateQuizFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'You need 70% to advance.'**
+  String get gateQuizFailed;
+
+  /// No description provided for @gateQuizReviewTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Review these topics:'**
+  String get gateQuizReviewTopics;
+
+  /// No description provided for @gateQuizRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get gateQuizRetry;
+
+  /// No description provided for @gatePracticeUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice mode unlocked! Use these hints before retrying.'**
+  String get gatePracticeUnlocked;
+
+  /// No description provided for @gatePracticeLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice mode unlocks after 3 attempts. Keep going!'**
+  String get gatePracticeLocked;
+
+  /// No description provided for @gatePracticeHintsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try these mini missions:'**
+  String get gatePracticeHintsTitle;
+
+  /// No description provided for @gatePracticeAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempts used: {count}/{total}'**
+  String gatePracticeAttempts(int count, int total);
+
+  /// No description provided for @modulePremiumContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium content'**
+  String get modulePremiumContent;
+
+  /// No description provided for @modulePremiumUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock module {moduleNumber} by starting your free trial.'**
+  String modulePremiumUnlock(int moduleNumber);
+
+  /// No description provided for @modulePremiumButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Premium'**
+  String get modulePremiumButton;
+
+  /// No description provided for @moduleGatePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Module quiz pending'**
+  String get moduleGatePending;
+
+  /// No description provided for @moduleGateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass the module {moduleNumber} quiz (>=70%) to advance.'**
+  String moduleGateRequired(int moduleNumber);
+
+  /// No description provided for @moduleGateTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take module quiz'**
+  String get moduleGateTake;
+
+  /// No description provided for @homeEnglishComingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Access'**
+  String get homeEnglishComingTitle;
+
+  /// No description provided for @homeEnglishComingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to try new features and suggest improvements'**
+  String get homeEnglishComingSubtitle;
+
+  /// No description provided for @homeEnglishNotifyCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me'**
+  String get homeEnglishNotifyCta;
+
+  /// No description provided for @homeEnglishNotifyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Already registered'**
+  String get homeEnglishNotifyDone;
+
+  /// No description provided for @homeEnglishNotifySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be notified when Technical English launches!'**
+  String get homeEnglishNotifySuccess;
+
+  /// No description provided for @homeEnglishNotifyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not register notification'**
+  String get homeEnglishNotifyError;
+
+  /// No description provided for @assessmentResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your level: {level}'**
+  String assessmentResultTitle(String level);
+
+  /// No description provided for @assessmentResultLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected level: {level}'**
+  String assessmentResultLevelLabel(String level);
+
+  /// No description provided for @assessmentResultPercentile.
+  ///
+  /// In en, this message translates to:
+  /// **'You scored better than {percentile}% of learners'**
+  String assessmentResultPercentile(int percentile);
+
+  /// No description provided for @assessmentResultStrengthsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Strengths'**
+  String get assessmentResultStrengthsTitle;
+
+  /// No description provided for @assessmentResultGapsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Areas to improve'**
+  String get assessmentResultGapsTitle;
+
+  /// No description provided for @assessmentResultPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested plan'**
+  String get assessmentResultPlanTitle;
+
+  /// No description provided for @assessmentResultShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share results'**
+  String get assessmentResultShare;
+
+  /// No description provided for @assessmentResultCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate my learning plan'**
+  String get assessmentResultCta;
+
+  /// No description provided for @assessmentResultShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'I just completed my {topic} assessment on Edaptia! Level: {level}, Score: {score}%'**
+  String assessmentResultShareMessage(String topic, String level, int score);
+
+  /// No description provided for @assessmentResultClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get assessmentResultClose;
+
+  /// No description provided for @assessmentResultResponsesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answers'**
+  String get assessmentResultResponsesTitle;
+
+  /// No description provided for @settingsLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Language'**
+  String get settingsLanguageTitle;
+
+  /// No description provided for @settingsLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get settingsLanguageSpanish;
+
+  /// No description provided for @settingsLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
   /// No description provided for @homeLogoutTooltip.
   ///
   /// In en, this message translates to:
@@ -325,6 +559,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Solve integrals'**
   String get homePrefillProblem;
+
+  /// No description provided for @commonYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get commonYes;
+
+  /// No description provided for @commonNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get commonNo;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about you'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get onboardingProgressLabel;
+
+  /// No description provided for @onboardingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get onboardingBack;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start learning'**
+  String get onboardingStart;
+
+  /// No description provided for @onboardingSelectLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an option'**
+  String get onboardingSelectLabel;
+
+  /// No description provided for @onboardingQuestionAge.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your age range?'**
+  String get onboardingQuestionAge;
+
+  /// No description provided for @onboardingQuestionInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'Which topics interest you?'**
+  String get onboardingQuestionInterests;
+
+  /// No description provided for @onboardingQuestionEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your education background?'**
+  String get onboardingQuestionEducation;
+
+  /// No description provided for @onboardingQuestionFirstSql.
+  ///
+  /// In en, this message translates to:
+  /// **'Is this your first time learning SQL?'**
+  String get onboardingQuestionFirstSql;
+
+  /// No description provided for @onboardingQuestionBeta.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to be a beta tester?'**
+  String get onboardingQuestionBeta;
+
+  /// No description provided for @onboardingAge18_24.
+  ///
+  /// In en, this message translates to:
+  /// **'18-24'**
+  String get onboardingAge18_24;
+
+  /// No description provided for @onboardingAge25_34.
+  ///
+  /// In en, this message translates to:
+  /// **'25-34'**
+  String get onboardingAge25_34;
+
+  /// No description provided for @onboardingAge35_44.
+  ///
+  /// In en, this message translates to:
+  /// **'35-44'**
+  String get onboardingAge35_44;
+
+  /// No description provided for @onboardingAge45Plus.
+  ///
+  /// In en, this message translates to:
+  /// **'45+'**
+  String get onboardingAge45Plus;
+
+  /// No description provided for @onboardingInterestSql.
+  ///
+  /// In en, this message translates to:
+  /// **'SQL'**
+  String get onboardingInterestSql;
+
+  /// No description provided for @onboardingInterestPython.
+  ///
+  /// In en, this message translates to:
+  /// **'Python'**
+  String get onboardingInterestPython;
+
+  /// No description provided for @onboardingInterestExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel'**
+  String get onboardingInterestExcel;
+
+  /// No description provided for @onboardingInterestData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data analysis'**
+  String get onboardingInterestData;
+
+  /// No description provided for @onboardingInterestMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing'**
+  String get onboardingInterestMarketing;
+
+  /// No description provided for @onboardingEducationSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'High school'**
+  String get onboardingEducationSecondary;
+
+  /// No description provided for @onboardingEducationUniversity.
+  ///
+  /// In en, this message translates to:
+  /// **'University'**
+  String get onboardingEducationUniversity;
+
+  /// No description provided for @onboardingEducationPostgrad.
+  ///
+  /// In en, this message translates to:
+  /// **'Postgraduate'**
+  String get onboardingEducationPostgrad;
+
+  /// No description provided for @onboardingEducationSelfTaught.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-taught'**
+  String get onboardingEducationSelfTaught;
+
+  /// No description provided for @onboardingBetaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Edaptia is in active development. As a beta tester:\\n• You get updates before everyone else\\n• You unlock experimental features\\n• Your feedback helps us improve'**
+  String get onboardingBetaDescription;
+
+  /// No description provided for @onboardingBetaOptIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I want to be a beta tester'**
+  String get onboardingBetaOptIn;
+
+  /// No description provided for @onboardingError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save your answers. Please try again.'**
+  String get onboardingError;
 
   /// No description provided for @notFoundRoute.
   ///
@@ -457,6 +871,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get quizDone;
+
+  /// No description provided for @quizNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get quizNext;
+
+  /// No description provided for @quizSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get quizSubmit;
+
+  /// No description provided for @quizContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get quizContinue;
 
   /// No description provided for @quizUnknownError.
   ///
@@ -1634,6 +2066,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use the Privacy Policy and Terms of Service links in the About section.'**
   String get helpFaqAnswer35;
+
+  /// No description provided for @adaptiveFlowCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive flow'**
+  String get adaptiveFlowCta;
+
+  /// No description provided for @adaptiveFlowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive journey'**
+  String get adaptiveFlowTitle;
+
+  /// No description provided for @adaptiveFlowLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading adaptive plan...'**
+  String get adaptiveFlowLoading;
+
+  /// No description provided for @adaptiveFlowError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load the adaptive plan. Try again.'**
+  String get adaptiveFlowError;
+
+  /// No description provided for @adaptiveFlowNoPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'No adaptive plan yet. Generate one to get started.'**
+  String get adaptiveFlowNoPlan;
+
+  /// No description provided for @adaptiveFlowLearnerState.
+  ///
+  /// In en, this message translates to:
+  /// **'Learner state'**
+  String get adaptiveFlowLearnerState;
+
+  /// No description provided for @adaptiveFlowPlanSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested modules'**
+  String get adaptiveFlowPlanSection;
+
+  /// No description provided for @adaptiveFlowModuleSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Module'**
+  String get adaptiveFlowModuleSection;
+
+  /// No description provided for @adaptiveFlowCheckpointSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkpoint'**
+  String get adaptiveFlowCheckpointSection;
+
+  /// No description provided for @adaptiveFlowBoosterSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Booster'**
+  String get adaptiveFlowBoosterSection;
+
+  /// No description provided for @adaptiveFlowGenerateModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate module'**
+  String get adaptiveFlowGenerateModule;
+
+  /// No description provided for @adaptiveFlowGenerateCheckpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create checkpoint'**
+  String get adaptiveFlowGenerateCheckpoint;
+
+  /// No description provided for @adaptiveFlowSubmitAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluate checkpoint'**
+  String get adaptiveFlowSubmitAnswers;
+
+  /// No description provided for @adaptiveFlowBoosterCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Request booster'**
+  String get adaptiveFlowBoosterCta;
+
+  /// No description provided for @adaptiveFlowWeakSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak skills: {skills}'**
+  String adaptiveFlowWeakSkills(String skills);
+
+  /// No description provided for @adaptiveFlowScoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Score: {score}%'**
+  String adaptiveFlowScoreLabel(int score);
+
+  /// No description provided for @adaptiveFlowActionAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! Advance to the next module.'**
+  String get adaptiveFlowActionAdvance;
+
+  /// No description provided for @adaptiveFlowActionBooster.
+  ///
+  /// In en, this message translates to:
+  /// **'Booster recommended before moving on.'**
+  String get adaptiveFlowActionBooster;
+
+  /// No description provided for @adaptiveFlowActionReplan.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeating this module with more scaffolding.'**
+  String get adaptiveFlowActionReplan;
+
+  /// No description provided for @adaptiveFlowCheckpointMissingSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an answer for each question.'**
+  String get adaptiveFlowCheckpointMissingSelection;
+
+  /// No description provided for @adaptiveFlowEmptySkills.
+  ///
+  /// In en, this message translates to:
+  /// **'No skills tracked yet.'**
+  String get adaptiveFlowEmptySkills;
+
+  /// No description provided for @adaptiveFlowDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration: {minutes} min'**
+  String adaptiveFlowDurationLabel(int minutes);
+
+  /// No description provided for @adaptiveFlowSkillsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills: {skills}'**
+  String adaptiveFlowSkillsLabel(String skills);
+
+  /// No description provided for @adaptiveFlowLockedModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete module {module} to unlock this one.'**
+  String adaptiveFlowLockedModule(String module);
+
+  /// No description provided for @adaptiveFlowLockedPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Premium to keep advancing.'**
+  String get adaptiveFlowLockedPremium;
 }
 
 class _AppLocalizationsDelegate

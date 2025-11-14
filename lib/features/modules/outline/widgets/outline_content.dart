@@ -7,6 +7,7 @@ class OutlineContent extends StatelessWidget {
     required this.courseId,
     required this.response,
     required this.modules,
+    required this.generatingModules,
     this.source,
     this.savedAt,
     this.band,
@@ -18,6 +19,7 @@ class OutlineContent extends StatelessWidget {
   final String courseId;
   final Map<String, dynamic> response;
   final List<Map<String, dynamic>> modules;
+  final Set<int> generatingModules;
   final String? source;
   final DateTime? savedAt;
   final PlacementBand? band;
@@ -56,10 +58,12 @@ class OutlineContent extends StatelessWidget {
           return ModuleCard(
             key: Key('module-${entry.key}'),
             courseId: courseId,
+            courseTopic: topic, // Pass the actual user topic for gate quizzes
             moduleIndex: entry.key,
             module: moduleData,
             courseLanguage: language,
             l10n: l10n,
+            isGenerating: generatingModules.contains(entry.key + 1),
             onExpansionChanged: (expanded) =>
                 onModuleExpansion(moduleData, entry.key, expanded),
           );

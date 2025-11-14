@@ -1,71 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
 import 'package:edaptia/features/modules/outline/module_outline_view.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/providers/streak_provider.dart';
 import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/services/entitlements_service.dart';
+import 'package:edaptia/services/streak_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    EntitlementsService().configureForTesting(memoryOnly: true);
   });
 
   testWidgets('tap first lesson opens detail', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: ModuleOutlineView(
-          topic: 'Physics',
-          language: 'en',
-          initialOutline: const [
-            {
-              'title': 'Module 1',
-              'lessons': [
-                {'title': 'Lesson Alpha', 'content': 'Content body'},
-                {'title': 'Lesson Beta', 'content': 'Content beta'},
-              ],
-            },
-          ],
-          outlineFetcher: ({
-            required String topic,
-            String? goal,
-            String? level,
-            required String language,
-            required String depth,
-            PlacementBand? band,
-          }) async =>
+      ProviderScope(
+        overrides: [
+          streakProvider.overrideWith((ref) => StreakNotifier(
+                _MockStreakService(),
+              )),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ModuleOutlineView(
+            topic: 'Physics',
+            language: 'en',
+            initialOutline: const [
               {
-                'topic': topic,
-                'language': language,
-                'depth': depth,
-                'band': 'beginner',
-                'source': 'test',
-                'outline': const [
-                  {
-                    'title': 'Module 1',
-                    'lessons': [
-                      {'title': 'Lesson Alpha', 'content': 'Content body'},
-                      {'title': 'Lesson Beta', 'content': 'Content beta'},
-                    ],
-                  },
+                'title': 'Module 1',
+                'lessons': [
+                  {'title': 'Lesson Alpha', 'content': 'Content body'},
+                  {'title': 'Lesson Beta', 'content': 'Content beta'},
                 ],
               },
+            ],
+            outlineFetcher: ({
+              required String topic,
+              String? goal,
+              String? level,
+              required String language,
+              required String depth,
+              PlacementBand? band,
+            }) async =>
+                {
+                  'topic': topic,
+                  'language': language,
+                  'depth': depth,
+                  'band': 'beginner',
+                  'source': 'test',
+                  'outline': const [
+                    {
+                      'title': 'Module 1',
+                      'lessons': [
+                        {'title': 'Lesson Alpha', 'content': 'Content body'},
+                        {'title': 'Lesson Beta', 'content': 'Content beta'},
+                      ],
+                    },
+                  ],
+                },
+          ),
+          onGenerateRoute: (settings) {
+            if (settings.name == LessonDetailPage.routeName) {
+              final args = settings.arguments as LessonDetailArgs;
+              return MaterialPageRoute<void>(
+                builder: (_) => LessonDetailPage(args: args),
+                settings: settings,
+              );
+            }
+            return null;
+          },
         ),
-        onGenerateRoute: (settings) {
-          if (settings.name == LessonDetailPage.routeName) {
-            final args = settings.arguments as LessonDetailArgs;
-            return MaterialPageRoute<void>(
-              builder: (_) => LessonDetailPage(args: args),
-              settings: settings,
-            );
-          }
-          return null;
-        },
       ),
     );
 
@@ -96,3 +108,22 @@ void main() {
   });
 }
 
+class _MockStreakService implements StreakService {
+  @override
+  Future<StreakSnapshot> fetch(String userId) async {
+    return const StreakSnapshot(
+      streakDays: 0,
+      lastCheckIn: null,
+      incremented: false,
+    );
+  }
+
+  @override
+  Future<StreakSnapshot> checkIn(String userId) async {
+    return StreakSnapshot(
+      streakDays: 1,
+      lastCheckIn: DateTime.now(),
+      incremented: true,
+    );
+  }
+}

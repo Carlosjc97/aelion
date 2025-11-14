@@ -1,6 +1,447 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Global policy overview
+    //
+    // - Only authenticated users may touch their personal documents.
+    // - Entitlements, caching layers, and rate limits are server-controlled.
+    // - Public data (trending topics) is explicitly whitelisted for reads.
+    // - Every block below documents its intent to aid future maintainers.
+    // - Helper functions prefer composition so that new fields can quickly
+    //   piggyback on existing validation gates.
+    // - When in doubt, collections default to "deny all" and require an
+    //   explicit match block to open access.
+    // - Comments err on the side of verbosity to highlight the reasoning
+    //   behind each rule—treat this file as living documentation.
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Utility helpers shared across every rule block.
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Basic identity helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function requestUserId() {
+      return isSignedIn() ? request.auth.uid : null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function stringBetween(value, minLen, maxLen) {
+      return value is string && value.size() >= minLen && value.size() <= maxLen;
+    }
+
+    function isTimestampValue(value) {
+      return value is timestamp || value == request.time;
+    }
+
+    function isValidLanguage(value) {
+      return value is string && value.size() >= 2 && value.size() <= 8;
+    }
+
+    // ------------------------------------------------------------------
+    // Allowed key definitions
+    // ------------------------------------------------------------------
+
+    function onboardingAllowedKeys() {
+      return [
+        'ageRange',
+        'education',
+        'interests',
+        'firstTimeSql',
+        'betaTester',
+        'skipped',
+        'skippedAt',
+        'completedAt',
+        'updatedAt'
+      ];
+    }
+
+    function entitlementsAllowedKeys() {
+      return [
+        'isPremium',
+        'trialEndsAt',
+        'updatedAt',
+        'source'
+      ];
+    }
+
+    function userAllowedKeys() {
+      return [
+        'onboarding',
+        'entitlements',
+        'displayName',
+        'photoUrl',
+        'language',
+        'lastSeenAt',
+        'preferences',
+        'betaTester',
+        'appMeta',
+        'updatedAt',
+        'createdAt'
+      ];
+    }
+
+    // End of helper toolbox //////////////////////////////////////////////////
+
+    function waitlistAllowedKeys() {
+      return [
+        'userId',
+        'email',
+        'displayName',
+        'language',
+        'platform',
+        'createdAt'
+      ];
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Validation helpers.
+    ////////////////////////////////////////////////////////////////////////////
+
+    // ------------------------------------------------------------------
+    // Optional field guards (string/bool/list/timestamp helpers).
+    //
+    // Each helper below allows us to concisely express "if this optional field
+    // exists, it must respect type/length constraints" without repeating the
+    // same guard logic dozens of times. These helpers intentionally accept any
+    // map so they can be re-used for onboarding payloads, root profile fields,
+    // or nested preference blobs.
+    // ------------------------------------------------------------------
+
+    function optionalStringField(map, fieldName, minLen, maxLen) {
+      return !map.keys().hasAny([fieldName]) ||
+        stringBetween(map[fieldName], minLen, maxLen);
+    }
+
+    function optionalBoolField(map, fieldName) {
+      return !map.keys().hasAny([fieldName]) || map[fieldName] is bool;
+    }
+
+    function optionalTimestampField(map, fieldName) {
+      return !map.keys().hasAny([fieldName]) ||
+        isTimestampValue(map[fieldName]);
+    }
+
+    function optionalListField(map, fieldName, maxItems) {
+      return !map.keys().hasAny([fieldName]) ||
+        (map[fieldName] is list && map[fieldName].size() <= maxItems);
+    }
+
+    function optionalMapField(map, fieldName) {
+      return !map.keys().hasAny([fieldName]) || map[fieldName] is map;
+    }
+
+    // ------------------------------------------------------------------
+    // Domain-specific validators.
+    // ------------------------------------------------------------------
+
+    function onboardingHasValidFields(onboarding) {
+      return onboarding is map &&
+        onboarding.keys().hasOnly(onboardingAllowedKeys()) &&
+        optionalStringField(onboarding, 'ageRange', 2, 40) &&
+        optionalStringField(onboarding, 'education', 2, 60) &&
+        optionalListField(onboarding, 'interests', 12) &&
+        optionalBoolField(onboarding, 'firstTimeSql') &&
+        optionalBoolField(onboarding, 'betaTester') &&
+        optionalBoolField(onboarding, 'skipped') &&
+        optionalTimestampField(onboarding, 'completedAt') &&
+        optionalTimestampField(onboarding, 'updatedAt') &&
+        optionalTimestampField(onboarding, 'skippedAt');
+    }
+
+    // Guard allowed entitlements structure. Clients may only touch the
+    // trial metadata; premium promotion is handled by the backend. Additional
+    // metadata (ex: "source" indicating which funnel activated the trial) is
+    // allowed but still bounded by string length limits.
+    function entitlementsHasValidFields(entitlements) {
+      return entitlements is map &&
+        entitlements.keys().hasOnly(entitlementsAllowedKeys()) &&
+        (!entitlements.keys().hasAny(['isPremium']) ||
+          entitlements.isPremium is bool) &&
+        (!entitlements.keys().hasAny(['updatedAt']) ||
+          isTimestampValue(entitlements.updatedAt)) &&
+        (!entitlements.keys().hasAny(['source']) ||
+          stringBetween(entitlements.source, 2, 48));
+    }
+
+    // Preferences currently store light-weight knobs (language override,
+    // list of pinned topics, notification opt-in). Keeping the list of keys
+    // explicit here protects us from clients sneaking in arbitrary blobs that
+    // could grow without bound.
+    function preferencesAreValid(preferences) {
+      return preferences is map &&
+        preferences.keys().hasOnly(['language', 'topics', 'notifications']) &&
+        optionalStringField(preferences, 'language', 2, 8) &&
+        optionalListField(preferences, 'topics', 16) &&
+        optionalBoolField(preferences, 'notifications');
+    }
+
+    // Prevents clients from toggling `entitlements.isPremium` directly. Server
+    // side code (running with Admin privileges) bypasses rules entirely, so
+    // this guard only affects untrusted traffic.
+    function premiumFlagRaised() {
+      let newValue = getField(request.resource.data, path('entitlements', 'isPremium'));
+      let oldValue = resource.data == null
+        ? null
+        : getField(resource.data, path('entitlements', 'isPremium'));
+      return newValue == true && newValue != oldValue;
+    }
+
+    // Trials should not be arbitrarily extended. This guard allows the client
+    // to set/refresh the timestamp (for example, after a server timestamp
+    // round-trip) but clamps it to 8 days ahead of the current request time.
+    function trialTimestampValid() {
+      let newValue = getField(request.resource.data, path('entitlements', 'trialEndsAt'));
+      if (!(newValue is timestamp) && !(newValue == request.time)) {
+        return newValue == null;
+      }
+      let oldValue = resource.data == null
+        ? null
+        : getField(resource.data, path('entitlements', 'trialEndsAt'));
+      return newValue == oldValue ||
+        (newValue >= request.time &&
+         newValue <= request.time + duration.value(8, 'd'));
+    }
+
+    // Gate entry point used by user create/update.
+    function onboardingIsValid() {
+      let onboarding = request.resource.data.onboarding;
+      return onboarding == null || onboardingHasValidFields(onboarding);
+    }
+
+    function entitlementsAreValid() {
+      let entitlements = request.resource.data.entitlements;
+      return entitlements == null || entitlementsHasValidFields(entitlements);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // users/{userId}
+    //
+    // Shape summary:
+    //   {
+    //     onboarding: {...},    // onboarding questionnaire answers
+    //     entitlements: {...},  // premium / trial metadata
+    //     preferences: {...},   // optional client-only knobs
+    //     profile fields...     // displayName, photoUrl, language, lastSeenAt
+    //   }
+    //
+    // Access summary:
+    //   - Owners may create/update their own document if it respects all
+    //     validation helpers above.
+    //   - No client can delete the root document (server migrations only).
+    //   - moduleGates subcollection is read-only: only Cloud Functions
+    //     persist quiz results there, but learners must be able to read them.
+    ////////////////////////////////////////////////////////////////////////////
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        request.resource.data.keys().hasOnly(userAllowedKeys()) &&
+        onboardingIsValid() &&
+        entitlementsAreValid() &&
+        (!request.resource.data.keys().hasAny(['preferences']) ||
+          preferencesAreValid(request.resource.data.preferences)) &&
+        optionalStringField(request.resource.data, 'displayName', 1, 120) &&
+        optionalStringField(request.resource.data, 'photoUrl', 4, 512) &&
+        optionalStringField(request.resource.data, 'language', 2, 8) &&
+        optionalTimestampField(request.resource.data, 'lastSeenAt') &&
+        optionalTimestampField(request.resource.data, 'updatedAt') &&
+        optionalTimestampField(request.resource.data, 'createdAt') &&
+        !premiumFlagRaised() &&
+        trialTimestampValid();
+
+      allow update: if isOwner(userId) &&
+        request.resource.data.keys().hasOnly(userAllowedKeys()) &&
+        onboardingIsValid() &&
+        entitlementsAreValid() &&
+        (!request.resource.data.keys().hasAny(['preferences']) ||
+          preferencesAreValid(request.resource.data.preferences)) &&
+        optionalStringField(request.resource.data, 'displayName', 1, 120) &&
+        optionalStringField(request.resource.data, 'photoUrl', 4, 512) &&
+        optionalStringField(request.resource.data, 'language', 2, 8) &&
+        optionalTimestampField(request.resource.data, 'lastSeenAt') &&
+        optionalTimestampField(request.resource.data, 'updatedAt') &&
+        optionalTimestampField(request.resource.data, 'createdAt') &&
+        !premiumFlagRaised() &&
+        trialTimestampValid();
+
+      allow delete: if false;
+
+      // Sub-collection: moduleGates (read-only for the owner).
+      match /moduleGates/{moduleId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      // Sub-collection: adaptiveState (read-only snapshot of learner state).
+      match /adaptiveState/{docId} {
+        allow read: if isOwner(userId) && docId == 'summary';
+        allow write: if false;
+      }
+
+      // Sub-collection: adaptiveCheckpoints (answer keys + quiz metadata).
+      // Locked for clients to avoid leaking checkpoint keys; Functions uses
+      // the Admin SDK to manage these docs.
+      match /adaptiveCheckpoints/{docId} {
+        allow read: if false;
+        allow write: if false;
+      }
+
+      // Block any other ad-hoc subcollection unless explicitly allowed.
+      match /{subcollection=**} {
+        allow read, write: if false;
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // user_streaks
+    //
+    // Client-managed record that tracks el progreso diario de cada usuario.
+    // Solo permite al propietario leer/escribir y valida los campos numéricos.
+    ////////////////////////////////////////////////////////////////////////////
+    match /user_streaks/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create, update: if isOwner(userId) &&
+        request.resource.data.keys().hasOnly(['currentStreak', 'lastCheckIn']) &&
+        request.resource.data.keys().hasAll(['currentStreak', 'lastCheckIn']) &&
+        (request.resource.data.currentStreak is int) &&
+        request.resource.data.currentStreak >= 0 &&
+        request.resource.data.currentStreak <= 3650 &&
+        isTimestampValue(request.resource.data.lastCheckIn);
+
+      allow delete: if false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // waitlist_english_tech
+    //
+    // - Accepts a single document per submission with metadata referencing
+    //   the authenticated user.
+    // - Only CREATE is allowed; reads/updates are blocked to protect PII.
+    ////////////////////////////////////////////////////////////////////////////
+
+    match /waitlist_english_tech/{docId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasOnly(waitlistAllowedKeys()) &&
+        (!request.resource.data.keys().hasAny(['userId']) ||
+          request.resource.data.userId == requestUserId()) &&
+        (!request.resource.data.keys().hasAny(['email']) ||
+          stringBetween(request.resource.data.email, 3, 200)) &&
+        (!request.resource.data.keys().hasAny(['displayName']) ||
+          stringBetween(request.resource.data.displayName, 1, 120)) &&
+        (!request.resource.data.keys().hasAny(['language']) ||
+          isValidLanguage(request.resource.data.language)) &&
+        (!request.resource.data.keys().hasAny(['platform']) ||
+          stringBetween(request.resource.data.platform, 2, 32)) &&
+        (request.resource.data.createdAt == request.time);
+
+      allow read, update, delete: if false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // course_outlines cache
+    //
+    // These docs store curated outlines generated offline. They are safe to
+    // expose to authenticated clients for read-only access so the Flutter app
+    // can render instant fallbacks without calling Cloud Functions.
+    ////////////////////////////////////////////////////////////////////////////
+
+    match /course_outlines/{slug} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // analytics_trending + trending snapshots
+    //
+    // Public leaderboards that power the discovery screen. Reads are allowed
+    // to anyone while writes remain server-only. This keeps the UI snappy and
+    // removes pressure from the primary Cloud Function endpoints.
+    //
+    // Docs have the following shape:
+    //   { topics: [{ topic, topicKey, count }...], windowHours: number }
+    // and are regenerated periodically by backend cron jobs.
+    ////////////////////////////////////////////////////////////////////////////
+
+    match /analytics_trending/{lang} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /trending/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Operational collections managed exclusively by Cloud Functions.
+    //
+    // The documents stored in the following collections are implementation
+    // details of backend jobs (cache, openai telemetry, or rate limiting).
+    // Exposing them to the client would leak sensitive data, so they stay
+    // completely locked down.
+    ////////////////////////////////////////////////////////////////////////////
+
+    // ai_cache: AI prompt cache keyed by hash of user request. Completely
+    // server-managed to avoid leaking training data and to keep quota
+    // protection effective.
+    match /ai_cache/{docId} {
+      allow read, write: if false;
+    }
+
+    // analytics_costs: aggregated financial metrics for observability.
+    match /analytics_costs/{docId} {
+      allow read, write: if false;
+    }
+
+    // openai_usage: fine-grained per-call telemetry used for dashboards.
+    match /openai_usage/{docId} {
+      allow read: if false;  // Admin-only via console or trusted tools.
+      allow write: if false; // Cloud Functions (Admin SDK) append-only access.
+    }
+
+    // rate_limits: stores rolling counters for request throttling.
+    match /rate_limits/{bucketId} {
+      allow read, write: if false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // quiz_sessions: Temporary storage for quiz state (placement & module gates)
+    //
+    // - Created by Cloud Functions when a quiz starts
+    // - Read by Cloud Functions when grading quiz responses
+    // - Expires automatically after 1 hour (placement) or 30 min (module gates)
+    // - Users cannot directly access (server-only via Cloud Functions)
+    ////////////////////////////////////////////////////////////////////////////
+    match /quiz_sessions/{sessionId} {
+      allow read, write: if false;  // Server-only via Cloud Functions
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Default catch-all rule
+    //
+    // Any collection not explicitly declared above should remain locked. This
+    // guarantees that future experimental collections start closed by default,
+    // forcing developers to document and reason about access before opening
+    // them up.
+    //
+    // When introducing a new collection:
+    //   1. Decide whether the data is public, per-user, or server-only.
+    //   2. Define the allowed shape with helper functions if needed.
+    //   3. Add a dedicated match block with strong comments.
+    //   4. Keep the catch-all deny statement as the final guard.
+    ////////////////////////////////////////////////////////////////////////////
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -2,6 +2,84 @@
 
 Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Gen‑2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
+## What's New (Jan 2025)
+
+- **⚡ Performance Boost** – Migrated from GPT-4o to GPT-4o-mini for calibration quiz, adaptive plans, and module generation. **3x faster response times, 16x cost reduction** (~$0.012 vs ~$0.19 per user journey).
+- **🚀 Timeout Fix** – Extended Firebase Functions timeout from 60s to 300s for all generative endpoints. Eliminated connection abort errors during plan generation.
+- **📈 Rate Limit Optimization** – Increased rate limits for development (20 requests/5min for adaptive plans, 10 requests/5min for placement quizzes).
+- **Adaptive engagement** – Placement quizzes now cache locally/offline, forward detected gaps to an OpenAI "tweak" call before persisting, and expose shareable, topic-aware results.
+- **Interactive lessons** – Lesson detail screens render AI-authored markdown hooks and validate user submissions through the `validateChallenge` endpoint to unlock badges.
+- **Gamification** – Daily streaks are stored in Firestore via a Riverpod provider and can trigger FCM reminders for lapsed learners.
+- **Cost transparency** – The new usage dashboard consumes `openaiUsageMetrics` to visualize token/cost spend per endpoint with `fl_chart`.
+- **Safer paywall UX** – Paywall helper/modal handle entitlement failures gracefully, emit GA4 `paywall_dismissed`, and expose a callback for additional tracking.
+
+## 🚀 Production Services
+
+### Assessment API (IRT Adaptive Testing)
+**Live Service:** https://assessment-api-110324120650.us-central1.run.app
+
+Adaptive assessment engine using Item Response Theory (IRT) with 3-parameter logistic model. Deployed on Cloud Run with:
+- Firebase Authentication
+- Google Cloud Secret Manager integration
+- HMAC signing + Rate limiting
+- 15 tests passing
+
+**Health Check:**
+```bash
+curl -H "Origin: https://aelion-c90d2.web.app" https://assessment-api-110324120650.us-central1.run.app/health
+# Returns: {"ok":true}
+```
+
+See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for full deployment documentation.
+
+---
+
+## 💰 Paywall & Monetization (MVP)
+
+**Status:** Functional (Mock - No real payment)
+
+The app implements a freemium model with paywall gating:
+- **M1 (Fundamentos SELECT)**: Free forever - 4 lessons (~28 min)
+- **M2-M6**: Premium locked - 18 lessons (~126 min)
+- **Mock Exam**: Premium locked
+- **PDF Cheat Sheet**: Premium locked
+
+### Paywall Triggers
+Three strategic paywall moments:
+1. **Post-calibration**: "Desbloquear plan completo" (first contact after quiz)
+2. **Module locked**: "Continuar con Premium" (friction moment when accessing M2-M6)
+3. **Mock exam**: "Acceder a examen de práctica" (added value)
+
+### Trial
+- **7 days free** (no credit card required)
+- Mock implementation (no RevenueCat integration yet)
+- Trial state persists in memory only (resets on app restart)
+
+### Implementation Files
+```
+lib/services/entitlements_service.dart  # Trial & premium logic
+lib/features/paywall/paywall_modal.dart # Paywall UI
+lib/features/paywall/paywall_helper.dart # Helper for showing paywall
+test/paywall_smoke_test.dart  # 4/4 tests passing
+```
+
+### Testing Paywall Locally
+```bash
+# Run paywall tests
+flutter test test/paywall_smoke_test.dart
+
+# Expected output:
+# ✅ 4/4 tests passing
+```
+
+### GA4 Events
+```
+paywall_viewed (placement: 'post_calibration' | 'module_locked' | 'mock_locked')
+trial_start (trigger: string, trial_days: 7)
+```
+
+See [SMOKE_TEST_CHECKLIST.md](docs/SMOKE_TEST_CHECKLIST.md) for complete testing guide.
+
 ---
 
 ## Backend Quickstart (Firebase Functions)
@@ -162,6 +240,11 @@ Each outline invocation appends a document to the `observability` collection:
 
 Failures to write observability data are logged but never impact the client response.
 
+
+
+## Plan Refinement Policy
+
+Manual "Actualizar plan" actions were removed from the Module Outline screen to avoid unlimited regenerations. Learners now refresh their plans only through the post-quiz flow or the existing "Refinar plan" sheet. See [PLAN_REFINEMENT_POLICY.md](docs/PLAN_REFINEMENT_POLICY.md) for details.
 
 
 ## UI Preview
