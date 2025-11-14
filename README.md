@@ -2,7 +2,7 @@
 
 Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Gen‑2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
-## What's New (Jan 2025)
+## What's New (November 2025)
 
 - **⚡ Performance Boost** – Migrated from GPT-4o to GPT-4o-mini for calibration quiz, adaptive plans, and module generation. **3x faster response times, 16x cost reduction** (~$0.012 vs ~$0.19 per user journey).
 - **🚀 Timeout Fix** – Extended Firebase Functions timeout from 60s to 300s for all generative endpoints. Eliminated connection abort errors during plan generation.
