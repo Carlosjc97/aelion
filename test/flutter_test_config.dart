@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -36,8 +37,41 @@ class _FakeFirebasePlatform extends FirebasePlatform {
 
 class _TestFirebaseAnalytics extends Mock implements FirebaseAnalytics {}
 
+void _setupFirebaseAuthChannelMocks() {
+  const codec = StandardMessageCodec();
+  const idTokenChannel =
+      'dev.flutter.pigeon.firebase_auth_platform_interface.FirebaseAuthHostApi.registerIdTokenListener';
+  const authStateChannel =
+      'dev.flutter.pigeon.firebase_auth_platform_interface.FirebaseAuthHostApi.registerAuthStateListener';
+  const idTokenStreamChannel = 'test.firebase_auth.id_token_stream';
+  const authStateStreamChannel = 'test.firebase_auth.auth_state_stream';
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+  messenger.setMockMessageHandler(
+    idTokenChannel,
+    (ByteData? message) async =>
+        codec.encodeMessage(<Object?>[idTokenStreamChannel]),
+  );
+  messenger.setMockMessageHandler(
+    authStateChannel,
+    (ByteData? message) async =>
+        codec.encodeMessage(<Object?>[authStateStreamChannel]),
+  );
+
+  messenger.setMockMethodCallHandler(
+    MethodChannel(idTokenStreamChannel),
+    (MethodCall call) async => null,
+  );
+  messenger.setMockMethodCallHandler(
+    MethodChannel(authStateStreamChannel),
+    (MethodCall call) async => null,
+  );
+}
+
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  _setupFirebaseAuthChannelMocks();
   FirebasePlatform.instance = _FakeFirebasePlatform();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

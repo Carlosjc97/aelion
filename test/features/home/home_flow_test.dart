@@ -5,7 +5,9 @@ import 'package:edaptia/features/modules/outline/module_outline_view.dart';
 import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/l10n/app_localizations_en.dart';
+import 'package:edaptia/providers/streak_provider.dart';
 import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/services/streak_service.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -120,6 +122,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          streakProvider.overrideWith((ref) => StreakNotifier(
+                _MockStreakService(),
+              )),
+        ],
         child: MaterialApp(
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -219,6 +226,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          streakProvider.overrideWith((ref) => StreakNotifier(
+                _MockStreakService(),
+              )),
+        ],
         child: MaterialApp(
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -271,4 +283,24 @@ void main() {
     expect(capturedModuleArgs, isNotNull);
     expect(capturedModuleArgs!.preferredBand, 'beginner');
   });
+}
+
+class _MockStreakService implements StreakService {
+  @override
+  Future<StreakSnapshot> fetch(String userId) async {
+    return const StreakSnapshot(
+      streakDays: 0,
+      lastCheckIn: null,
+      incremented: false,
+    );
+  }
+
+  @override
+  Future<StreakSnapshot> checkIn(String userId) async {
+    return StreakSnapshot(
+      streakDays: 1,
+      lastCheckIn: DateTime.now(),
+      incremented: true,
+    );
+  }
 }

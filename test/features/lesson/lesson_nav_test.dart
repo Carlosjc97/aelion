@@ -6,18 +6,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
 import 'package:edaptia/features/modules/outline/module_outline_view.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/providers/streak_provider.dart';
 import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/services/entitlements_service.dart';
+import 'package:edaptia/services/streak_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    EntitlementsService().configureForTesting(memoryOnly: true);
   });
 
   testWidgets('tap first lesson opens detail', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          streakProvider.overrideWith((ref) => StreakNotifier(
+                _MockStreakService(),
+              )),
+        ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -99,3 +108,22 @@ void main() {
   });
 }
 
+class _MockStreakService implements StreakService {
+  @override
+  Future<StreakSnapshot> fetch(String userId) async {
+    return const StreakSnapshot(
+      streakDays: 0,
+      lastCheckIn: null,
+      incremented: false,
+    );
+  }
+
+  @override
+  Future<StreakSnapshot> checkIn(String userId) async {
+    return StreakSnapshot(
+      streakDays: 1,
+      lastCheckIn: DateTime.now(),
+      incremented: true,
+    );
+  }
+}

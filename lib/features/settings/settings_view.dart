@@ -26,7 +26,7 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Future<void> _loadLanguage() async {
-    final stored = await LanguagePreferences.getPreferredLanguageCode();
+    final stored = await LanguagePreferences.getLanguageCode();
     if (!mounted) return;
     setState(() => _currentLanguage = stored);
   }
