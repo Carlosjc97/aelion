@@ -101,7 +101,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         topic: widget.topic,
         band: widget.initialBand,
         target: widget.target,
-        timeout: const Duration(seconds: 60),
+        timeout: const Duration(seconds: 120),
       );
 
       final suggestions = planResponse.plan.suggestedModules

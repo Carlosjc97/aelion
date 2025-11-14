@@ -200,15 +200,12 @@ service cloud.firestore {
     // round-trip) but clamps it to 8 days ahead of the current request time.
     function trialTimestampValid() {
       let newValue = getField(request.resource.data, path('entitlements', 'trialEndsAt'));
-      if (!(newValue is timestamp) && !(newValue == request.time)) {
-        return newValue == null;
-      }
       let oldValue = resource.data == null
         ? null
         : getField(resource.data, path('entitlements', 'trialEndsAt'));
-      return newValue == oldValue ||
-        (newValue >= request.time &&
-         newValue <= request.time + duration.value(8, 'd'));
+      return (!(newValue is timestamp) && !(newValue == request.time))
+        ? (newValue == null)
+        : (newValue == oldValue || (newValue >= request.time && newValue <= request.time + duration.value(8, 'd')));
     }
 
     // Gate entry point used by user create/update.
