@@ -29,7 +29,20 @@ class StreakService {
     }
 
     try {
-      final doc = await _firestore.collection('user_streaks').doc(userId).get();
+      final doc = await _firestore
+          .collection('user_streaks')
+          .doc(userId)
+          .get()
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw FirebaseException(
+                plugin: 'cloud_firestore',
+                code: 'timeout',
+                message: 'Streak fetch timed out',
+              );
+            },
+          );
       if (!doc.exists) {
         return const StreakSnapshot(streakDays: 0, lastCheckIn: null, incremented: false);
       }
@@ -43,20 +56,24 @@ class StreakService {
         incremented: false,
       );
     } on FirebaseException catch (e) {
-      // Handle permission-denied gracefully by returning default
-      if (e.code == 'permission-denied') {
+      // Handle permission-denied, unavailable, and timeout gracefully
+      if (e.code == 'permission-denied' ||
+          e.code == 'unavailable' ||
+          e.code == 'timeout') {
         return const StreakSnapshot(streakDays: 0, lastCheckIn: null, incremented: false);
       }
       rethrow;
     }
   }
 
-  Future<StreakSnapshot> checkIn(String userId) async {
+  Future<StreakSnapshot> checkIn(String userId, {int retryCount = 0}) async {
     final docRef = _firestore.collection('user_streaks').doc(userId);
     final now = DateTime.now();
     final nowDay = DateTime(now.year, now.month, now.day);
 
-    final snapshot = await _firestore.runTransaction<StreakSnapshot>((transaction) async {
+    try {
+      final snapshot = await _firestore.runTransaction<StreakSnapshot>(
+        (transaction) async {
       final doc = await transaction.get(docRef);
       final data = doc.data() ?? <String, dynamic>{};
       final previousStreak = data['currentStreak'] is num ? (data['currentStreak'] as num).toInt() : 0;
@@ -90,10 +107,29 @@ class StreakService {
         lastCheckIn: now,
         incremented: incremented,
       );
-    });
+        },
+        timeout: const Duration(seconds: 15),
+      );
 
-    await _ensureReminderSubscription();
-    return snapshot;
+      await _ensureReminderSubscription();
+      return snapshot;
+    } on FirebaseException catch (e) {
+      // Retry on unavailable error
+      if (e.code == 'unavailable' && retryCount < 2) {
+        await Future.delayed(Duration(seconds: 2 * (retryCount + 1)));
+        return checkIn(userId, retryCount: retryCount + 1);
+      }
+
+      // Return default on unavailable or timeout if out of retries
+      if (e.code == 'unavailable' || e.code == 'timeout') {
+        return const StreakSnapshot(
+          streakDays: 0,
+          lastCheckIn: null,
+          incremented: false,
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<void> _ensureReminderSubscription() async {

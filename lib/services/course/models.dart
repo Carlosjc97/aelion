@@ -642,6 +642,33 @@ class AdaptivePlanDraft {
   }
 }
 
+/// Response from /adaptiveModuleCount endpoint
+class ModuleCountResponse {
+  const ModuleCountResponse({
+    required this.moduleCount,
+    required this.rationale,
+    required this.topic,
+    required this.band,
+  });
+
+  final int moduleCount;
+  final String rationale;
+  final String topic;
+  final PlacementBand band;
+
+  factory ModuleCountResponse.fromJson(Map<String, dynamic> map) {
+    return ModuleCountResponse(
+      moduleCount: map['moduleCount'] as int? ?? 4,
+      rationale: map['rationale']?.toString() ?? '',
+      topic: map['topic']?.toString() ?? '',
+      band: placementBandFromString(map['band']?.toString() ?? 'basic'),
+    );
+  }
+
+  @override
+  String toString() => 'ModuleCountResponse($moduleCount modules for $topic)';
+}
+
 class AdaptivePlanResponse {
   const AdaptivePlanResponse({
     required this.plan,
@@ -722,7 +749,7 @@ class AdaptiveLesson {
     required this.hook,
     required this.lessonType,
     required this.theory,
-    required this.exampleLatam,
+    required this.exampleGlobal,
     required this.practice,
     required this.microQuiz,
     this.hint,
@@ -734,7 +761,7 @@ class AdaptiveLesson {
   final String hook;
   final String lessonType;
   final String theory;
-  final String exampleLatam;
+  final String exampleGlobal;
   final AdaptiveLessonPractice practice;
   final List<AdaptiveMcq> microQuiz;
   final String? hint;
@@ -754,7 +781,8 @@ class AdaptiveLesson {
       hook: map['hook']?.toString() ?? '',
       lessonType: map['lessonType']?.toString() ?? 'welcome_summary',
       theory: map['theory']?.toString() ?? '',
-      exampleLatam: map['exampleLATAM']?.toString() ?? '',
+      exampleGlobal: map['exampleGlobal']?.toString() ??
+          map['exampleLATAM']?.toString() ?? '',  // Backward compatibility
       practice: AdaptiveLessonPractice.fromJson(
         Map<String, dynamic>.from(map['practice'] as Map? ?? const {}),
       ),

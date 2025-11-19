@@ -1,4 +1,5 @@
 import { validateOrThrow } from "./validator";
+import * as logger from "firebase-functions/logger";
 
 /** Remove fences, normalise quotes, and trim down to the likely JSON payload. */
 export function coerceJsonCandidate(raw: string): string {
@@ -59,6 +60,7 @@ export interface ModelCaller {
     temperature?: number;
     max_tokens?: number;
     response_format?: unknown;
+    endpointHint?: string;
   }): Promise<string>;
 }
 
@@ -75,13 +77,15 @@ export async function generateWithSchema<T = unknown>(
     temperature?: number;
     max_tokens?: number;
     response_format?: unknown;
+    endpointHint?: string;
   },
   schemaId: string,
   maxRetries = 3,
 ): Promise<T> {
   let lastError: unknown;
   const baseUser = params.user;
-  let currentParams = { ...params };
+  const baseEndpointHint = params.endpointHint ?? schemaId;
+  let currentParams = { ...params, endpointHint: baseEndpointHint };
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const raw = await callModel(currentParams);
@@ -90,6 +94,13 @@ export async function generateWithSchema<T = unknown>(
     try {
       parsed = safeJsonParse(raw);
     } catch (parseError) {
+      logger.error("JSON parse failed on attempt.", {
+        attempt: attempt,
+        error: (parseError as Error).message,
+        jsonLength: raw.length,
+        jsonPreviewStart: raw.substring(0, 400),
+        jsonPreviewEnd: raw.substring(Math.max(0, raw.length - 400)),
+      });
       lastError = new Error(`JSON parse failed (attempt ${attempt}): ${(parseError as Error).message}`);
       if (attempt < maxRetries) {
         const repair = buildRepairPrompt(schemaId, (lastError as Error).message);
@@ -123,13 +134,14 @@ export async function generateJson<T = unknown>(
   user: string,
   model = "gpt-4o",
   temperature = 0.6,
-  max_tokens = 3200,
+  max_tokens = 5000,
   response_format?: unknown,
   maxRetries = 3,
+  endpointHint?: string,
 ): Promise<T> {
   return generateWithSchema<T>(
     callModel,
-    { system, user, model, temperature, max_tokens, response_format },
+    { system, user, model, temperature, max_tokens, response_format, endpointHint },
     schemaId,
     maxRetries,
   );

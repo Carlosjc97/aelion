@@ -119,7 +119,7 @@ class _MockStreakService implements StreakService {
   }
 
   @override
-  Future<StreakSnapshot> checkIn(String userId) async {
+  Future<StreakSnapshot> checkIn(String userId, {int retryCount = 0}) async {
     return StreakSnapshot(
       streakDays: 1,
       lastCheckIn: DateTime.now(),
