@@ -1456,9 +1456,10 @@ function buildModuleUserPrompt(params: {
     `Foco prioritario (ordenado por brecha): ${deficits}`,
     "Genera ENTRE 10 y 14 lecciones. Sigue la siguiente coreografia y utiliza el campo lessonType para cada leccion:",
     lessonBlueprint,
-    "Cada leccion debe incluir: hook (<=140 chars), lessonType (enum), theory (<=2 parrafos), exampleGlobal (global professional example), practice (prompt+expected), microQuiz (2-4 preguntas), hint (1 frase opcional), motivation (micro-copy motivacional <=80 chars) y takeaway.",
+    "CRITICO: Cada leccion debe incluir: hook (<=140 chars), lessonType (enum), theory (<=2 parrafos COMPLETOS nunca vacios), exampleGlobal (global professional example <=400 chars NUNCA vacio), practice (SIEMPRE con prompt y expected nunca vacios), microQuiz (2-4 preguntas), hint (1 frase opcional), motivation (micro-copy motivacional <=80 chars) y takeaway (NUNCA vacio).",
+    "IMPORTANTE: checkpointBlueprint DEBE tener entre 5 y 10 items, no menos de 5.",
     "Haz que la leccion welcome_summary incluya bienvenida + resumen de terminos clave; diagnostic_quiz debe centrarse en preguntas de seleccion multiple; mini_game debe describir pasos estilo juego; reflection debe cerrar con accion concreta.",
-    "SOLO JSON con la estructura solicitada (no incluyas markdown ni texto adicional).",
+    "SOLO JSON con la estructura solicitada (no incluyas markdown ni texto adicional). NUNCA dejes campos requeridos vacios.",
     stringifyJson({
       moduleNumber: "<int>",
       title: "...",
@@ -1492,6 +1493,9 @@ function buildModuleUserPrompt(params: {
         items: [
           { id: "c1", skillTag: "skillA", type: "mcq" },
           { id: "c2", skillTag: "skillB", type: "mcq" },
+          { id: "c3", skillTag: "skillA", type: "mcq" },
+          { id: "c4", skillTag: "skillC", type: "mcq" },
+          { id: "c5", skillTag: "skillB", type: "mcq" },
         ],
         targetReliability: "medium",
       },
