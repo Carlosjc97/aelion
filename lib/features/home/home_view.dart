@@ -1013,8 +1013,8 @@ String _depthLabel(AppLocalizations l10n, String depth) {
 
 String _bandLabel(AppLocalizations l10n, PlacementBand band) {
   switch (band) {
-    case PlacementBand.beginner:
-      return l10n.quizBandBeginner;
+    case PlacementBand.basic:
+      return l10n.quizBandBasic;
     case PlacementBand.intermediate:
       return l10n.quizBandIntermediate;
     case PlacementBand.advanced:

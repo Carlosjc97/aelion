@@ -710,8 +710,8 @@ class _QuizScreenState extends State<QuizScreen> {
 
 String _bandLabel(AppLocalizations l10n, PlacementBand band) {
   switch (band) {
-    case PlacementBand.beginner:
-      return l10n.quizBandBeginner;
+    case PlacementBand.basic:
+      return l10n.quizBandBasic;
     case PlacementBand.intermediate:
       return l10n.quizBandIntermediate;
     case PlacementBand.advanced:
@@ -956,7 +956,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       for (int i = 1; i <= countResponse.moduleCount && i <= _maxTimelineModules; i++) {
         seeds[i] = _ModuleTileState(
           number: i,
-          title: 'MÃ³dulo $i',  // Placeholder, se llenarÃ¡ despuÃ©s con el contenido real
+          title: 'Módulo $i',  // Placeholder, se llenará después con el contenido real
           skills: const <String>[],
           unlocked: i == 1,
           completed: false,
@@ -1485,67 +1485,74 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             icon = Icons.play_circle;
           }
 
-          return AnimatedOpacity(
-            duration: const Duration(milliseconds: 300),
-            opacity: tile.unlocked ? 1 : 0.6,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: background == null ? EdaptiaColors.cardLight : null,
-                gradient: background,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: baseColor.withValues(alpha: baseColor.a * 0.4),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _handleModuleTileTap(tile.number),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: tile.unlocked ? 1 : 0.6,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: background == null ? EdaptiaColors.cardLight : null,
+                    gradient: background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: baseColor.withValues(alpha: baseColor.a * 0.4),
+                    ),
+                  ),
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(icon, color: foreground, size: 18),
-                      const SizedBox(width: 6),
-                      Text(
-                        'M',
-                        style: EdaptiaTypography.title3.copyWith(color: foreground),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, color: foreground, size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'M',
+                            style: EdaptiaTypography.title3.copyWith(color: foreground),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        tile.title,
+                        style: EdaptiaTypography.body.copyWith(color: foreground),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tile.skills.isEmpty
+                            ? l10n.adaptiveFlowEmptySkills
+                            : tile.skills.take(2).join(', '),
+                        style: EdaptiaTypography.caption.copyWith(
+                          color: foreground.withValues(alpha: foreground.a * 0.9),
+                        ),
+                      ),
+                      if (tile.requiresPremium && !_hasPremium) ...[
+                        const SizedBox(height: 8),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: EdaptiaColors.primaryDark,
+                          ),
+                          onPressed: () => PaywallHelper.checkAndShowPaywall(
+                                context,
+                                trigger: 'adaptive_timeline',
+                              ),
+                          icon: const Icon(Icons.workspace_premium_outlined),
+                          label: Text(upgradeLabel),
+                        ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    tile.title,
-                    style: EdaptiaTypography.body.copyWith(color: foreground),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    tile.skills.isEmpty
-                        ? l10n.adaptiveFlowEmptySkills
-                        : tile.skills.take(2).join(', '),
-                    style: EdaptiaTypography.caption.copyWith(
-                      color: foreground.withValues(alpha: foreground.a * 0.9),
-                    ),
-                  ),
-                  if (tile.requiresPremium && !_hasPremium) ...[
-                    const SizedBox(height: 8),
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: EdaptiaColors.primaryDark,
-                      ),
-                      onPressed: () => PaywallHelper.checkAndShowPaywall(
-                            context,
-                            trigger: 'adaptive_timeline',
-                          ),
-                      icon: const Icon(Icons.workspace_premium_outlined),
-                      label: Text(upgradeLabel),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           );

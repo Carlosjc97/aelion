@@ -1,13 +1,14 @@
 # CONTEXT V2 - Edaptia (Documento Consolidado Definitivo)
 
 > **Fecha creación:** 18 Noviembre 2025
-> **Reemplaza:** CONTEXTO_SESION_NUEVA.md, IMPLEMENTACION_COMPLETADA_15NOV.md, RESUMEN_PARA_USUARIO.md
+> **Última actualización:** 22 Noviembre 2025 - Sistema Adaptativo Completo
+> **Reemplaza:** CONTEXTO_SESION_NUEVA.md, IMPLEMENTACION_COMPLETADA_15NOV.md, RESUMEN_PARA_USUARIO.md, RESPUESTAS_SISTEMA_ADAPTATIVO.md
 > **Propósito:** Documento único y definitivo con TODO el contexto del proyecto
 > **Para:** Claude Code, Codex, y nuevos desarrolladores
 
 ---
 
-## ESTADO ACTUAL DEL PROYECTO (18 NOV 2025)
+## ESTADO ACTUAL DEL PROYECTO (22 NOV 2025)
 
 ### Resumen Ejecutivo
 **Edaptia MVP** es una plataforma de aprendizaje adaptativo que genera cursos personalizados con IA (GPT-4o-mini). El usuario completa un quiz de calibración y recibe un plan de 4-12 módulos adaptado a su nivel.
@@ -177,6 +178,427 @@ lib/
 - Módulos: 14 días
 
 **Hit Rate Objetivo:** 85% (solo 15% llama a OpenAI)
+
+---
+
+## SISTEMA ADAPTATIVO COMPLETO
+
+### Overview
+Edaptia NO es un sistema de cursos estáticos. Es un **verdadero sistema adaptativo con IA** que personaliza cada módulo según el progreso del usuario en tiempo real.
+
+### 1. Traducciones Multiidioma (Band Levels)
+
+**Backend (TypeScript):**
+```typescript
+// functions/src/openai-service.ts línea 272
+export type Band = "basic" | "intermediate" | "advanced";
+```
+
+**Frontend (Flutter):**
+```dart
+// lib/services/course/placement_band.dart
+enum PlacementBand { basic, intermediate, advanced }
+
+// Alias para retrocompatibilidad
+'beginner' → PlacementBand.basic
+```
+
+**Traducciones (i18n):**
+```json
+// lib/l10n/app_es.arb
+{
+  "quizBandBasic": "Básico",
+  "quizBandIntermediate": "Intermedio",
+  "quizBandAdvanced": "Avanzado"
+}
+
+// lib/l10n/app_en.arb
+{
+  "quizBandBasic": "Basic",
+  "quizBandIntermediate": "Intermediate",
+  "quizBandAdvanced": "Advanced"
+}
+```
+
+**22 Nov 2025:** Migración completada de `beginner` → `basic` para consistencia con backend.
+
+---
+
+### 2. Estructura de Módulos y Lecciones
+
+**Cada módulo contiene 8-20 lecciones generadas por IA:**
+
+```typescript
+// Estructura de ModuleAdaptive
+{
+  "moduleNumber": 1,
+  "moduleTitle": "Fundamentos de SQL",
+  "lessons": [
+    {
+      "id": "m1-l1",
+      "title": "¿Qué es SQL?",
+      "objective": "Entender el propósito de SQL",
+      "contentBlocks": [
+        { "type": "text", "body": "SQL es..." },
+        { "type": "example", "code": "SELECT * FROM users;" },
+        { "type": "exercise", "prompt": "Escribe tu primer SELECT..." }
+      ],
+      "durationMinutes": 12
+    }
+    // ... 7-19 lecciones más
+  ],
+  "checkpointQuiz": { /* Quiz al final del módulo */ }
+}
+```
+
+**Sistema de Candados Progresivos:**
+
+```dart
+// lib/features/modules/outline/widgets/lesson_card.dart
+final bool isLocked;
+
+// Lógica de desbloqueo:
+- Primera lección de M1: SIEMPRE desbloqueada
+- Siguientes lecciones: Se desbloquean al completar la anterior
+- M2+: Requieren Premium (paywall)
+```
+
+**Código de candados:**
+```dart
+// lib/features/quiz/quiz_screen.dart líneas 961-1263
+unlocked: i == 1,  // M1 siempre desbloqueado
+_timeline[nextNumber]!.unlocked = true;  // Desbloquea siguiente al completar
+
+if (!tile.unlocked) {
+  // Muestra mensaje "Completa M1 primero"
+  ScaffoldMessenger.of(context).showSnackBar(...)
+}
+```
+
+---
+
+### 3. LearnerState: El Cerebro del Sistema Adaptativo
+
+**Estructura (functions/src/openai-service.ts líneas 274-283):**
+
+```typescript
+export interface LearnerState {
+  level_band: Band;                      // "basic" | "intermediate" | "advanced"
+  skill_mastery: Record<string, number>; // {"sql_select": 0.6, "sql_joins": 0.4}
+  history: {
+    passedModules: number[];             // [1, 2, 3]
+    failedModules: number[];             // []
+    commonErrors: string[];              // ["INNER JOIN syntax", "WHERE placement"]
+  };
+  target: string;                        // "Analista de datos junior"
+}
+```
+
+**Flujo de Actualización:**
+
+```
+Quiz de Ubicación
+  ↓ Calcula skill_mastery inicial
+{ sql_select: 0.3, sql_joins: 0.2 }
+  ↓ Genera M1 con band="basic"
+Usuario completa M1
+  ↓ Checkpoint Quiz
+Evalúa respuestas → Actualiza mastery
+  ↓
+{ sql_select: 0.6, sql_joins: 0.4 }  ← MEJORÓ
+  ↓ Genera M2 con learnerState actualizado
+M2 refuerza "sql_joins" (que sigue siendo débil)
+```
+
+**Código de carga/actualización:**
+
+```typescript
+// functions/src/generative-endpoints.ts
+const learnerState = await loadLearnerState(userId);
+
+await getOpenAI().generateModuleAdaptive({
+  topic: "SQL Marketing",
+  learnerState: learnerState,  // ← Progreso arrastrándose
+  nextModuleNumber: 2,
+  topDeficits: ["joins", "subqueries"],
+  target: "Analista junior",
+  userId: userId,
+});
+
+// Después del checkpoint:
+await updateLearnerState(userId, {
+  skill_mastery: evaluation.updatedMastery,  // ← Nueva mastery
+  history: {
+    passedModules: [1, 2],
+    failedModules: [],
+    commonErrors: evaluation.weakSkills
+  }
+});
+```
+
+---
+
+### 4. Sistema de Checkpoint Quiz (Umbral ≥70%)
+
+**Endpoints:**
+- `POST /adaptiveCheckpointQuiz` - Genera quiz al final del módulo
+- `POST /adaptiveEvaluateCheckpoint` - Evalúa y decide acción
+- `POST /adaptiveBooster` - Genera contenido remedial si falla
+
+**Flujo Completo:**
+
+```
+Usuario completa M1 (8-20 lecciones)
+  ↓
+POST /adaptiveCheckpointQuiz
+  → Genera 4-8 preguntas MCQ
+  → skillsTargeted: ["sql_select", "sql_where"]
+  ↓
+Usuario responde quiz
+  ↓
+POST /adaptiveEvaluateCheckpoint
+  → Calcula score: (correctas / total) * 100
+  → Actualiza skill_mastery con algoritmo ELO
+  ↓
+  DECISIÓN:
+  ├─ score < 50%  → action="replan" (rehacer módulo)
+  ├─ score 50-69% → action="booster" (contenido remedial)
+  └─ score ≥ 70%  → action="advance" (desbloquea M2)
+```
+
+**Código de evaluación (functions/src/generative-endpoints.ts líneas 1842-1848):**
+
+```typescript
+let action: "advance" | "booster" | "replan";
+if (evaluation.score < 50) {
+  action = "replan";  // Muy bajo, rehacer módulo
+} else if (evaluation.recommendation === "advance") {
+  action = "advance"; // ≥70% + mastery promedio ≥0.55
+} else {
+  action = "booster"; // Entre 50-70%, necesita refuerzo
+}
+```
+
+**Sistema de Booster:**
+
+Si sacas entre 50-69%:
+```typescript
+POST /adaptiveBooster
+{
+  "topic": "SQL para Marketing",
+  "weakSkills": ["sql_joins"]  // Detectado automáticamente
+}
+
+// Genera:
+{
+  "boosterFor": ["sql_joins"],
+  "lessons": [
+    {
+      "title": "Refuerzo: INNER JOIN paso a paso",
+      "contentBlocks": [/* 2 lecciones cortas */]
+    }
+  ],
+  "microQuiz": [/* 3-4 preguntas de práctica */]
+}
+```
+
+---
+
+### 5. Sistema de Mastery Escalable (Algoritmo ELO)
+
+**Escala de Mastery: 0.0 - 1.0**
+- `0.0-0.3`: No sabe / Nivel muy bajo
+- `0.4-0.6`: Aprendiendo / Nivel medio
+- `0.7-0.9`: Domina / Nivel alto
+- `0.9-1.0`: Experto / Maestría completa
+
+**Algoritmo de Actualización (functions/src/openai-service.ts líneas 1543-1553):**
+
+```typescript
+function applyEloUpdate(
+  mastery: number,       // Mastery actual (ej: 0.4)
+  isCorrect: boolean,    // ¿Respondió bien?
+  difficulty: "easy" | "medium" | "hard"
+): { updated: number; delta: number } {
+  const diff = ITEM_DIFFICULTY[difficulty] ?? 0.5;
+  const expected = 1 / (1 + Math.exp(-(mastery - diff)));
+  const delta = ITEM_K[difficulty] * ((isCorrect ? 1 : 0) - expected);
+  const updated = clamp(mastery + delta, 0, 1);
+  return { updated, delta };
+}
+```
+
+**Ejemplo real:**
+
+```typescript
+// Usuario con mastery bajo en "sql_joins"
+Antes: skill_mastery["sql_joins"] = 0.3
+
+// Responde pregunta MEDIUM correctamente
+applyEloUpdate(0.3, true, "medium")
+  → delta = +0.18
+  → updated = 0.48
+
+// Responde pregunta HARD incorrectamente
+applyEloUpdate(0.48, false, "hard")
+  → delta = -0.12
+  → updated = 0.36
+```
+
+**Meta Escalable:**
+
+```typescript
+// Al generar plan inicial:
+{
+  "moduleCount": 6,
+  "rationale": "Para ser Analista junior necesitas dominar:
+                M1: SELECT (mastery ≥ 0.6)
+                M2-M3: JOINS (mastery ≥ 0.6)
+                M4: Aggregates (mastery ≥ 0.6)
+                M5: Subqueries (mastery ≥ 0.7)
+                M6: Window Functions (mastery ≥ 0.75)"
+}
+
+// Si al terminar M2 detecta que el usuario va muy bien:
+avgMastery = 0.82  // ← Alto
+
+// La IA puede:
+- Reducir M3 (menos lecciones, contenido más avanzado)
+- O agregar temas más complejos
+
+// Si va mal:
+avgMastery = 0.45  // ← Bajo
+
+// La IA genera:
+- Booster automático
+- M3 con más refuerzo en temas débiles
+- Posiblemente agregar un módulo extra de práctica
+```
+
+---
+
+### 6. Número Dinámico de Módulos (NO es fijo M1-M6)
+
+**Rango permitido:**
+```typescript
+// functions/src/adaptive/schemas.ts línea 430
+moduleCount: { type: "integer", minimum: 4, maximum: 12 }
+```
+
+**La IA decide según:**
+```typescript
+// functions/src/openai-service.ts líneas 1342-1356
+Criterios:
+- Complejidad del tema
+- Nivel inicial (basic = más módulos, advanced = menos)
+- Objetivo final (aplicación práctica requiere más que teoría)
+
+Ejemplos:
+"SQL básico" + band="basic" → 8-10 módulos
+"SQL avanzado" + band="advanced" → 4-6 módulos
+"Inglés A1" + band="basic" → 10-12 módulos (idiomas requieren repetición)
+"Python Data Science" + band="intermediate" → 6-8 módulos
+```
+
+**Generación adaptativa de moduleStatus:**
+
+```typescript
+// functions/src/index.ts líneas 780-785
+const moduleStatus: { [key: number]: "pending" | "generating" | "ready" | "error" } = {};
+
+for (let i = 1; i <= moduleCountResult.moduleCount; i++) {
+  moduleStatus[i] = i === 1 ? "generating" : "pending";
+}
+
+// Si moduleCount = 8, crea:
+{ 1: "generating", 2: "pending", 3: "pending", ..., 8: "pending" }
+```
+
+---
+
+### 7. Resumen del Flujo Completo
+
+```mermaid
+flowchart TD
+    A[Quiz de Ubicación 10 preguntas] --> B[Calcula band + skill_mastery]
+    B --> C[POST /adaptiveModuleCount]
+    C --> D[IA decide: 6 módulos]
+    D --> E[Genera M1 con learnerState inicial]
+    E --> F[Usuario completa 8-20 lecciones]
+    F --> G[Checkpoint Quiz M1]
+    G --> H{Calificación}
+
+    H -->|< 50%| I[Replan M1]
+    H -->|50-69%| J[Booster 2 lecciones]
+    J --> K[Mini-quiz booster]
+    K --> L{≥70%?}
+    L -->|Sí| M[Actualiza learnerState]
+    L -->|No| I
+
+    H -->|≥ 70%| M
+    M --> N[Desbloquea M2]
+    N --> O[Genera M2 con learnerState actualizado]
+    O --> P[...ciclo se repite M3, M4, M5, M6]
+    P --> Q[Meta Alcanzada]
+```
+
+---
+
+### 8. Archivos Clave del Sistema Adaptativo
+
+**Backend:**
+```
+functions/src/
+├── openai-service.ts                    # LearnerState, Band, mastery ELO
+│   ├── líneas 272-283: LearnerState interface
+│   ├── líneas 1543-1553: applyEloUpdate (algoritmo ELO)
+│   ├── líneas 1590-1621: generateModuleCount
+│   ├── líneas 1700-1729: generateRemedialBooster
+│   └── líneas 1731-1802: evaluateCheckpoint
+├── generative-endpoints.ts
+│   ├── líneas 1631-1728: adaptiveCheckpointQuiz
+│   ├── líneas 1731-1870: adaptiveEvaluateCheckpoint
+│   └── líneas 1874-1976: adaptiveBooster
+├── adaptive/schemas.ts
+│   ├── líneas 424-433: ModuleCountSchema (min: 4, max: 12)
+│   └── CheckpointQuizSchema, EvaluationResultSchema, etc.
+└── index.ts
+    └── líneas 731-853: adaptiveSessionStart (orquestador)
+```
+
+**Frontend:**
+```
+lib/
+├── services/course/
+│   ├── placement_band.dart              # Enum PlacementBand, mapeo basic/intermediate/advanced
+│   └── models.dart                      # LearnerState model Flutter
+├── features/
+│   ├── quiz/quiz_screen.dart            # líneas 711-720: _bandLabel
+│   ├── modules/outline/widgets/
+│   │   ├── lesson_card.dart             # Sistema de candados por lección
+│   │   └── module_card.dart             # Candados por módulo + paywall
+│   └── paywall/paywall_modal.dart       # Trigger: 'module_locked'
+└── l10n/
+    ├── app_es.arb                       # "Básico", "Intermedio", "Avanzado"
+    └── app_en.arb                       # "Basic", "Intermediate", "Advanced"
+```
+
+---
+
+### 9. Estado de Implementación ✅
+
+| Feature | Estado | Código |
+|---------|--------|--------|
+| **Traducciones ES/EN niveles** | ✅ Migrado `beginner` → `basic` (22 Nov) | `app_es.arb`, `placement_band.dart` |
+| **Lecciones con candados** | ✅ Implementado | `lesson_card.dart:15-61` |
+| **Contenido adaptado según quiz** | ✅ Implementado | `openai-service.ts:generateModuleAdaptive()` |
+| **LearnerState arrastrándose M1→M2→M3** | ✅ Implementado | `generative-endpoints.ts:loadLearnerState()` |
+| **Checkpoint quiz al final** | ✅ Implementado | `POST /adaptiveCheckpointQuiz` |
+| **Umbral ≥70% para pasar** | ✅ Implementado | `adaptiveEvaluateCheckpoint:1842-1848` |
+| **Booster si falla 50-69%** | ✅ Implementado | `POST /adaptiveBooster:1874` |
+| **Replan si falla <50%** | ✅ Implementado | `action="replan"` |
+| **Meta escalable (mastery ELO)** | ✅ Implementado | `applyEloUpdate():1543-1553` |
+| **Módulos dinámicos (4-12)** | ✅ Implementado | `ModuleCountSchema:430` |
 
 ---
 

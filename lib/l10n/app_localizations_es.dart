@@ -452,6 +452,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get quizUnknownError => 'No pudimos cargar el quiz. Intenta de nuevo.';
 
   @override
+  String get quizBandBasic => 'Básico';
+
+  @override
   String get quizBandBeginner => 'Principiante';
 
   @override

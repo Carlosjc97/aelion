@@ -148,6 +148,7 @@
   "quizSubmit": "Enviar",
   "quizContinue": "Continuar",
   "quizUnknownError": "No pudimos cargar el quiz. Intenta de nuevo.",
+  "quizBandBasic": "Básico",
   "quizBandBeginner": "Principiante",
   "quizBandIntermediate": "Intermedio",
   "quizBandAdvanced": "Avanzado",

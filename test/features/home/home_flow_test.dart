@@ -219,7 +219,7 @@ void main() {
       userId: 'anonymous',
       topic: 'Graph Theory',
       language: 'en',
-      band: PlacementBand.beginner,
+      band: PlacementBand.basic,
     );
 
     ModuleOutlineArgs? capturedModuleArgs;
