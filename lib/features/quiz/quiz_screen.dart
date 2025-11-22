@@ -10,6 +10,7 @@ import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/components/edaptia_card.dart';
 import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/features/assessment/assessment_results_screen.dart';
+import 'package:edaptia/features/lesson/lesson_detail_page.dart';
 import 'package:edaptia/features/paywall/paywall_helper.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/providers/streak_provider.dart';
@@ -1608,7 +1609,12 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             const SizedBox(height: 12),
             ...module.lessons.asMap().entries.map((entry) {
               final lesson = entry.value;
-              return _LessonCard(index: entry.key + 1, lesson: lesson);
+              return _LessonCard(
+                index: entry.key + 1,
+                lesson: lesson,
+                moduleTitle: module.title,
+                courseId: widget.topic,
+              );
             }),
           ],
         ),
@@ -1759,7 +1765,12 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             const SizedBox(height: 12),
             ...booster.lessons.asMap().entries.map(
                   (entry) =>
-                      _LessonCard(index: entry.key + 1, lesson: entry.value),
+                      _LessonCard(
+                        index: entry.key + 1,
+                        lesson: entry.value,
+                        moduleTitle: 'Booster: ${booster.boosterFor.join(', ')}',
+                        courseId: widget.topic,
+                      ),
                 ),
           ],
         ),
@@ -1800,53 +1811,93 @@ class _LessonCard extends StatelessWidget {
   const _LessonCard({
     required this.index,
     required this.lesson,
+    required this.moduleTitle,
+    required this.courseId,
   });
 
   final int index;
   final AdaptiveLesson lesson;
+  final String moduleTitle;
+  final String courseId;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        color: theme.colorScheme.surfaceContainerHighest,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            LessonDetailPage.routeName,
+            arguments: LessonDetailArgs(
+              courseId: courseId,
+              moduleTitle: moduleTitle,
+              lessonTitle: lesson.title,
+              content: null,
+              lesson: {
+                'hook': lesson.hook,
+                'theory': lesson.theory,
+                'exampleGlobal': lesson.exampleGlobal,
+                'practice': {
+                  'prompt': lesson.practice.prompt,
+                  'hint': lesson.hint,
+                  'expected': lesson.practice.expected,
+                },
+                'takeaway': lesson.takeaway,
+                'motivation': lesson.motivation,
+                'lessonType': lesson.lessonType,
+              },
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: theme.colorScheme.surfaceContainerHighest,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('L$index â€¢ ${lesson.title}',
-                  style: theme.textTheme.titleSmall),
-              Chip(
-                label: Text(lesson.lessonType.replaceAll('_', ' ')),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text('L$index â€¢ ${lesson.title}',
+                        style: theme.textTheme.titleSmall),
+                  ),
+                  const SizedBox(width: 8),
+                  Chip(
+                    label: Text(lesson.lessonType.replaceAll('_', ' ')),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                lesson.hook,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.arrow_forward, size: 16, color: theme.colorScheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Tap to open lesson',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(lesson.hook),
-          const SizedBox(height: 8),
-          Text(lesson.theory),
-          const SizedBox(height: 8),
-          Text(lesson.exampleGlobal),
-          const SizedBox(height: 8),
-          Text('Practice: ${lesson.practice.prompt}'),
-          if (lesson.hint != null && lesson.hint!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text('Hint: ${lesson.hint!}'),
-          ],
-          if (lesson.motivation != null && lesson.motivation!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(lesson.motivation!),
-          ],
-          const SizedBox(height: 8),
-          Text('Takeaway: ${lesson.takeaway}'),
-        ],
+        ),
       ),
     );
   }
