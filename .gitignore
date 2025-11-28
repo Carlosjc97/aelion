@@ -180,3 +180,27 @@ TECHNICAL_CHANGELOG.md
 
 # Claude Code artifacts
 PROMPT_NEXT_SESSION.md
+
+# Firebase and Google Cloud credentials
+**/credentials.json
+**/service-account*.json
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# API Keys and secrets
+**/api-keys.json
+**/secrets.json
+
+# Large auto-generated files
+node_modules/
+package-lock.json
+
+# iOS certificates and provisioning
+ios/**/*.mobileprovision
+ios/**/*.p12
+ios/**/*.cer
+
+# Android keystores
+**/*.keystore
+**/*.jks
