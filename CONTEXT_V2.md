@@ -1,21 +1,38 @@
 # CONTEXT V2 - Edaptia (Documento Consolidado Definitivo)
 
 > **Fecha creación:** 18 Noviembre 2025
-> **Última actualización:** 27 Noviembre 2025 - Bugs Críticos Identificados
+> **Última actualización:** 28 Noviembre 2025 - Bugs Corregidos + App Hosting Funcionando
 > **Reemplaza:** CONTEXTO_SESION_NUEVA.md, IMPLEMENTACION_COMPLETADA_15NOV.md, RESUMEN_PARA_USUARIO.md, RESPUESTAS_SISTEMA_ADAPTATIVO.md
 > **Propósito:** Documento único y definitivo con TODO el contexto del proyecto
 > **Para:** Claude Code, Codex, y nuevos desarrolladores
 
 ---
 
-## 🔴 BUGS CRÍTICOS PENDIENTES - 27 NOV 2025
+## ESTADO ACTUAL - 28 NOV 2025
 
-**Estado:** 3 bugs críticos identificados, NINGUNO corregido aún
+### Deployment Status
+- **GitHub CI**: PASSING (flutter + functions)
+- **Firebase Functions**: DEPLOYED
+- **App Hosting**: ACTIVE (revision aelion-build-2025-11-28-008)
+- **Servidor Backend**: Escuchando en puerto 8080
+- **URL Producción**: https://aelion-110324120650.us-east4.run.app
+
+### Bugs Críticos: TODOS CORREGIDOS
+- Bug #1 (Quiz off-topic): FIXED
+- Bug #2 (Mojibake): FIXED
+- Bug #3 (Contenido duplicado): FIXED
+
+---
+
+## BUGS CRÍTICOS CORREGIDOS - 28 NOV 2025
+
+**Estado:** 3 bugs críticos identificados el 27 NOV, TODOS corregidos el 28 NOV
 **Reporte completo:** Ver `BUG_REPORT_27NOV_2025.md`
 **Screenshots analizados:** 13 archivos en `C:\Users\Jean Villalta\Downloads\problemas\`
 
-### Bug #1: Quiz de Colocación Genera Preguntas FUERA DEL TEMA 🔴
+### Bug #1: Quiz de Colocación Genera Preguntas FUERA DEL TEMA ✅ CORREGIDO
 **Severidad:** CRÍTICA - Rompe flujo de placement test
+**Status:** FIXED en `functions/src/openai-service.ts`
 
 **Problema:**
 - Usuario selecciona "Francés Básico"
@@ -36,8 +53,9 @@
 
 ---
 
-### Bug #2: Mojibake en Bullet Points (â€¢ en vez de •) 🟡
+### Bug #2: Mojibake en Bullet Points (â€¢ en vez de •) ✅ CORREGIDO
 **Severidad:** MEDIA - Error visual afecta UX
+**Status:** FIXED en `quiz_screen.dart` y `landing/index.html`
 
 **Problema:**
 - "L0 â€¢ Bienvenida" en vez de "L0 • Bienvenida"
@@ -61,8 +79,9 @@ Text('M${module.moduleNumber} • ${module.title}'),
 
 ---
 
-### Bug #3: Contenido Duplicado en Módulos 🔴
+### Bug #3: Contenido Duplicado en Módulos ✅ CORREGIDO
 **Severidad:** CRÍTICA - UI confusa, contenido aparece 2 veces
+**Status:** FIXED en `quiz_screen.dart` (eliminada función duplicada)
 
 **Problema:**
 - Lecciones aparecen DENTRO de M1 expandido (correcto)
@@ -85,15 +104,31 @@ Text('M${module.moduleNumber} • ${module.title}'),
 
 ---
 
-### Orden de Implementación Recomendado
+## APP HOSTING DEBUGGING - 28 NOV 2025
 
-1. **Bug #3** (1 línea) → Mejora UX inmediata
-2. **Bug #2** (1 línea) → Pulido visual
-3. **Bug #1** (requiere deploy backend) → Funcionalidad crítica
+### Problema Root Identificado
+App Hosting fallaba con error: "container failed to start and listen on PORT=8080"
 
-**Deployment Necesario:**
-- Bugs #2 y #3: Solo `flutter run` (frontend)
-- Bug #1: `firebase deploy --only functions` (backend)
+**Root Cause:**
+1. Buildpack usaba `package.json` de la raíz (no `server/package.json`)
+2. Faltaba dependencia `firebase-admin` en root package.json
+3. `package-lock.json` desincronizado
+4. Variable de entorno `SERVER_ALLOWED_ORIGINS` no configurada
+
+### Solución Implementada
+1. Agregado `firebase-admin@13.5.0` a root package.json
+2. Ejecutado `npm install` para actualizar lockfile
+3. Agregado `SERVER_ALLOWED_ORIGINS` a apphosting.yaml
+4. Simplificado apphosting.yaml (runtime: nodejs20, sin Dockerfile)
+
+### Resultado
+- Build: SUCCESS (deps instaladas correctamente)
+- Deployment: SUCCESS
+- Health Check: PASSED
+- Servidor: Escuchando en puerto 8080
+- Status: ACTIVE
+
+**URL Producción:** https://aelion-110324120650.us-east4.run.app
 
 ---
 

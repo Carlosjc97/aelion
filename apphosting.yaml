@@ -1,15 +1,25 @@
 runtime: nodejs20
 
-# Deja que App Hosting use su builder nativo. (Quitamos el bloque 'build')
-# build:
-#   builder: heroku/builder:22
-
 runConfig:
-  entrypoint: node server/server.js
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
 
 env:
   # Usa 'variable' en lugar de 'name'
   # Limita ambas a RUNTIME para que NO se escriban durante BUILD
+  - variable: PORT
+    value: "8080"
+    availability:
+      - RUNTIME
+
+  - variable: SERVER_ALLOWED_ORIGINS
+    value: "https://aelion--aelion-c90d2.us-east4.hosted.app,https://aelion-c90d2.web.app,https://aelion-c90d2.firebaseapp.com"
+    availability:
+      - RUNTIME
+
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
     availability:
