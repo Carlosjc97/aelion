@@ -238,7 +238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSignOutError => 'We could not sign you out. Try again.';
 
   @override
-  String get homeUserFallback => 'Aelion user';
+  String get homeUserFallback => 'Edaptia user';
 
   @override
   String get homeUserNoEmail => 'No email';
@@ -449,6 +449,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quizUnknownError => 'We could not load the quiz. Try again.';
+
+  @override
+  String get quizBandBasic => 'Basic';
 
   @override
   String get quizBandBeginner => 'Beginner';
@@ -759,11 +762,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonQuizCheck => 'Check answer';
 
   @override
-  String get lessonQuizCorrect => '✅ Correct!';
+  String get lessonQuizCorrect => 'âœ… Correct!';
 
   @override
   String lessonQuizIncorrect(String answer) {
-    return '❌ Incorrect. The answer was $answer.';
+    return 'âŒ Incorrect. The answer was $answer.';
   }
 
   @override
@@ -883,12 +886,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String helpEmailSubject(String appName, String version, String device) {
-    return '$appName support request (v$version · $device)';
+    return '$appName support request (v$version Â· $device)';
   }
 
   @override
   String helpBugReportSubject(String appName, String version, String device) {
-    return '$appName bug report (v$version · $device)';
+    return '$appName bug report (v$version Â· $device)';
   }
 
   @override

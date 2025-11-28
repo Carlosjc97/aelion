@@ -1,75 +1,75 @@
-# TestFlight Setup Guide - Aelion MVP
+﻿# TestFlight Setup Guide - Edaptia MVP
 
-> **Objetivo:** Internal testing con 20 slots antes de beta pública
-> **Timeline:** Día -2 (setup) → Día 0 (invitations) → Día 7 (review)
+> **Objetivo:** Internal testing con 20 slots antes de beta pÃºblica
+> **Timeline:** DÃ­a -2 (setup) â†’ DÃ­a 0 (invitations) â†’ DÃ­a 7 (review)
 
 ---
 
-## 📱 Pre-requisitos
+## ðŸ“± Pre-requisitos
 
 - [ ] Apple Developer Account activo ($99/year)
 - [ ] App registrada en App Store Connect
-- [ ] Bundle ID configurado: `com.aelion.app`
+- [ ] Bundle ID configurado: `com.Edaptia.app`
 - [ ] Xcode 15+ instalado
 - [ ] Flutter 3.5+ instalado
-- [ ] Firebase configurado (ya está ✅)
+- [ ] Firebase configurado (ya estÃ¡ âœ…)
 
 ---
 
-## 🚀 Paso 1: Configurar App en App Store Connect
+## ðŸš€ Paso 1: Configurar App en App Store Connect
 
 ### **1.1 Crear App**
 1. Ir a [App Store Connect](https://appstoreconnect.apple.com)
-2. Click **"Apps"** → **"+"** → **"New App"**
+2. Click **"Apps"** â†’ **"+"** â†’ **"New App"**
 3. Configurar:
    - **Platform:** iOS
-   - **Name:** Aelion
+   - **Name:** Edaptia
    - **Primary Language:** Spanish (Spain)
-   - **Bundle ID:** com.aelion.app
-   - **SKU:** aelion-ios-2025
+   - **Bundle ID:** com.Edaptia.app
+   - **SKU:** Edaptia-ios-2025
    - **User Access:** Full Access
 
 ### **1.2 App Information**
 ```
-Name: Aelion
+Name: Edaptia
 Subtitle: Aprende SQL en 3 semanas
 Category: Education
 Secondary Category: Productivity
 
-Privacy Policy URL: https://aelion.dev/privacy (crear página simple)
-Support URL: https://aelion.dev/support
+Privacy Policy URL: https://Edaptia.dev/privacy (crear pÃ¡gina simple)
+Support URL: https://Edaptia.dev/support
 
 Description (short):
-Plan personalizado para aprender SQL basado en tu nivel. 7 días gratis.
+Plan personalizado para aprender SQL basado en tu nivel. 7 dÃ­as gratis.
 
 Description (full):
-Aelion es tu compañero de aprendizaje SQL con evaluación adaptativa.
+Edaptia es tu compaÃ±ero de aprendizaje SQL con evaluaciÃ³n adaptativa.
 
-✓ Evaluación inicial personaliza tu plan
-✓ Algoritmo IRT ajusta dificultad en tiempo real
-✓ 100 preguntas SQL para Marketing Analytics
-✓ Mock exam de práctica
-✓ 7 días gratis sin tarjeta
+âœ“ EvaluaciÃ³n inicial personaliza tu plan
+âœ“ Algoritmo IRT ajusta dificultad en tiempo real
+âœ“ 100 preguntas SQL para Marketing Analytics
+âœ“ Mock exam de prÃ¡ctica
+âœ“ 7 dÃ­as gratis sin tarjeta
 
 Freemium model:
 - M1 (Fundamentos SELECT): Gratis siempre
-- M2-M6: Premium después de 7 días trial
+- M2-M6: Premium despuÃ©s de 7 dÃ­as trial
 ```
 
 ---
 
-## 🔨 Paso 2: Build & Archive (Xcode)
+## ðŸ”¨ Paso 2: Build & Archive (Xcode)
 
 ### **2.1 Configurar Signing**
 1. Abrir proyecto en Xcode:
    ```bash
-   cd /c/Dev/aelion/aelion
+   cd /c/Dev/Edaptia/Edaptia
    flutter build ios --release
    open ios/Runner.xcworkspace
    ```
 
 2. En Xcode:
-   - Target **"Runner"** → **"Signing & Capabilities"**
+   - Target **"Runner"** â†’ **"Signing & Capabilities"**
    - Team: Seleccionar tu Apple Developer Team
    - Signing Certificate: Distribution
    - Provisioning Profile: Automatic
@@ -80,44 +80,44 @@ Freemium model:
 version: 1.0.0+1
 
 // Incrementar +1 en cada build:
-// 1.0.0+1 → Internal testing
-// 1.0.0+2 → Bug fixes
-// 1.0.0+3 → ...
+// 1.0.0+1 â†’ Internal testing
+// 1.0.0+2 â†’ Bug fixes
+// 1.0.0+3 â†’ ...
 ```
 
 ### **2.3 Archive**
-1. Xcode → Menu → **Product** → **Archive**
-2. Esperar compilación (~5-10 min)
-3. Window → **Organizer** → **Archives**
-4. Seleccionar build → **"Distribute App"**
+1. Xcode â†’ Menu â†’ **Product** â†’ **Archive**
+2. Esperar compilaciÃ³n (~5-10 min)
+3. Window â†’ **Organizer** â†’ **Archives**
+4. Seleccionar build â†’ **"Distribute App"**
 
 ### **2.4 Upload to App Store Connect**
-1. Distribute App → **"App Store Connect"**
+1. Distribute App â†’ **"App Store Connect"**
 2. Destination: **"Upload"**
 3. Distribution options:
-   - ✅ Upload symbols (for Crashlytics)
-   - ✅ Manage version and build number
+   - âœ… Upload symbols (for Crashlytics)
+   - âœ… Manage version and build number
 4. Re-sign: **"Automatically manage signing"**
-5. Review summary → **"Upload"**
+5. Review summary â†’ **"Upload"**
 6. Esperar procesamiento (~10-30 min)
 
 ---
 
-## 🧪 Paso 3: Configurar Internal Testing
+## ðŸ§ª Paso 3: Configurar Internal Testing
 
 ### **3.1 Crear Grupo de Testers**
-1. App Store Connect → **"TestFlight"** → **"Internal Testing"**
-2. Click **"+"** → **"Add Group"**
+1. App Store Connect â†’ **"TestFlight"** â†’ **"Internal Testing"**
+2. Click **"+"** â†’ **"Add Group"**
 3. Nombre: **"MVP Team"**
 4. Agregar testers:
-   - Click **"+"** → **"Add Testers"**
+   - Click **"+"** â†’ **"Add Testers"**
    - Email: emails@example.com
    - Role: Internal Tester
    - Maximum: 20 personas
 
 ### **3.2 Seleccionar Build**
-1. Internal Testing → **"MVP Team"**
-2. Click **"+"** → Seleccionar build 1.0.0+1
+1. Internal Testing â†’ **"MVP Team"**
+2. Click **"+"** â†’ Seleccionar build 1.0.0+1
 3. **"Test Details"**:
    ```
    What to Test:
@@ -131,7 +131,7 @@ version: 1.0.0+1
    - Report any crashes or bugs
 
    Feedback:
-   - Email: support@aelion.dev
+   - Email: support@Edaptia.dev
    - Expected: Bugs, UX feedback, feature requests
    ```
 
@@ -139,55 +139,55 @@ version: 1.0.0+1
 
 ---
 
-## 📧 Paso 4: Invitar Testers
+## ðŸ“§ Paso 4: Invitar Testers
 
-### **4.1 Email de Invitación (Automático)**
-Apple envía email automáticamente con:
+### **4.1 Email de InvitaciÃ³n (AutomÃ¡tico)**
+Apple envÃ­a email automÃ¡ticamente con:
 - Link de descarga TestFlight app
-- Código de invitación
-- Instrucciones de instalación
+- CÃ³digo de invitaciÃ³n
+- Instrucciones de instalaciÃ³n
 
 ### **4.2 Follow-up Manual (Opcional)**
 ```
-Subject: 🚀 Aelion Beta - Tu acceso TestFlight está listo
+Subject: ðŸš€ Edaptia Beta - Tu acceso TestFlight estÃ¡ listo
 
 Hola [Nombre],
 
-¡Gracias por ayudarme a probar Aelion!
+Â¡Gracias por ayudarme a probar Edaptia!
 
 INSTRUCCIONES:
 1. Descarga TestFlight app: https://apps.apple.com/us/app/testflight/id899247664
-2. Abre el email de invitación de Apple
+2. Abre el email de invitaciÃ³n de Apple
 3. Click "View in TestFlight" o redeem code
-4. Instala Aelion
+4. Instala Edaptia
 5. Prueba el flujo completo (~10 min)
 
-QUÉ PROBAR:
-✓ Calibration quiz (10 preguntas)
-✓ Paywall después del quiz
-✓ M1 gratis (sin paywall)
-✓ M2-M6 bloqueados (con candado)
-✓ Trial start → M2-M6 se desbloquean
-✓ Completar al menos 1 lección
+QUÃ‰ PROBAR:
+âœ“ Calibration quiz (10 preguntas)
+âœ“ Paywall despuÃ©s del quiz
+âœ“ M1 gratis (sin paywall)
+âœ“ M2-M6 bloqueados (con candado)
+âœ“ Trial start â†’ M2-M6 se desbloquean
+âœ“ Completar al menos 1 lecciÃ³n
 
 REPORTAR BUGS:
-- Email: support@aelion.dev
+- Email: support@Edaptia.dev
 - Screenshot si es posible
 - Device + iOS version
 
-¡Gracias! 🙏
+Â¡Gracias! ðŸ™
 
-PD: Feedback brutal es bienvenido. No te preocupes por herir sentimientos 😅
+PD: Feedback brutal es bienvenido. No te preocupes por herir sentimientos ðŸ˜…
 ```
 
 ---
 
-## 📊 Paso 5: Monitorear Feedback
+## ðŸ“Š Paso 5: Monitorear Feedback
 
 ### **5.1 TestFlight Analytics**
-App Store Connect → TestFlight → Analytics
+App Store Connect â†’ TestFlight â†’ Analytics
 
-**Métricas disponibles:**
+**MÃ©tricas disponibles:**
 - Invitations sent
 - Testers accepted
 - Sessions (total)
@@ -195,40 +195,40 @@ App Store Connect → TestFlight → Analytics
 - Feedback submitted
 
 ### **5.2 Crashlytics**
-Firebase Console → Crashlytics
+Firebase Console â†’ Crashlytics
 
 **Alertas:**
-- Crash-free users: Target ≥ 99%
-- Stack traces con líneas de código
+- Crash-free users: Target â‰¥ 99%
+- Stack traces con lÃ­neas de cÃ³digo
 - Device distribution
 
 ### **5.3 GA4 Events**
-Firebase Console → Analytics → DebugView
+Firebase Console â†’ Analytics â†’ DebugView
 
 **Validar eventos:**
 ```
-✓ user_identified
-✓ paywall_viewed
-✓ trial_start
-✓ module_started
-✓ module_completed
+âœ“ user_identified
+âœ“ paywall_viewed
+âœ“ trial_start
+âœ“ module_started
+âœ“ module_completed
 ```
 
 ---
 
-## 🐛 Paso 6: Iterar Basado en Feedback
+## ðŸ› Paso 6: Iterar Basado en Feedback
 
 ### **6.1 Priorizar Bugs**
 **P0 - Blocker (fix en < 24h):**
 - App crashea al abrir
-- Calibración no completa
+- CalibraciÃ³n no completa
 - Paywall no aparece
 - M1 muestra paywall (debe ser gratis)
 
-**P1 - High (fix en < 3 días):**
+**P1 - High (fix en < 3 dÃ­as):**
 - Trial no desbloquea M2-M6
 - Progreso no persiste
-- Navegación rota
+- NavegaciÃ³n rota
 
 **P2 - Medium (fix en < 1 semana):**
 - UI bugs menores
@@ -243,34 +243,34 @@ Firebase Console → Analytics → DebugView
 ### **6.2 Release New Build**
 1. Fix bugs
 2. Increment build number: `1.0.0+2`
-3. Archive → Upload to App Store Connect
-4. TestFlight → Internal Testing → Add build
+3. Archive â†’ Upload to App Store Connect
+4. TestFlight â†’ Internal Testing â†’ Add build
 5. Testers reciben auto-update notification
 
 ---
 
-## 🚀 Paso 7: Preparar External Testing (Post-MVP)
+## ðŸš€ Paso 7: Preparar External Testing (Post-MVP)
 
 **Solo cuando:**
-- ✅ Internal testing completo (20+ testers)
-- ✅ Crash-free rate ≥ 99%
-- ✅ Trial start rate ≥ 6%
-- ✅ M1 completion rate ≥ 60%
+- âœ… Internal testing completo (20+ testers)
+- âœ… Crash-free rate â‰¥ 99%
+- âœ… Trial start rate â‰¥ 6%
+- âœ… M1 completion rate â‰¥ 60%
 
 **Process:**
-1. App Store Connect → TestFlight → **"External Testing"**
+1. App Store Connect â†’ TestFlight â†’ **"External Testing"**
 2. Submit for review (Apple review required, ~24-48h)
 3. Create public link (max 10,000 testers)
 4. Share link en redes sociales
 
 ---
 
-## 📋 Checklist Pre-Launch
+## ðŸ“‹ Checklist Pre-Launch
 
 **Antes de enviar invitaciones:**
 
 ### **Technical**
-- [ ] Build compiló sin errores
+- [ ] Build compilÃ³ sin errores
 - [ ] Crashlytics recibiendo crashes (test forzado)
 - [ ] GA4 events llegando en DebugView
 - [ ] Paywall funciona (post_calibration + module_locked)
@@ -286,28 +286,28 @@ Firebase Console → Analytics → DebugView
 - [ ] App icon actualizado
 
 ### **Communication**
-- [ ] Email template de invitación
+- [ ] Email template de invitaciÃ³n
 - [ ] Script de feedback request
 - [ ] Dashboard de tracking (Google Sheets)
 
 ---
 
-## 🆘 Troubleshooting
+## ðŸ†˜ Troubleshooting
 
 ### **"Processing" stuck por > 1 hora**
 - Refresh App Store Connect
 - Check email de Apple (puede haber error)
 - Reupload si es necesario
 
-### **Testers no reciben invitación**
+### **Testers no reciben invitaciÃ³n**
 - Check spam folder
-- Reenviar: TestFlight → Testers → Resend Invitation
+- Reenviar: TestFlight â†’ Testers â†’ Resend Invitation
 - Verificar email correcto en App Store Connect
 
 ### **Crashes no aparecen en Crashlytics**
 - Verificar `firebase_crashlytics` en `pubspec.yaml`
 - Check `FirebaseCrashlytics.instance.recordFlutterError` en `main.dart`
-- Esperar 5-10 min después del crash
+- Esperar 5-10 min despuÃ©s del crash
 
 ### **Build rejected by Apple**
 - Review error message en email
@@ -315,11 +315,11 @@ Firebase Console → Analytics → DebugView
   - Missing privacy policy
   - App uses private APIs
   - Incomplete metadata
-- Fix → Resubmit
+- Fix â†’ Resubmit
 
 ---
 
-## 📚 Recursos
+## ðŸ“š Recursos
 
 **Official Docs:**
 - [TestFlight Documentation](https://developer.apple.com/testflight/)
@@ -332,6 +332,7 @@ Firebase Console → Analytics → DebugView
 
 ---
 
-**Última actualización:** 2025-11-04
+**Ãšltima actualizaciÃ³n:** 2025-11-04
 **Owner:** iOS Team
-**Próxima revisión:** Día 7 post-internal testing
+**PrÃ³xima revisiÃ³n:** DÃ­a 7 post-internal testing
+

@@ -1,22 +1,22 @@
-## 📄 2. `CONTRIBUTING.md`
+﻿## ðŸ“„ 2. `CONTRIBUTING.md`
 
 ```markdown
-# Contribuir a Aelion
+# Contribuir a Edaptia
 
-Gracias por querer aportar a Aelion 🚀. Aquí te dejamos las pautas básicas.
+Gracias por querer aportar a Edaptia ðŸš€. AquÃ­ te dejamos las pautas bÃ¡sicas.
 
 ---
 
-## 🔀 Flujo de ramas
+## ðŸ”€ Flujo de ramas
 
 - `main`: rama estable y protegida.
 - `feat/*`: nuevas funcionalidades.
 - `fix/*`: correcciones o hotfixes.
-- `release/*`: preparación de lanzamientos.
+- `release/*`: preparaciÃ³n de lanzamientos.
 
 ---
 
-## 🧪 Validación antes de PR
+## ðŸ§ª ValidaciÃ³n antes de PR
 
 1. Ejecuta:
    ```bash
@@ -26,16 +26,16 @@ Gracias por querer aportar a Aelion 🚀. Aquí te dejamos las pautas básicas.
 Si modificaste el backend:
 
 bash
-Copiar código
+Copiar cÃ³digo
 npm ci --prefix server
 npm run start --prefix server
 curl http://localhost:8787/health
 Verifica que no subes .env ni secretos:
 
 bash
-Copiar código
+Copiar cÃ³digo
 gitleaks detect --source .
-📦 CI/CD
+ðŸ“¦ CI/CD
 GitHub Actions valida cada PR:
 
 Linter (flutter analyze).
@@ -48,22 +48,22 @@ Gitleaks.
 
 El merge a main dispara despliegue a Firebase Hosting/Functions.
 
-🏷 Tags y releases
+ðŸ· Tags y releases
 Cada estado estable se etiqueta:
 
 bash
-Copiar código
-git tag -a vX.Y.Z -m "Descripción"
+Copiar cÃ³digo
+git tag -a vX.Y.Z -m "DescripciÃ³n"
 git push origin vX.Y.Z
-Producción se despliega desde tags.
+ProducciÃ³n se despliega desde tags.
 
-Rollback rápido: git checkout vX.Y.Z.
+Rollback rÃ¡pido: git checkout vX.Y.Z.
 
-✅ Buenas prácticas
-Commits claros y pequeños (feat:, fix:, chore:).
+âœ… Buenas prÃ¡cticas
+Commits claros y pequeÃ±os (feat:, fix:, chore:).
 
 PRs con checklist de QA (tests, build, endpoints).
 
-Documenta cambios en README.md si afectan configuración.
+Documenta cambios en README.md si afectan configuraciÃ³n.
 
 Usa Secrets Manager en lugar de .env para prod.

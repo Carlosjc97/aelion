@@ -1,3 +1,4 @@
+import type { Band } from "./openai-service";
 import { onRequest } from "firebase-functions/v2/https";
 import type { Request, Response } from "express";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -10,6 +11,7 @@ import { createHash } from "node:crypto";
 import { getCached, setCached, generateCacheKey } from "./cache-service";
 import { savePlacementSession, getPlacementSession } from "./session-store";
 import { getSQLMarketingTemplate } from "./templates/sql-marketing";
+
 type AssessmentModule = typeof import("./assessment");
 
 let assessmentModule: AssessmentModule | null = null;
@@ -366,29 +368,6 @@ class RateLimitError extends Error {
   }
 }
 
-export function extractBearerToken(req: Request): string | null {
-  const header = req.headers.authorization ?? req.headers.Authorization;
-  if (!header || typeof header !== "string") {
-    return null;
-  }
-  const match = header.match(/Bearer\s+(.+)/i);
-  return match ? match[1].trim() : null;
-}
-
-export async function resolveUserId(req: Request): Promise<string> {
-  const token = extractBearerToken(req);
-  if (!token) {
-    return "anonymous";
-  }
-  try {
-    const decoded = await authClient.verifyIdToken(token);
-    return decoded?.uid ?? "anonymous";
-  } catch (error) {
-    logger.debug("Failed to verify ID token", error as Error);
-    return "anonymous";
-  }
-}
-
 export function setAuthClientForTesting(client: Auth) {
   authClient = client;
 }
@@ -397,33 +376,7 @@ export function resetAuthClientForTesting() {
   authClient = getAuth();
 }
 
-function fingerprintRequest(req: Request): string {
-  const forwarded = req.headers["x-forwarded-for"];
-  const ip = Array.isArray(forwarded)
-    ? forwarded[0]
-    : typeof forwarded === "string"
-    ? forwarded.split(",")[0]?.trim()
-    : req.ip;
-  const userAgent = req.headers["user-agent"] ?? "unknown";
-  const acceptLanguage = req.headers["accept-language"] ?? "";
-  const raw = `${ip ?? "unknown"}|${userAgent}|${acceptLanguage}`;
-  return createHash("sha1").update(raw).digest("hex");
-}
 
-function enforceRateLimit(scope: string, key: string, limit: number) {
-  const bucketKey = `${scope}:${key}`;
-  const now = Date.now();
-  const bucket = RATE_BUCKETS.get(bucketKey);
-  if (!bucket || bucket.resetAt <= now) {
-    RATE_BUCKETS.set(bucketKey, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return;
-  }
-  if (bucket.count >= limit) {
-    throw new RateLimitError("rate_limit", bucket.resetAt - now);
-  }
-  bucket.count += 1;
-  RATE_BUCKETS.set(bucketKey, bucket);
-}
 
 export function slugifyTopic(topic: string): string {
   const slug = topic
@@ -449,9 +402,11 @@ function normalizeDepth(depth?: string): string {
   return "medium";
 }
 
-function normalizeBand(band?: string): string {
+
+
+function normalizeBand(band?: string): Band {
   const value = (band ?? "intermediate").toLowerCase();
-  if (value.includes("begin")) return "beginner";
+  if (value.includes("begin") || value.includes("basic")) return "basic";
   if (value.includes("advance")) return "advanced";
   return "intermediate";
 }
@@ -751,6 +706,152 @@ function sendMethodNotAllowed(res: Response, allowed: string[]) {
   res.status(405).json({ error: "method_not_allowed" });
 }
 
+import { FieldValue } from "firebase-admin/firestore";
+import {
+  OPENAI_SECRETS,
+  getOpenAI,
+  loadLearnerState,
+} from "./generative-endpoints";
+import {
+  authenticateRequest,
+  enforceRateLimit,
+  resolveRateLimitKey,
+} from "./request-guard";
+
+// ============================================================
+// ADAPTIVE SESSION ENDPOINTS (Sequential Generation)
+// ============================================================
+
+const AdaptiveSessionStartSchema = z.object({
+  topic: z.string().min(3, "topic"),
+  band: z.string().optional(),
+  target: z.string().min(2, "target"),
+});
+
+export const adaptiveSessionStart = onRequest(
+  { cors: true, timeoutSeconds: 60, memory: "256MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    try {
+      const authContext = await authenticateRequest(req, authClient);
+      if (!authContext.userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      const rateKey = `${resolveRateLimitKey(
+        req,
+        authContext.userId,
+      )}:adaptive_session_start`;
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 15,
+        windowSeconds: 300,
+      });
+
+      const body = req.body ?? {};
+      const parsed = AdaptiveSessionStartSchema.safeParse(body);
+      if (!parsed.success) {
+        res
+          .status(400)
+          .json({ error: "invalid_request", details: parsed.error.flatten() });
+        return;
+      }
+
+      const { topic, band, target } = parsed.data;
+      const normalizedBand = normalizeBand(band);
+
+      // 1. Get module count
+      const moduleCountResult = await getOpenAI().generateModuleCount({
+        topic,
+        band: normalizedBand,
+        target,
+        userId: authContext.userId,
+      });
+
+      // 2. Create session in Firestore
+      const sessionId = firestore.collection("adaptive_sessions").doc().id;
+      const sessionRef = firestore.collection("adaptive_sessions").doc(sessionId);
+
+      const moduleStatus: {
+        [key: number]: "pending" | "generating" | "ready" | "error";
+      } = {};
+      for (let i = 1; i <= moduleCountResult.moduleCount; i++) {
+        moduleStatus[i] = i === 1 ? "generating" : "pending";
+      }
+
+      await sessionRef.set({
+        userId: authContext.userId,
+        sessionId,
+        topic,
+        band: normalizedBand,
+        target,
+        moduleCount: moduleCountResult.moduleCount,
+        rationale: moduleCountResult.rationale,
+        moduleStatus,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 3. Trigger M1 generation in the background (don't await)
+      const initialLearnerState = await loadLearnerState(authContext.userId);
+      getOpenAI()
+        .generateModuleAdaptive({
+          topic: topic.trim(),
+          learnerState: initialLearnerState,
+          nextModuleNumber: 1,
+          topDeficits: [],
+          target: target.trim(),
+          userId: authContext.userId,
+        })
+        .then((moduleData) => {
+          // Update session with generated module and set status to 'ready'
+          return sessionRef
+            .collection("modules")
+            .doc("1")
+            .set(moduleData)
+            .then(() => {
+              return sessionRef.update({
+                "moduleStatus.1": "ready",
+                updatedAt: FieldValue.serverTimestamp(),
+              });
+            });
+        })
+        .catch((error) => {
+          logger.error("Error generating module 1 in background", {
+            sessionId,
+            error,
+          });
+          return sessionRef.update({
+            "moduleStatus.1": "error",
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        });
+
+      // 4. Return skeleton immediately
+      res.status(200).json({
+        sessionId,
+        moduleCount: moduleCountResult.moduleCount,
+        rationale: moduleCountResult.rationale,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("RATE_LIMIT")) {
+        res.status(429).json({ error: "Too many requests" });
+        return;
+      }
+      logger.error("adaptiveSessionStart error:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  },
+);
+
 export const outline = onRequest({ cors: true }, async (req, res) => {
   const startedAt = Date.now();
   if (req.method === "OPTIONS") {
@@ -780,9 +881,14 @@ export const outline = onRequest({ cors: true }, async (req, res) => {
 
   let userId: string = "anonymous";
   try {
-    userId = await resolveUserId(req);
-    const rateKey = userId === "anonymous" ? fingerprintRequest(req) : userId;
-    enforceRateLimit("outline", rateKey, userId === "anonymous" ? ANON_OUTLINE_LIMIT : AUTH_OUTLINE_LIMIT);
+    const authContext = await authenticateRequest(req, authClient);
+    userId = authContext.userId ?? "anonymous";
+    const rateKey = resolveRateLimitKey(req, userId);
+    await enforceRateLimit({
+      key: `outline:${rateKey}`,
+      limit: userId === "anonymous" ? 10 : 80,
+      windowSeconds: 60,
+    });
 
     const outlineResult = await resolveOutlineDocument({
       topic,
@@ -872,9 +978,14 @@ export const trending = onRequest({ cors: true }, async (req, res) => {
 
   let userId: string = "anonymous";
   try {
-    userId = await resolveUserId(req);
-    const rateKey = userId === "anonymous" ? fingerprintRequest(req) : userId;
-    enforceRateLimit("trending", rateKey, userId === "anonymous" ? ANON_TRENDING_LIMIT : AUTH_TRENDING_LIMIT);
+    const authContext = await authenticateRequest(req, authClient);
+    userId = authContext.userId ?? "anonymous";
+    const rateKey = resolveRateLimitKey(req, userId);
+    await enforceRateLimit({
+      key: `trending:${rateKey}`,
+      limit: userId === "anonymous" ? 20 : 120,
+      windowSeconds: 60,
+    });
     const { topics, windowHours, source, counters, resolution } = await resolveTrendingTopics(language);
     res.status(200).json({
       lang: language,
@@ -1110,6 +1221,7 @@ export {
   validateChallenge,
   outlineTweak,
   openaiUsageMetrics,
+  adaptiveModuleCount,
   adaptivePlanDraft,
   adaptiveModuleGenerate,
   adaptiveCheckpointQuiz,

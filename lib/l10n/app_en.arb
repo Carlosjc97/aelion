@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "en",
   "appTitle": "Edaptia",
   "loginTitle": "Learn faster with AI",
@@ -71,7 +71,7 @@
     }
   },
   "moduleGateTake": "Take module quiz",
-  "homeEnglishComingTitle": "🌍 Technical English for Devs",
+  "homeEnglishComingTitle": "ðŸŒ Technical English for Devs",
   "homeEnglishComingSubtitle": "COMING SOON\nLearn technical terms, code review English, and more.",
   "homeEnglishNotifyCta": "NOTIFY ME",
   "homeEnglishNotifyDone": "YOU'RE IN",
@@ -113,7 +113,7 @@
   "settingsLanguageEnglish": "English",
   "homeLogoutTooltip": "Sign out",
   "homeSignOutError": "We could not sign you out. Try again.",
-  "homeUserFallback": "Aelion user",
+  "homeUserFallback": "Edaptia user",
   "homeUserNoEmail": "No email",
   "homeSuggestionMath": "Math basics",
   "homeSuggestionEnglish": "Conversational English",
@@ -177,6 +177,7 @@
   "quizSubmit": "Submit",
   "quizContinue": "Continue",
   "quizUnknownError": "We could not load the quiz. Try again.",
+  "quizBandBasic": "Basic",
   "quizBandBeginner": "Beginner",
   "quizBandIntermediate": "Intermediate",
   "quizBandAdvanced": "Advanced",
@@ -486,8 +487,8 @@
   "lessonQuizTitle": "Question",
   "lessonQuizOption": "{letter}) {option}",
   "lessonQuizCheck": "Check answer",
-  "lessonQuizCorrect": "✅ Correct!",
-  "lessonQuizIncorrect": "❌ Incorrect. The answer was {answer}.",
+  "lessonQuizCorrect": "âœ… Correct!",
+  "lessonQuizIncorrect": "âŒ Incorrect. The answer was {answer}.",
   "lessonTipReview": "Tip: if something is unclear, reread and practice for 2 more minutes before moving on.",
   "lessonContentComingSoon": "Content available soon.",
   "commonOk": "OK",
@@ -555,8 +556,8 @@
   "settingsGeneralSection": "General",
   "settingsHelpSupport": "Help & Support",
   "settingsHelpSupportSubtitle": "FAQs, contact, and policies",
-  "helpEmailSubject": "{appName} support request (v{version} · {device})",
-  "helpBugReportSubject": "{appName} bug report (v{version} · {device})",
+  "helpEmailSubject": "{appName} support request (v{version} Â· {device})",
+  "helpBugReportSubject": "{appName} bug report (v{version} Â· {device})",
   "helpBugReportBody": "Timestamp: {timestamp}\nLocale: {locale}\nVersion: {version}\nDevice: {device}\n\nSteps to reproduce:\n- ",
   "helpAboutVersion": "Version {version}",
   "helpFaqQuestion1": "How do I generate my first learning plan?",
@@ -810,3 +811,4 @@
   "settingsLanguageEnglish": "English",
   "settingsLanguageTitle": "App Language"
 }
+

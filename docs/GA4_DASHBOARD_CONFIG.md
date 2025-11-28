@@ -1,27 +1,27 @@
-# GA4 Dashboard Configuration - Aelion MVP
+﻿# GA4 Dashboard Configuration - Edaptia MVP
 
-> **Objetivo:** Monitor métricas críticas para los primeros 100 usuarios
+> **Objetivo:** Monitor mÃ©tricas crÃ­ticas para los primeros 100 usuarios
 > **Fecha:** 2025-11-04
 
 ---
 
-## 🎯 Métricas Críticas (MVP)
+## ðŸŽ¯ MÃ©tricas CrÃ­ticas (MVP)
 
 ### **Funnel Principal**
 ```
-100 usuarios → Calibración → Paywall → Trial → M1 Complete
+100 usuarios â†’ CalibraciÃ³n â†’ Paywall â†’ Trial â†’ M1 Complete
 ```
 
-**Targets (primeros 7 días):**
-- Calibration completion rate: ≥ 70%
-- Trial start rate: ≥ 6%
-- M1 completion rate: ≥ 60%
-- Crash-free rate: ≥ 99%
-- D7 retention: ≥ 12%
+**Targets (primeros 7 dÃ­as):**
+- Calibration completion rate: â‰¥ 70%
+- Trial start rate: â‰¥ 6%
+- M1 completion rate: â‰¥ 60%
+- Crash-free rate: â‰¥ 99%
+- D7 retention: â‰¥ 12%
 
 ---
 
-## 📊 Eventos GA4 Implementados
+## ðŸ“Š Eventos GA4 Implementados
 
 ### **Core Events**
 ```javascript
@@ -97,17 +97,17 @@ purchase_completed {
 
 ---
 
-## 🔧 Configuración en Firebase Console
+## ðŸ”§ ConfiguraciÃ³n en Firebase Console
 
 ### **Paso 1: Crear Dashboard Custom**
 
-1. Ir a **Firebase Console** → Analytics → Dashboard
+1. Ir a **Firebase Console** â†’ Analytics â†’ Dashboard
 2. Click "Create custom report"
-3. Nombre: "MVP 5 DÍAS - Core Metrics"
+3. Nombre: "MVP 5 DÃAS - Core Metrics"
 
 ### **Paso 2: Agregar Cards**
 
-#### **Card 1: Funnel de Conversión**
+#### **Card 1: Funnel de ConversiÃ³n**
 ```
 Type: Funnel
 Events:
@@ -169,7 +169,7 @@ Time range: Last 7 days
 
 ---
 
-## 📈 Queries Útiles (BigQuery)
+## ðŸ“ˆ Queries Ãštiles (BigQuery)
 
 ### **Query 1: Trial Conversion Rate por Trigger**
 ```sql
@@ -178,7 +178,7 @@ WITH paywall_views AS (
     user_pseudo_id,
     event_timestamp,
     (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'placement') AS placement
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE event_name = 'paywall_viewed'
     AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))
       AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
@@ -188,7 +188,7 @@ trial_starts AS (
     user_pseudo_id,
     event_timestamp,
     (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'trigger') AS trigger
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE event_name = 'trial_start'
     AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))
       AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
@@ -212,14 +212,14 @@ ORDER BY conversion_rate_pct DESC;
 ```sql
 WITH users AS (
   SELECT DISTINCT user_pseudo_id
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE event_name = 'user_identified'
     AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))
       AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
 ),
 m1_started AS (
   SELECT DISTINCT user_pseudo_id
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE event_name = 'module_started'
     AND (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'module_id') = 'M1'
     AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))
@@ -227,7 +227,7 @@ m1_started AS (
 ),
 m1_completed AS (
   SELECT DISTINCT user_pseudo_id
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE event_name = 'module_completed'
     AND (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'module_id') = 'M1'
     AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))
@@ -258,7 +258,7 @@ WITH cohort AS (
   SELECT
     user_pseudo_id,
     MIN(DATE(TIMESTAMP_MICROS(event_timestamp))) AS cohort_date
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE event_name = 'user_identified'
     AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY))
       AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
@@ -268,7 +268,7 @@ activity AS (
   SELECT DISTINCT
     user_pseudo_id,
     DATE(TIMESTAMP_MICROS(event_timestamp)) AS activity_date
-  FROM `aelion-c90d2.analytics_*.events_*`
+  FROM `Edaptia-c90d2.analytics_*.events_*`
   WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY))
       AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
 )
@@ -291,7 +291,7 @@ ORDER BY c.cohort_date DESC;
 
 ---
 
-## 🚨 Alertas Sugeridas
+## ðŸš¨ Alertas Sugeridas
 
 ### **Alerta 1: Trial Start Rate Bajo**
 ```
@@ -319,43 +319,44 @@ Action: Revisar contenido M1
 
 ---
 
-## 📱 DebugView (Testing)
+## ðŸ“± DebugView (Testing)
 
 **Activar DebugView para testing:**
 
 ### Android
 ```bash
-adb shell setprop debug.firebase.analytics.app com.aelion.app
+adb shell setprop debug.firebase.analytics.app com.Edaptia.app
 ```
 
 ### iOS
 ```bash
-# En Xcode: Edit Scheme → Run → Arguments → Launch Arguments
+# En Xcode: Edit Scheme â†’ Run â†’ Arguments â†’ Launch Arguments
 -FIRAnalyticsDebugEnabled
 ```
 
 **Validar eventos:**
-1. Abrir Firebase Console → Analytics → DebugView
+1. Abrir Firebase Console â†’ Analytics â†’ DebugView
 2. Ejecutar flujo en emulador/device
 3. Verificar eventos aparecen en real-time
 4. Validar properties correctas
 
 ---
 
-## 🎯 KPIs Semanales (Primeros 30 días)
+## ðŸŽ¯ KPIs Semanales (Primeros 30 dÃ­as)
 
-| Métrica | Target | Crítico |
+| MÃ©trica | Target | CrÃ­tico |
 |---------|--------|---------|
-| Trial start rate | ≥ 6% | Sí |
-| Calibration completion | ≥ 70% | Sí |
-| M1 completion | ≥ 60% | Sí |
-| Crash-free rate | ≥ 99% | Sí |
-| D7 retention | ≥ 12% | No |
-| Avg session duration | ≥ 15 min | No |
-| M2-M6 unlock rate | ≥ 30% | No |
+| Trial start rate | â‰¥ 6% | SÃ­ |
+| Calibration completion | â‰¥ 70% | SÃ­ |
+| M1 completion | â‰¥ 60% | SÃ­ |
+| Crash-free rate | â‰¥ 99% | SÃ­ |
+| D7 retention | â‰¥ 12% | No |
+| Avg session duration | â‰¥ 15 min | No |
+| M2-M6 unlock rate | â‰¥ 30% | No |
 
 ---
 
-**Última actualización:** 2025-11-04
+**Ãšltima actualizaciÃ³n:** 2025-11-04
 **Owner:** Analytics Team
-**Próxima revisión:** Día 7 post-launch
+**PrÃ³xima revisiÃ³n:** DÃ­a 7 post-launch
+

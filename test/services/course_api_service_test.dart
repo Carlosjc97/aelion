@@ -10,7 +10,7 @@ void main() {
     });
 
     test('parses known bands case-insensitively', () {
-      expect(CourseApiService.tryPlacementBandFromString('Beginner'), PlacementBand.beginner);
+      expect(CourseApiService.tryPlacementBandFromString('Beginner'), PlacementBand.basic);
       expect(CourseApiService.tryPlacementBandFromString('INTERMEDIATE'), PlacementBand.intermediate);
       expect(CourseApiService.tryPlacementBandFromString('advanced'), PlacementBand.advanced);
     });

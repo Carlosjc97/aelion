@@ -1,4 +1,4 @@
-# Deployment Landing Page - edaptia.io (Namecheap + Firebase Hosting)
+﻿# Deployment Landing Page - edaptia.io (Namecheap + Firebase Hosting)
 
 > **Objetivo:** Conectar dominio edaptia.io (Namecheap) con Firebase Hosting para servir landing page
 
@@ -6,18 +6,18 @@
 
 ## Estrategia Recomendada
 
-### Opción A: Firebase Hosting (Recomendado) ✅
+### OpciÃ³n A: Firebase Hosting (Recomendado) âœ…
 **Pros:**
 - Free tier generoso (10GB storage, 360MB/day transfer)
-- SSL automático (HTTPS gratis)
-- CDN global (ultra rápido)
+- SSL automÃ¡tico (HTTPS gratis)
+- CDN global (ultra rÃ¡pido)
 - Deploy con un comando: `firebase deploy`
-- Integración nativa con GA4/Analytics
+- IntegraciÃ³n nativa con GA4/Analytics
 
 **Cons:**
 - Requiere configurar DNS en Namecheap
 
-### Opción B: Namecheap Hosting Directo
+### OpciÃ³n B: Namecheap Hosting Directo
 **Pros:**
 - Todo en un lugar (dominio + hosting)
 - Panel cPanel familiar
@@ -25,9 +25,9 @@
 **Cons:**
 - Hosting shared lento
 - SSL manual (Let's Encrypt)
-- Sin CDN (más lento globalmente)
+- Sin CDN (mÃ¡s lento globalmente)
 
-**Recomendación:** **Firebase Hosting** (más rápido, gratis, mejor experiencia)
+**RecomendaciÃ³n:** **Firebase Hosting** (mÃ¡s rÃ¡pido, gratis, mejor experiencia)
 
 ---
 
@@ -56,7 +56,7 @@ firebase init hosting
 
 ### 2. Configurar firebase.json
 
-Editar `firebase.json` (debería verse así):
+Editar `firebase.json` (deberÃ­a verse asÃ­):
 
 ```json
 {
@@ -98,29 +98,29 @@ Editar `firebase.json` (debería verse así):
 firebase serve --only hosting
 # Abrir http://localhost:5000
 
-# Deploy a producción
+# Deploy a producciÃ³n
 firebase deploy --only hosting
 ```
 
 **Output:**
 ```
-✔  Deploy complete!
+âœ”  Deploy complete!
 
 Project Console: https://console.firebase.google.com/project/YOUR_PROJECT_ID/overview
 Hosting URL: https://YOUR_PROJECT_ID.web.app
 ```
 
-Copia la URL de Hosting (ej: `aelion-mvp.web.app`)
+Copia la URL de Hosting (ej: `Edaptia-mvp.web.app`)
 
 ---
 
 ### 4. Agregar Custom Domain en Firebase Console
 
-1. Ir a Firebase Console → Hosting → "Add custom domain"
+1. Ir a Firebase Console â†’ Hosting â†’ "Add custom domain"
 2. Ingresar: `edaptia.io`
-3. Firebase mostrará 2 registros DNS a configurar:
+3. Firebase mostrarÃ¡ 2 registros DNS a configurar:
 
-**Ejemplo (tus valores serán diferentes):**
+**Ejemplo (tus valores serÃ¡n diferentes):**
 ```
 Type: A
 Name: @
@@ -144,7 +144,7 @@ Value: edaptia.io.
 
 1. **Login a Namecheap**
    - Ir a https://namecheap.com
-   - Dashboard → Domain List → edaptia.io → "Manage"
+   - Dashboard â†’ Domain List â†’ edaptia.io â†’ "Manage"
 
 2. **Ir a Advanced DNS**
    - Click tab "Advanced DNS"
@@ -159,7 +159,7 @@ Value: edaptia.io.
    | A Record | @ | 151.101.65.195 | Automatic |
    | CNAME Record | www | edaptia.io. | Automatic |
 
-   **Nota:** Los IPs específicos los obtienes de Firebase Console (paso 4)
+   **Nota:** Los IPs especÃ­ficos los obtienes de Firebase Console (paso 4)
 
 4. **Eliminar registros conflictivos (si hay)**
    - Eliminar cualquier registro A existente para `@`
@@ -170,9 +170,9 @@ Value: edaptia.io.
 
 ---
 
-### 6. Verificar DNS (esperar propagación)
+### 6. Verificar DNS (esperar propagaciÃ³n)
 
-**Tiempo de propagación:** 10 minutos - 48 horas (usualmente < 1 hora)
+**Tiempo de propagaciÃ³n:** 10 minutos - 48 horas (usualmente < 1 hora)
 
 ```bash
 # Verificar registros A
@@ -196,21 +196,21 @@ www.edaptia.io    CNAME edaptia.io
 
 ### 7. Verificar dominio en Firebase Console
 
-1. Regresar a Firebase Console → Hosting → "Add custom domain"
-2. Firebase verificará automáticamente los registros DNS
-3. Cuando DNS esté propagado, verás:
+1. Regresar a Firebase Console â†’ Hosting â†’ "Add custom domain"
+2. Firebase verificarÃ¡ automÃ¡ticamente los registros DNS
+3. Cuando DNS estÃ© propagado, verÃ¡s:
    ```
-   ✓ DNS records verified
-   ✓ SSL certificate provisioned
+   âœ“ DNS records verified
+   âœ“ SSL certificate provisioned
    ```
-4. **Status:** Connected ✅
-5. **URL final:** https://edaptia.io (con SSL automático)
+4. **Status:** Connected âœ…
+5. **URL final:** https://edaptia.io (con SSL automÃ¡tico)
 
 ---
 
 ## Mejoras al Landing Page
 
-### Cambio 1: Botón CTA → Link a Play Store Internal Testing
+### Cambio 1: BotÃ³n CTA â†’ Link a Play Store Internal Testing
 
 Actualizar `landing/index.html` line 220 y 263:
 
@@ -218,7 +218,7 @@ Actualizar `landing/index.html` line 220 y 263:
 <!-- Antes -->
 <a href="#" class="cta-button">Empieza gratis</a>
 
-<!-- Después (cuando tengas enlace Play Store) -->
+<!-- DespuÃ©s (cuando tengas enlace Play Store) -->
 <a href="https://play.google.com/apps/internaltest/YOUR_ID" class="cta-button">
     Unirme a la Beta (Android)
 </a>
@@ -229,7 +229,7 @@ Actualizar `landing/index.html` line 220 y 263:
 Si quieres capturar emails **antes** de tener Play Store listo:
 
 ```html
-<!-- Reemplazar botón CTA con formulario -->
+<!-- Reemplazar botÃ³n CTA con formulario -->
 <form id="waitlist-form" style="max-width: 500px; margin: 0 auto;">
     <input
         type="email"
@@ -257,7 +257,7 @@ Si quieres capturar emails **antes** de tener Play Store listo:
     >
         Unirme a la Waitlist
     </button>
-    <p class="trial-note">Te avisaremos cuando la app esté lista</p>
+    <p class="trial-note">Te avisaremos cuando la app estÃ© lista</p>
 </form>
 
 <script>
@@ -274,7 +274,7 @@ document.getElementById('waitlist-form').addEventListener('submit', async (e) =>
             body: JSON.stringify({ email, timestamp: Date.now() })
         });
 
-        alert('¡Gracias! Te avisaremos cuando lancemos 🚀');
+        alert('Â¡Gracias! Te avisaremos cuando lancemos ðŸš€');
         document.getElementById('email').value = '';
     } catch (error) {
         console.error(error);
@@ -300,7 +300,7 @@ Agregar en `<head>`:
 ```
 
 Obtener Measurement ID:
-- Firebase Console → Analytics → Dashboard → Settings icon → Data Streams → Web
+- Firebase Console â†’ Analytics â†’ Dashboard â†’ Settings icon â†’ Data Streams â†’ Web
 
 ---
 
@@ -308,94 +308,94 @@ Obtener Measurement ID:
 
 ### Timeline Recomendado
 
-**DÍA -3 (HOY):**
+**DÃA -3 (HOY):**
 ```
 1. Deploy landing a Firebase Hosting
 2. Configurar DNS en Namecheap
-3. Esperar propagación (1-4h)
+3. Esperar propagaciÃ³n (1-4h)
 4. Verificar https://edaptia.io funciona
 ```
 
-**DÍA -2:**
+**DÃA -2:**
 ```
 1. Agregar formulario waitlist (capturar emails)
 2. Comenzar a compartir en redes:
-   - LinkedIn: "Estoy construyendo Aelion..."
-   - Twitter: "Landing page live → edaptia.io"
+   - LinkedIn: "Estoy construyendo Edaptia..."
+   - Twitter: "Landing page live â†’ edaptia.io"
    - Comunidades LATAM
 3. Target: 50-100 emails antes de Play Store
 ```
 
-**DÍA -1:**
+**DÃA -1:**
 ```
 1. Subir AAB a Play Store Internal Testing
-2. Actualizar landing: Waitlist → Link Play Store
+2. Actualizar landing: Waitlist â†’ Link Play Store
 3. Enviar email a waitlist: "Ya puedes probar la beta"
 ```
 
-**DÍA 0 (LANZAMIENTO):**
+**DÃA 0 (LANZAMIENTO):**
 ```
 1. Post masivo en LinkedIn/Twitter
-2. Link directo: edaptia.io → Play Store
-3. Monitorear tráfico (GA4)
+2. Link directo: edaptia.io â†’ Play Store
+3. Monitorear trÃ¡fico (GA4)
 ```
 
 ---
 
-## Canales de Tráfico
+## Canales de TrÃ¡fico
 
-### 1. SEO Básico (Día 0)
+### 1. SEO BÃ¡sico (DÃ­a 0)
 
 Ya tienes en `<head>`:
 ```html
 <meta name="description" content="Aprende SQL en 3 semanas...">
-<title>Aelion - Aprende SQL en 3 semanas, no en 3 meses</title>
+<title>Edaptia - Aprende SQL en 3 semanas, no en 3 meses</title>
 ```
 
 **Agregar:**
 ```html
-<meta property="og:title" content="Aelion - Aprende SQL en 3 semanas">
+<meta property="og:title" content="Edaptia - Aprende SQL en 3 semanas">
 <meta property="og:description" content="Plan personalizado adaptado a tu nivel...">
 <meta property="og:image" content="https://edaptia.io/og-image.png">
 <meta property="og:url" content="https://edaptia.io">
 <meta name="twitter:card" content="summary_large_image">
 ```
 
-### 2. Paid Ads (Opcional - Día 3-7)
+### 2. Paid Ads (Opcional - DÃ­a 3-7)
 
 Si quieres acelerar:
 - **Google Ads:** Palabras clave "aprender SQL", "curso SQL gratis"
 - **Reddit Ads:** r/learnprogramming, r/datascience
-- **Budget:** $5-10/día (test)
-- **Landing page lista** → Mayor conversion rate
+- **Budget:** $5-10/dÃ­a (test)
+- **Landing page lista** â†’ Mayor conversion rate
 
-### 3. Comunidades Orgánicas
+### 3. Comunidades OrgÃ¡nicas
 
 **LinkedIn (Personal):**
 ```
-🚀 Acabo de lanzar Aelion
+ðŸš€ Acabo de lanzar Edaptia
 
-Después de 6 meses construyendo, hoy lanzo Aelion: una app que te enseña
+DespuÃ©s de 6 meses construyendo, hoy lanzo Edaptia: una app que te enseÃ±a
 SQL en 3 semanas (no 3 meses).
 
-✅ Plan personalizado a tu nivel
-✅ 100 preguntas adaptativas
-✅ Enfoque en entrevistas técnicas
+âœ… Plan personalizado a tu nivel
+âœ… 100 preguntas adaptativas
+âœ… Enfoque en entrevistas tÃ©cnicas
 
-Beta gratis en Android → edaptia.io
+Beta gratis en Android â†’ edaptia.io
 
-¿Quién se anima a probar? 🙋‍♂️
+Â¿QuiÃ©n se anima a probar? ðŸ™‹â€â™‚ï¸
 ```
 
 **Twitter:**
 ```
-Acabo de lanzar edaptia.io 🚀
+Acabo de lanzar edaptia.io ðŸš€
 
 Aprende SQL en 3 semanas con aprendizaje adaptativo.
 
-Beta gratis para Android → https://edaptia.io
+Beta gratis para Android â†’ https://edaptia.io
 
-RT si conoces a alguien que quiera aprender SQL 👇
+RT si conoces a alguien que quiera aprender SQL ðŸ‘‡
 ```
 
 **Reddit (r/learnprogramming):**
@@ -405,7 +405,7 @@ Title: I built an adaptive SQL learning app (3-week program)
 Body:
 Hey r/learnprogramming,
 
-I just launched Aelion (edaptia.io) - an app that teaches SQL in 3 weeks
+I just launched Edaptia (edaptia.io) - an app that teaches SQL in 3 weeks
 using adaptive learning (IRT algorithm).
 
 Key features:
@@ -418,12 +418,12 @@ Currently Android beta (Play Store Internal Testing). Looking for feedback!
 
 Link: https://edaptia.io
 
-Happy to answer questions 👇
+Happy to answer questions ðŸ‘‡
 ```
 
 ---
 
-## Comandos Útiles
+## Comandos Ãštiles
 
 ### Deploy landing (cada vez que cambies algo)
 ```bash
@@ -435,7 +435,7 @@ firebase deploy --only hosting
 firebase hosting:logs
 ```
 
-### Rollback a versión anterior
+### Rollback a versiÃ³n anterior
 ```bash
 firebase hosting:rollback
 ```
@@ -444,13 +444,13 @@ firebase hosting:rollback
 
 ## Troubleshooting
 
-### DNS no propaga después de 4 horas
+### DNS no propaga despuÃ©s de 4 horas
 - Verificar en https://dnschecker.org/
 - Verificar que eliminaste registros conflictivos en Namecheap
 - Flush DNS local: `ipconfig /flushdns` (Windows) o `sudo dscacheutil -flushcache` (Mac)
 
 ### Firebase dice "DNS verification failed"
-- Esperar 10-30 min más
+- Esperar 10-30 min mÃ¡s
 - Verificar que los IPs A records coinciden exactamente
 - Verificar que CNAME tiene el punto final: `edaptia.io.` (no `edaptia.io`)
 
@@ -461,7 +461,7 @@ firebase hosting:rollback
 
 ### SSL no funciona (insecure warning)
 - Esperar 24h (Firebase auto-provisiona SSL)
-- Verificar que dominio está "Connected" en Firebase Console
+- Verificar que dominio estÃ¡ "Connected" en Firebase Console
 
 ---
 
@@ -478,23 +478,24 @@ firebase hosting:rollback
 
 ---
 
-## Métricas de Éxito (Landing Page)
+## MÃ©tricas de Ã‰xito (Landing Page)
 
 **Primeras 48 horas:**
 ```
-✅ 500+ visitas
-✅ 50+ emails waitlist (o 20+ clicks Play Store)
-✅ Conversion rate ≥ 10%
-✅ Bounce rate < 60%
+âœ… 500+ visitas
+âœ… 50+ emails waitlist (o 20+ clicks Play Store)
+âœ… Conversion rate â‰¥ 10%
+âœ… Bounce rate < 60%
 ```
 
 **Primera semana:**
 ```
-✅ 2000+ visitas
-✅ 200+ emails (o 100+ instalaciones Play Store)
-✅ Compartido en 3+ comunidades LATAM
+âœ… 2000+ visitas
+âœ… 200+ emails (o 100+ instalaciones Play Store)
+âœ… Compartido en 3+ comunidades LATAM
 ```
 
 ---
 
-**Próximo paso:** ¿Quieres que actualice el landing con formulario waitlist o esperamos a tener Play Store listo?
+**PrÃ³ximo paso:** Â¿Quieres que actualice el landing con formulario waitlist o esperamos a tener Play Store listo?
+

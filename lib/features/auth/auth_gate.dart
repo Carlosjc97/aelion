@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/l10n/app_localizations.dart';
@@ -18,7 +18,7 @@ class AuthGate extends StatelessWidget {
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _AuthStatusScaffold(
-            title: l10n?.appTitle ?? 'Aelion',
+            title: l10n?.appTitle ?? 'Edaptia',
             message: l10n?.authCheckingSession ?? 'Checking your session...',
             child: const CircularProgressIndicator(),
           );
@@ -26,7 +26,7 @@ class AuthGate extends StatelessWidget {
 
         if (snapshot.hasError) {
           return _AuthStatusScaffold(
-            title: l10n?.appTitle ?? 'Aelion',
+            title: l10n?.appTitle ?? 'Edaptia',
             message: l10n?.authError ?? 'We could not verify your session',
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -95,3 +95,4 @@ class _AuthStatusScaffold extends StatelessWidget {
     );
   }
 }
+

@@ -93,7 +93,7 @@ void main() {
                             },
                             grader: ({required quizId, required answers}) async {
                               return const PlacementQuizGradeResponse(
-                                band: PlacementBand.beginner,
+                                band: PlacementBand.basic,
                                 scorePct: 40,
                                 recommendRegenerate: false,
                                 suggestedDepth: 'intro',

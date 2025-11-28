@@ -642,6 +642,33 @@ class AdaptivePlanDraft {
   }
 }
 
+/// Response from /adaptiveModuleCount endpoint
+class ModuleCountResponse {
+  const ModuleCountResponse({
+    required this.moduleCount,
+    required this.rationale,
+    required this.topic,
+    required this.band,
+  });
+
+  final int moduleCount;
+  final String rationale;
+  final String topic;
+  final PlacementBand band;
+
+  factory ModuleCountResponse.fromJson(Map<String, dynamic> map) {
+    return ModuleCountResponse(
+      moduleCount: map['moduleCount'] as int? ?? 4,
+      rationale: map['rationale']?.toString() ?? '',
+      topic: map['topic']?.toString() ?? '',
+      band: placementBandFromString(map['band']?.toString() ?? 'basic'),
+    );
+  }
+
+  @override
+  String toString() => 'ModuleCountResponse($moduleCount modules for $topic)';
+}
+
 class AdaptivePlanResponse {
   const AdaptivePlanResponse({
     required this.plan,
@@ -677,6 +704,13 @@ class AdaptiveLessonPractice {
       prompt: map['prompt']?.toString() ?? '',
       expected: map['expected']?.toString() ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'prompt': prompt,
+      'expected': expected,
+    };
   }
 }
 
@@ -714,6 +748,17 @@ class AdaptiveMcq {
       rationale: map['rationale']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'stem': stem,
+      'options': options,
+      'correct': correct,
+      'skillTag': skillTag,
+      'rationale': rationale,
+    };
+  }
 }
 
 class AdaptiveLesson {
@@ -722,7 +767,7 @@ class AdaptiveLesson {
     required this.hook,
     required this.lessonType,
     required this.theory,
-    required this.exampleLatam,
+    required this.exampleGlobal,
     required this.practice,
     required this.microQuiz,
     this.hint,
@@ -734,7 +779,7 @@ class AdaptiveLesson {
   final String hook;
   final String lessonType;
   final String theory;
-  final String exampleLatam;
+  final String exampleGlobal;
   final AdaptiveLessonPractice practice;
   final List<AdaptiveMcq> microQuiz;
   final String? hint;
@@ -754,7 +799,8 @@ class AdaptiveLesson {
       hook: map['hook']?.toString() ?? '',
       lessonType: map['lessonType']?.toString() ?? 'welcome_summary',
       theory: map['theory']?.toString() ?? '',
-      exampleLatam: map['exampleLATAM']?.toString() ?? '',
+      exampleGlobal: map['exampleGlobal']?.toString() ??
+          map['exampleLATAM']?.toString() ?? '',  // Backward compatibility
       practice: AdaptiveLessonPractice.fromJson(
         Map<String, dynamic>.from(map['practice'] as Map? ?? const {}),
       ),
@@ -763,6 +809,21 @@ class AdaptiveLesson {
       motivation: map['motivation']?.toString(),
       takeaway: map['takeaway']?.toString() ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'hook': hook,
+      'lessonType': lessonType,
+      'theory': theory,
+      'exampleGlobal': exampleGlobal,
+      'practice': practice.toJson(),
+      'microQuiz': microQuiz.map((q) => q.toJson()).toList(),
+      'hint': hint,
+      'motivation': motivation,
+      'takeaway': takeaway,
+    };
   }
 }
 
@@ -788,6 +849,14 @@ class AdaptiveChallenge {
       rubric: rubric,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'desc': description,
+      'expected': expected,
+      'rubric': rubric,
+    };
+  }
 }
 
 class AdaptiveBlueprintItem {
@@ -807,6 +876,14 @@ class AdaptiveBlueprintItem {
       skillTag: map['skillTag']?.toString() ?? '',
       type: map['type']?.toString() ?? 'mcq',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'skillTag': skillTag,
+      'type': type,
+    };
   }
 }
 
@@ -833,6 +910,13 @@ class AdaptiveCheckpointBlueprint {
       items: items,
       targetReliability: map['targetReliability']?.toString() ?? 'medium',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'items': items.map((item) => item.toJson()).toList(),
+      'targetReliability': targetReliability,
+    };
   }
 }
 
@@ -887,6 +971,18 @@ class AdaptiveModuleOut {
             map['checkpointBlueprint'] as Map? ?? const {}),
       ),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'moduleNumber': moduleNumber,
+      'title': title,
+      'durationMinutes': durationMinutes,
+      'skillsTargeted': skillsTargeted,
+      'lessons': lessons.map((lesson) => lesson.toJson()).toList(),
+      'challenge': challenge.toJson(),
+      'checkpointBlueprint': blueprint.toJson(),
+    };
   }
 }
 

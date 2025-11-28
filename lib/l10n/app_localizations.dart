@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeUserFallback.
   ///
   /// In en, this message translates to:
-  /// **'Aelion user'**
+  /// **'Edaptia user'**
   String get homeUserFallback;
 
   /// No description provided for @homeUserNoEmail.
@@ -895,6 +895,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We could not load the quiz. Try again.'**
   String get quizUnknownError;
+
+  /// No description provided for @quizBandBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get quizBandBasic;
 
   /// No description provided for @quizBandBeginner.
   ///
@@ -1397,13 +1403,13 @@ abstract class AppLocalizations {
   /// No description provided for @lessonQuizCorrect.
   ///
   /// In en, this message translates to:
-  /// **'✅ Correct!'**
+  /// **'âœ… Correct!'**
   String get lessonQuizCorrect;
 
   /// No description provided for @lessonQuizIncorrect.
   ///
   /// In en, this message translates to:
-  /// **'❌ Incorrect. The answer was {answer}.'**
+  /// **'âŒ Incorrect. The answer was {answer}.'**
   String lessonQuizIncorrect(String answer);
 
   /// No description provided for @lessonTipReview.
@@ -1625,13 +1631,13 @@ abstract class AppLocalizations {
   /// No description provided for @helpEmailSubject.
   ///
   /// In en, this message translates to:
-  /// **'{appName} support request (v{version} · {device})'**
+  /// **'{appName} support request (v{version} Â· {device})'**
   String helpEmailSubject(String appName, String version, String device);
 
   /// No description provided for @helpBugReportSubject.
   ///
   /// In en, this message translates to:
-  /// **'{appName} bug report (v{version} · {device})'**
+  /// **'{appName} bug report (v{version} Â· {device})'**
   String helpBugReportSubject(String appName, String version, String device);
 
   /// No description provided for @helpBugReportBody.

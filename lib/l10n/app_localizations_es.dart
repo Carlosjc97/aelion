@@ -201,7 +201,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get assessmentResultStrengthsTitle => 'Fortalezas';
 
   @override
-  String get assessmentResultGapsTitle => 'Áreas de mejora';
+  String get assessmentResultGapsTitle => 'Ãreas de mejora';
 
   @override
   String get assessmentResultPlanTitle => 'Plan sugerido';
@@ -240,7 +240,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'No pudimos cerrar la sesion. Intenta de nuevo.';
 
   @override
-  String get homeUserFallback => 'Usuario Aelion';
+  String get homeUserFallback => 'Usuario Edaptia';
 
   @override
   String get homeUserNoEmail => 'Sin correo';
@@ -450,6 +450,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quizUnknownError => 'No pudimos cargar el quiz. Intenta de nuevo.';
+
+  @override
+  String get quizBandBasic => 'Básico';
 
   @override
   String get quizBandBeginner => 'Principiante';
@@ -764,11 +767,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lessonQuizCheck => 'Comprobar respuesta';
 
   @override
-  String get lessonQuizCorrect => '✅ ¡Correcto!';
+  String get lessonQuizCorrect => 'âœ… ¡Correcto!';
 
   @override
   String lessonQuizIncorrect(String answer) {
-    return '❌ Incorrecto. La respuesta era $answer.';
+    return 'âŒ Incorrecto. La respuesta era $answer.';
   }
 
   @override
@@ -889,12 +892,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String helpEmailSubject(String appName, String version, String device) {
-    return 'Solicitud de soporte $appName (v$version · $device)';
+    return 'Solicitud de soporte $appName (v$version Â· $device)';
   }
 
   @override
   String helpBugReportSubject(String appName, String version, String device) {
-    return 'Reporte de bug $appName (v$version · $device)';
+    return 'Reporte de bug $appName (v$version Â· $device)';
   }
 
   @override

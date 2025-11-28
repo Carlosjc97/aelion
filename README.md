@@ -1,19 +1,19 @@
-# Aelion [![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml)
+﻿# Edaptia [![CI](https://github.com/Carlosjc97/Edaptia/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/Edaptia/actions/workflows/ci.yml)
 
-Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Gen‑2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
+Modern learning companion built with Flutter and Firebase. The `outline` HTTPS Function (Genâ€‘2) produces curated course outlines with Firestore-backed caching, defensive JSON parsing, and observability telemetry. The Flutter client persists the last generated outline locally so learners can resume instantly.
 
 ## What's New (November 2025)
 
-- **⚡ Performance Boost** – Migrated from GPT-4o to GPT-4o-mini for calibration quiz, adaptive plans, and module generation. **3x faster response times, 16x cost reduction** (~$0.012 vs ~$0.19 per user journey).
-- **🚀 Timeout Fix** – Extended Firebase Functions timeout from 60s to 300s for all generative endpoints. Eliminated connection abort errors during plan generation.
-- **📈 Rate Limit Optimization** – Increased rate limits for development (20 requests/5min for adaptive plans, 10 requests/5min for placement quizzes).
-- **Adaptive engagement** – Placement quizzes now cache locally/offline, forward detected gaps to an OpenAI "tweak" call before persisting, and expose shareable, topic-aware results.
-- **Interactive lessons** – Lesson detail screens render AI-authored markdown hooks and validate user submissions through the `validateChallenge` endpoint to unlock badges.
-- **Gamification** – Daily streaks are stored in Firestore via a Riverpod provider and can trigger FCM reminders for lapsed learners.
-- **Cost transparency** – The new usage dashboard consumes `openaiUsageMetrics` to visualize token/cost spend per endpoint with `fl_chart`.
-- **Safer paywall UX** – Paywall helper/modal handle entitlement failures gracefully, emit GA4 `paywall_dismissed`, and expose a callback for additional tracking.
+- **âš¡ Performance Boost** â€“ Migrated from GPT-4o to GPT-4o-mini for calibration quiz, adaptive plans, and module generation. **3x faster response times, 16x cost reduction** (~$0.012 vs ~$0.19 per user journey).
+- **ðŸš€ Timeout Fix** â€“ Extended Firebase Functions timeout from 60s to 300s for all generative endpoints. Eliminated connection abort errors during plan generation.
+- **ðŸ“ˆ Rate Limit Optimization** â€“ Increased rate limits for development (20 requests/5min for adaptive plans, 10 requests/5min for placement quizzes).
+- **Adaptive engagement** â€“ Placement quizzes now cache locally/offline, forward detected gaps to an OpenAI "tweak" call before persisting, and expose shareable, topic-aware results.
+- **Interactive lessons** â€“ Lesson detail screens render AI-authored markdown hooks and validate user submissions through the `validateChallenge` endpoint to unlock badges.
+- **Gamification** â€“ Daily streaks are stored in Firestore via a Riverpod provider and can trigger FCM reminders for lapsed learners.
+- **Cost transparency** â€“ The new usage dashboard consumes `openaiUsageMetrics` to visualize token/cost spend per endpoint with `fl_chart`.
+- **Safer paywall UX** â€“ Paywall helper/modal handle entitlement failures gracefully, emit GA4 `paywall_dismissed`, and expose a callback for additional tracking.
 
-## 🚀 Production Services
+## ðŸš€ Production Services
 
 ### Assessment API (IRT Adaptive Testing)
 **Live Service:** https://assessment-api-110324120650.us-central1.run.app
@@ -26,7 +26,7 @@ Adaptive assessment engine using Item Response Theory (IRT) with 3-parameter log
 
 **Health Check:**
 ```bash
-curl -H "Origin: https://aelion-c90d2.web.app" https://assessment-api-110324120650.us-central1.run.app/health
+curl -H "Origin: https://Edaptia-c90d2.web.app" https://assessment-api-110324120650.us-central1.run.app/health
 # Returns: {"ok":true}
 ```
 
@@ -34,7 +34,7 @@ See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for full deployment document
 
 ---
 
-## 💰 Paywall & Monetization (MVP)
+## ðŸ’° Paywall & Monetization (MVP)
 
 **Status:** Functional (Mock - No real payment)
 
@@ -48,7 +48,7 @@ The app implements a freemium model with paywall gating:
 Three strategic paywall moments:
 1. **Post-calibration**: "Desbloquear plan completo" (first contact after quiz)
 2. **Module locked**: "Continuar con Premium" (friction moment when accessing M2-M6)
-3. **Mock exam**: "Acceder a examen de práctica" (added value)
+3. **Mock exam**: "Acceder a examen de prÃ¡ctica" (added value)
 
 ### Trial
 - **7 days free** (no credit card required)
@@ -69,7 +69,7 @@ test/paywall_smoke_test.dart  # 4/4 tests passing
 flutter test test/paywall_smoke_test.dart
 
 # Expected output:
-# ✅ 4/4 tests passing
+# âœ… 4/4 tests passing
 ```
 
 ### GA4 Events
@@ -86,7 +86,7 @@ See [SMOKE_TEST_CHECKLIST.md](docs/SMOKE_TEST_CHECKLIST.md) for complete testing
 
 **Prerequisites**
 - Node.js 20
-- Firebase CLI authenticated against the `aelion-c90d2` project
+- Firebase CLI authenticated against the `Edaptia-c90d2` project
 
 ```bash
 cd functions
@@ -113,7 +113,7 @@ $body = @{
 } | ConvertTo-Json -Compress
 Invoke-RestMethod `
   -Method POST `
-  -Uri "https://us-east4-aelion-c90d2.cloudfunctions.net/outline" `
+  -Uri "https://us-east4-Edaptia-c90d2.cloudfunctions.net/outline" `
   -ContentType "application/json" `
   -Body $body
 ```
@@ -123,21 +123,21 @@ Invoke-RestMethod `
 {"topic":"Flutter crash course","depth":"medium","lang":"en"}
 '@ | Out-File -Encoding utf8 payload.json
 curl.exe -sS -i -X POST ^
-  "https://us-east4-aelion-c90d2.cloudfunctions.net/outline" ^
+  "https://us-east4-Edaptia-c90d2.cloudfunctions.net/outline" ^
   -H "Content-Type: application/json" ^
   --data-binary "@payload.json"
 ```
 
 ### Logs & Diagnostics
 ```bash
-firebase functions:log --only outline --project aelion-c90d2
+firebase functions:log --only outline --project Edaptia-c90d2
 ```
 
 ### Firestore Rules
 
 - Production deployments ship with a fully closed `firestore.rules` file (`allow read, write: if false;`). All client requests must flow through Cloud Functions.
 - When you need permissive rules for local emulation only, create a throwaway file such as `firestore.rules.emulator` with `allow read, write: if true;` and start the emulator explicitly:  
-  `firebase emulators:start --only firestore --project aelion-c90d2 --rules firestore.rules.emulator`  
+  `firebase emulators:start --only firestore --project Edaptia-c90d2 --rules firestore.rules.emulator`  
   Never deploy these permissive rules to production.
 
 ### Behaviour Guarantees
@@ -156,14 +156,14 @@ firebase functions:log --only outline --project aelion-c90d2
 **Comandos rapidos (PowerShell)**
 
 ```powershell
-$URL_START = "https://us-east4-aelion-c90d2.cloudfunctions.net/placementQuizStart"
+$URL_START = "https://us-east4-Edaptia-c90d2.cloudfunctions.net/placementQuizStart"
 $startBody = @{ topic = "Historia de Roma"; lang = "es" } | ConvertTo-Json -Compress
 $start = Invoke-RestMethod -Method POST -Uri $URL_START -ContentType "application/json" -Body $startBody
 $start | ConvertTo-Json -Depth 10
 ```
 
 ```powershell
-$URL_GRADE = "https://us-east4-aelion-c90d2.cloudfunctions.net/placementQuizGrade"
+$URL_GRADE = "https://us-east4-Edaptia-c90d2.cloudfunctions.net/placementQuizGrade"
 $answers = $start.questions | ForEach-Object { @{ id = $_.id; choiceIndex = 0 } }
 $gradeBody = @{ quizId = $start.quizId; answers = $answers } | ConvertTo-Json -Compress
 Invoke-RestMethod -Method POST -Uri $URL_GRADE -ContentType "application/json" -Body $gradeBody
@@ -187,7 +187,7 @@ flutter run -d chrome
 ```
 
 ### Analytics Debugging
-- **GA4 DebugView**: run the app with analytics debug mode enabled (Android: `adb shell setprop debug.firebase.analytics.app com.aelion.learning`; iOS: launch with `-FIRDebugEnabled`). Open *Google Analytics ? Configure ? DebugView* to inspect live events, filtered by the active device stream.
+- **GA4 DebugView**: run the app with analytics debug mode enabled (Android: `adb shell setprop debug.firebase.analytics.app com.Edaptia.learning`; iOS: launch with `-FIRDebugEnabled`). Open *Google Analytics ? Configure ? DebugView* to inspect live events, filtered by the active device stream.
 - **PostHog Live Events**: open your PostHog project and select *Live events*. Events are tagged with `schema_ver="v1"` plus the shared context (platform, build type, locale) for quick filtering.
 
 ### Key UX Notes
@@ -201,8 +201,8 @@ flutter run -d chrome
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `AELION_ENV` | Logical environment label used for analytics and feature toggles. | `production` |
-| `API_BASE_URL` | Base HTTPS URL for the deployed Functions instance. | `https://us-east4-aelion-c90d2.cloudfunctions.net` |
+| `Edaptia_ENV` | Logical environment label used for analytics and feature toggles. | `production` |
+| `API_BASE_URL` | Base HTTPS URL for the deployed Functions instance. | `https://us-east4-Edaptia-c90d2.cloudfunctions.net` |
 | `BASE_URL` | Backwards-compatible alias for `API_BASE_URL`. | same as above |
 | `CV_STUDIO_API_KEY` | Optional integration token (leave blank for local). | `changeme` |
 | `USE_FUNCTIONS_EMULATOR` | When `true`, routes API calls to the local emulator. | `false` |
@@ -253,4 +253,5 @@ Manual "Actualizar plan" actions were removed from the Module Outline screen to 
 ![Home Screen](docs/assets/ui-home.png)
 ![Home Screen (Plan suggestions)](docs/assets/ui-home2.png)
 ![Placement Quiz](docs/assets/ui-quiz.png)
+
 

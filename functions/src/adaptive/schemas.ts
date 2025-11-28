@@ -59,8 +59,8 @@ export const AdaptivePlanDraftSchema = {
   properties: {
     suggestedModules: {
       type: "array",
-      minItems: 412,
-      maxItems: 412,
+      minItems: 4,
+      maxItems: 12,
       items: {
         type: "object",
         additionalProperties: false,
@@ -131,7 +131,7 @@ export const ModuleAdaptiveSchema = {
           "hook",
           "lessonType",
           "theory",
-          "exampleLATAM",
+          "exampleGlobal",
           "practice",
           "microQuiz",
           "takeaway",
@@ -326,7 +326,7 @@ export const RemedialBoosterSchema = {
           "hook",
           "lessonType",
           "theory",
-          "exampleLATAM",
+          "exampleGlobal",
           "practice",
           "microQuiz",
           "takeaway",
@@ -421,6 +421,17 @@ export const RemedialBoosterSchema = {
   },
 } as const;
 
+export const ModuleCountSchema = {
+  $id: "https://aelion.ai/schemas/ModuleCount.json",
+  type: "object",
+  additionalProperties: false,
+  required: ["moduleCount", "rationale"],
+  properties: {
+    moduleCount: { type: "integer", minimum: 4, maximum: 12 },
+    rationale: { type: "string", minLength: 20, maxLength: 200 },
+  },
+} as const;
+
 export const ALL_SCHEMAS = [
   CalibrationQuizSchema,
   AdaptivePlanDraftSchema,
@@ -428,4 +439,5 @@ export const ALL_SCHEMAS = [
   CheckpointQuizSchema,
   EvaluationResultSchema,
   RemedialBoosterSchema,
+  ModuleCountSchema,
 ];

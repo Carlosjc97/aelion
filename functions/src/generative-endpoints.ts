@@ -4,6 +4,7 @@
 // ============================================================
 
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
@@ -36,7 +37,7 @@ type AssessmentModule = typeof import("./assessment");
 let openaiModule: OpenAIServiceModule | null = null;
 let assessmentModule: AssessmentModule | null = null;
 
-function getOpenAI(): OpenAIServiceModule {
+export function getOpenAI(): OpenAIServiceModule {
   if (!openaiModule) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     openaiModule = require("./openai-service") as OpenAIServiceModule;
@@ -55,6 +56,19 @@ function getAssessment(): AssessmentModule {
 if (!getApps().length) {
   initializeApp();
 }
+
+const OPENAI_API_KEY_PRIMARY = defineSecret("OPENAI_API_KEY_PRIMARY");
+const OPENAI_API_KEY_MODULES = defineSecret("OPENAI_API_KEY_MODULES");
+const OPENAI_API_KEY_QUIZZES = defineSecret("OPENAI_API_KEY_QUIZZES");
+const OPENAI_API_KEY_CALIBRATION = defineSecret("OPENAI_API_KEY_CALIBRATION");
+const OPENAI_API_KEY_FALLBACK = defineSecret("OPENAI_API_KEY");
+export const OPENAI_SECRETS = [
+  OPENAI_API_KEY_PRIMARY,
+  OPENAI_API_KEY_MODULES,
+  OPENAI_API_KEY_QUIZZES,
+  OPENAI_API_KEY_CALIBRATION,
+  OPENAI_API_KEY_FALLBACK,
+];
 
 const firestore = getFirestore();
 const authClient = getAuth();
@@ -200,7 +214,7 @@ function createLearnerStateSnapshot(overrides: Partial<LearnerState> = {}): Lear
   };
 }
 
-async function loadLearnerState(userId: string): Promise<LearnerState> {
+export async function loadLearnerState(userId: string): Promise<LearnerState> {
   const snapshot = await learnerStateDoc(userId).get();
   if (!snapshot.exists) {
     return createLearnerStateSnapshot();
@@ -434,7 +448,9 @@ async function persistGateResult(options: {
  * Body: { topic: string, lang: string }
  * Returns: { quizId, questions: [...], expiresAt, policy, meta }
  */
-export const placementQuizStartLive = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const placementQuizStartLive = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -629,7 +645,8 @@ export const placementQuizStartLive = onRequest({ cors: true, timeoutSeconds: 30
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
 /**
  * POST /outlineGenerative
@@ -637,7 +654,9 @@ export const placementQuizStartLive = onRequest({ cors: true, timeoutSeconds: 30
  * Body: { topic: string, band: string, lang: string, errors?: string[], quizScore?: number }
  * Returns: { module: {...}, cacheKey, source, meta }
  */
-export const outlineGenerative = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const outlineGenerative = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -778,7 +797,8 @@ export const outlineGenerative = onRequest({ cors: true, timeoutSeconds: 300, me
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
 /**
  * POST /fetchNextModule
@@ -786,7 +806,9 @@ export const outlineGenerative = onRequest({ cors: true, timeoutSeconds: 300, me
  * Body: { topic, moduleNumber, band, lang, previousScore, errors?, isPaid }
  * Returns: { module: {...}, cacheKey, source, meta }
  */
-export const fetchNextModule = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const fetchNextModule = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -959,12 +981,15 @@ export const fetchNextModule = onRequest({ cors: true, timeoutSeconds: 300, memo
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
 /**
  * Gate quiz start for modules (post-lesson assessments)
  */
-export const moduleQuizStart = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const moduleQuizStart = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1081,9 +1106,12 @@ export const moduleQuizStart = onRequest({ cors: true, timeoutSeconds: 300, memo
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const moduleQuizGrade = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const moduleQuizGrade = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1201,11 +1229,14 @@ export const moduleQuizGrade = onRequest({ cors: true, timeoutSeconds: 300, memo
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
 // Quiz sessions are now persisted in Firestore via session-store helpers
 
-export const validateChallenge = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const validateChallenge = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1293,9 +1324,12 @@ export const validateChallenge = onRequest({ cors: true, timeoutSeconds: 300, me
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const outlineTweak = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const outlineTweak = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1364,9 +1398,79 @@ export const outlineTweak = onRequest({ cors: true, timeoutSeconds: 300, memory:
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const adaptivePlanDraft = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const adaptiveModuleCount = onRequest(
+  { cors: true, timeoutSeconds: 60, memory: "256MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:adaptive_module_count`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 30,
+        windowSeconds: 300,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
+        res.status(429).json({ error: "Too many module count requests" });
+        return;
+      }
+      throw limitError;
+    }
+
+    const { topic, band, target } = req.body ?? {};
+
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    if (!target || typeof target !== "string" || target.trim().length < 2) {
+      res.status(400).json({ error: "Invalid target" });
+      return;
+    }
+
+    const normalizedBand: Band =
+      band === "intermediate" || band === "advanced" ? band : "basic";
+
+    const result = await getOpenAI().generateModuleCount({
+      topic: topic.trim(),
+      band: normalizedBand,
+      target: target.trim(),
+      userId: authContext.userId,
+    });
+
+    res.status(200).json({
+      moduleCount: result.moduleCount,
+      rationale: result.rationale,
+      topic: topic.trim(),
+      band: normalizedBand,
+    });
+  } catch (error) {
+    logger.error("adaptiveModuleCount error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+  },
+);
+
+export const adaptivePlanDraft = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1440,9 +1544,12 @@ export const adaptivePlanDraft = onRequest({ cors: true, timeoutSeconds: 300, me
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const adaptiveModuleGenerate = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const adaptiveModuleGenerate = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1518,9 +1625,12 @@ export const adaptiveModuleGenerate = onRequest({ cors: true, timeoutSeconds: 30
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const adaptiveCheckpointQuiz = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const adaptiveCheckpointQuiz = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1615,9 +1725,12 @@ export const adaptiveCheckpointQuiz = onRequest({ cors: true, timeoutSeconds: 30
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const adaptiveEvaluateCheckpoint = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const adaptiveEvaluateCheckpoint = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1755,9 +1868,12 @@ export const adaptiveEvaluateCheckpoint = onRequest({ cors: true, timeoutSeconds
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
-export const adaptiveBooster = onRequest({ cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+export const adaptiveBooster = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1859,7 +1975,8 @@ export const adaptiveBooster = onRequest({ cors: true, timeoutSeconds: 300, memo
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
-});
+  },
+);
 
 export const openaiUsageMetrics = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== "GET") {

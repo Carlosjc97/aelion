@@ -150,3 +150,33 @@ lib/l10n/app_localizations_*.dart
 # Backup files
 *.backup
 **/*.backup
+
+# Temporary documentation and session files
+CONTEXTO_SESION*.md
+IMPLEMENTACION_*.md
+RESUMEN_*.md
+HANDOFF_*.md
+DOCUMENTATION_CLEANUP*.md
+BUGFIX*.md
+*_tree.txt
+functions_tree.txt
+lib_tree.txt
+
+# Deployment and build logs
+deploy-log.txt
+deploy-fix-log.txt
+*-log.txt
+
+# Temporary scripts
+fix_*.py
+fix_*.ps1
+*.pyc
+
+# Bug reports (keep only in issues, not in repo)
+BUG_REPORT_*.md
+
+# Technical changelogs (keep in PRs, not main branch)
+TECHNICAL_CHANGELOG.md
+
+# Claude Code artifacts
+PROMPT_NEXT_SESSION.md
