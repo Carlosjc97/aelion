@@ -6,10 +6,20 @@ runtime: nodejs20
 
 runConfig:
   entrypoint: node server/server.js
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
 
 env:
   # Usa 'variable' en lugar de 'name'
   # Limita ambas a RUNTIME para que NO se escriban durante BUILD
+  - variable: PORT
+    value: "8080"
+    availability:
+      - RUNTIME
+
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
     availability:
