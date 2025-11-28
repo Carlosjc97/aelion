@@ -4,7 +4,7 @@ runtime: nodejs20
 rootDirectory: server
 
 runConfig:
-  entrypoint: node server.js
+  entrypoint: npm start
   cpu: 1
   memoryMiB: 512
   minInstances: 0
