@@ -1,11 +1,10 @@
 runtime: nodejs20
 
-# Deja que App Hosting use su builder nativo. (Quitamos el bloque 'build')
-# build:
-#   builder: heroku/builder:22
+# Specify the server directory as the root
+rootDirectory: server
 
 runConfig:
-  entrypoint: node server/server.js
+  entrypoint: node server.js
   cpu: 1
   memoryMiB: 512
   minInstances: 0
