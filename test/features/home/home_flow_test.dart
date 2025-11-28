@@ -8,7 +8,6 @@ import 'package:edaptia/l10n/app_localizations_en.dart';
 import 'package:edaptia/providers/streak_provider.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/streak_service.dart';
-import 'package:edaptia/services/topic_band_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
