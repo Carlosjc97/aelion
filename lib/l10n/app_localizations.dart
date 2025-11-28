@@ -725,7 +725,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingBetaDescription.
   ///
   /// In en, this message translates to:
-  /// **'Edaptia is in active development. As a beta tester:\\nâ€¢ You get updates before everyone else\\nâ€¢ You unlock experimental features\\nâ€¢ Your feedback helps us improve'**
+  /// **'Edaptia is in active development. As a beta tester:\\n• You get updates before everyone else\\n• You unlock experimental features\\n• Your feedback helps us improve'**
   String get onboardingBetaDescription;
 
   /// No description provided for @onboardingBetaOptIn.
@@ -1379,7 +1379,7 @@ abstract class AppLocalizations {
   /// No description provided for @lessonObjectiveSummary.
   ///
   /// In en, this message translates to:
-  /// **'â€¢ Understand the core concept.\nâ€¢ Complete a short practice.\nâ€¢ Move on once you feel ready.'**
+  /// **'• Understand the core concept.\n• Complete a short practice.\n• Move on once you feel ready.'**
   String get lessonObjectiveSummary;
 
   /// No description provided for @lessonQuizTitle.

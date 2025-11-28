@@ -17,7 +17,7 @@ class QuizService {
     required String topic,
     String language = 'en',
     Duration timeout = CourseApiClient.defaultTimeout,
-    int maxRetries = 1,
+    int maxRetries = 3,  // Aumentado para mejor resiliencia
   }) async {
     final cleanedTopic = topic.trim();
     if (cleanedTopic.length < 3) {

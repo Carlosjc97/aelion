@@ -4,6 +4,15 @@ import 'package:edaptia/features/auth/auth.dart';
 import 'package:edaptia/features/courses/course_entry_view.dart';
 import 'package:edaptia/features/home/home_view.dart';
 import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/lesson/models/lesson_view_config.dart';
+import 'package:edaptia/features/lesson/screens/activity_screen.dart';
+import 'package:edaptia/features/lesson/screens/applied_project_screen.dart';
+import 'package:edaptia/features/lesson/screens/diagnostic_quiz_screen.dart';
+import 'package:edaptia/features/lesson/screens/guided_practice_screen.dart';
+import 'package:edaptia/features/lesson/screens/mini_game_screen.dart';
+import 'package:edaptia/features/lesson/screens/reflection_screen.dart';
+import 'package:edaptia/features/lesson/screens/theory_refresh_screen.dart';
+import 'package:edaptia/features/lesson/screens/welcome_lesson_screen.dart';
 import 'package:edaptia/features/modules/outline/module_outline_view.dart';
 import 'package:edaptia/features/onboarding/onboarding_gate.dart';
 import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
@@ -97,6 +106,54 @@ class AppRouter {
             arguments: lessonArgs,
           ),
         );
+      case WelcomeLessonScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          WelcomeLessonScreen.routeName,
+          (config) => WelcomeLessonScreen(config: config),
+        );
+      case DiagnosticQuizScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          DiagnosticQuizScreen.routeName,
+          (config) => DiagnosticQuizScreen(config: config),
+        );
+      case GuidedPracticeScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          GuidedPracticeScreen.routeName,
+          (config) => GuidedPracticeScreen(config: config),
+        );
+      case ActivityScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          ActivityScreen.routeName,
+          (config) => ActivityScreen(config: config),
+        );
+      case MiniGameScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          MiniGameScreen.routeName,
+          (config) => MiniGameScreen(config: config),
+        );
+      case TheoryRefreshScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          TheoryRefreshScreen.routeName,
+          (config) => TheoryRefreshScreen(config: config),
+        );
+      case AppliedProjectScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          AppliedProjectScreen.routeName,
+          (config) => AppliedProjectScreen(config: config),
+        );
+      case ReflectionScreen.routeName:
+        return _lessonScreenRoute(
+          settings,
+          ReflectionScreen.routeName,
+          (config) => ReflectionScreen(config: config),
+        );
       case QuizScreen.routeName:
         final rawArgs = settings.arguments;
         QuizScreenArgs? args;
@@ -173,6 +230,27 @@ class AppRouter {
     return MaterialPageRoute<void>(
       builder: (context) => NotFoundView(routeName: settings.name),
       settings: const RouteSettings(name: 'not-found'),
+    );
+  }
+
+  static Route<dynamic> _lessonScreenRoute(
+    RouteSettings settings,
+    String routeName,
+    Widget Function(LessonViewConfig config) builder,
+  ) {
+    final args = settings.arguments;
+    if (args is! LessonScreenArgs) {
+      return _invalidRoute(
+        settings,
+        '$routeName requires LessonScreenArgs.',
+      );
+    }
+    return _guarded(
+      builder(args.config),
+      RouteSettings(
+        name: routeName,
+        arguments: args,
+      ),
     );
   }
 

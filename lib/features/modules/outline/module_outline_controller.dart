@@ -416,8 +416,12 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     required int moduleNumber,
     String? language,
   }) async {
+    // DOUBLE CHECK: Prevent duplicate requests
     if (_generatingModules.contains(moduleNumber) ||
         _hydratedModules.contains(moduleNumber)) {
+      debugPrint(
+        '[ModuleOutline] Skipping M$moduleNumber: already generating/hydrated',
+      );
       return;
     }
 
@@ -434,9 +438,12 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
         return;
       }
 
+      // Mark as generating BEFORE the async call to prevent race conditions
       setState(() {
         _generatingModules.add(moduleNumber);
       });
+
+      debugPrint('[ModuleOutline] Starting generation for M$moduleNumber');
 
       final moduleResponse = await CourseApiService.fetchGenerativeModule(
         topic: _courseId,
@@ -472,13 +479,19 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
         return;
       }
 
-      debugPrint('Failed to fetch module $moduleNumber: $error');
+      debugPrint('[ModuleOutline] Failed to fetch M$moduleNumber: $error');
 
       setState(() {
         _generatingModules.remove(moduleNumber);
       });
 
-      _showModuleGenerationError(moduleNumber);
+      // Check if it's a rate limit error (429)
+      final errorString = error.toString().toLowerCase();
+      if (errorString.contains('429') || errorString.contains('rate limit')) {
+        _showRateLimitError(moduleNumber);
+      } else {
+        _showModuleGenerationError(moduleNumber);
+      }
     }
   }
 
@@ -648,6 +661,29 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$generic ($moduleLabel)')),
+    );
+  }
+
+  void _showRateLimitError(int moduleNumber) {
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    final moduleLabel =
+        l10n?.outlineModuleFallback(moduleNumber) ?? 'Module $moduleNumber';
+
+    final message = l10n?.localeName.startsWith('es') == true
+        ? 'Demasiadas solicitudes para $moduleLabel. Por favor espera un momento e intenta nuevamente.'
+        : 'Too many requests for $moduleLabel. Please wait a moment and try again.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: l10n?.localeName.startsWith('es') == true ? 'OK' : 'OK',
+          onPressed: () {},
+        ),
+      ),
     );
   }
 

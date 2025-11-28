@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:edaptia/core/app_colors.dart';
 import 'package:edaptia/features/home/home_controller.dart';
-import 'package:edaptia/features/modules/outline/module_outline_view.dart';
 import 'package:edaptia/features/settings/settings_view.dart';
 import 'package:edaptia/features/support/help_support_screen.dart';
 import 'package:edaptia/features/quiz/quiz_screen.dart';
@@ -16,8 +15,6 @@ import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/dataconnect_generated/courses.dart';
 import 'package:edaptia/services/google_sign_in_helper.dart';
-import 'package:edaptia/services/local_outline_storage.dart';
-import 'package:edaptia/services/recent_outlines_storage.dart';
 import 'package:edaptia/widgets/skeleton.dart';
 import 'package:edaptia/providers/streak_provider.dart';
 
@@ -154,99 +151,36 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
       if (!mounted) return;
 
+      // ALWAYS go to adaptive journey flow (QuizScreen)
+      // If cachedBand exists, QuizScreen will skip directly to AdaptiveJourneyScreen
+      // This ensures we NEVER go to legacy ModuleOutlineView
+
       if (cachedBand == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.calibratingPlan)),
         );
+      }
 
-        unawaited(
-          _controller.trackQuizOpen(
-            topic: rawTopic,
-            language: languageCode,
-          ),
-        );
-
-        if (!mounted) return;
-
-        assert(() {
-          debugPrint('[HomeView] navigating to QuizScreen');
-          return true;
-        }());
-        await Navigator.of(context).pushNamed(
-          QuizScreen.routeName,
-          arguments: QuizScreenArgs(
-            topic: rawTopic,
-            language: languageCode,
-          ),
-        );
-      } else {
-        final outlineResponse = await CourseApiService.generateOutline(
+      unawaited(
+        _controller.trackQuizOpen(
           topic: rawTopic,
           language: languageCode,
-          band: cachedBand,
-        );
+        ),
+      );
 
-        final now = DateTime.now();
-        await LocalOutlineStorage.instance.save(
+      if (!mounted) return;
+
+      assert(() {
+        debugPrint('[HomeView] navigating to QuizScreen (adaptive flow)');
+        return true;
+      }());
+      await Navigator.of(context).pushNamed(
+        QuizScreen.routeName,
+        arguments: QuizScreenArgs(
           topic: rawTopic,
-          payload: outlineResponse,
-        );
-
-        final responseBand = outlineResponse['band']?.toString();
-        final responseDepth = outlineResponse['depth']?.toString() ??
-            CourseApiService.depthForBand(cachedBand);
-        final responseLanguage =
-            outlineResponse['language']?.toString() ?? languageCode;
-        final outlineList = _extractOutlineList(outlineResponse['outline']);
-
-        unawaited(
-          _controller.trackOutlineGenerated(
-            topic: rawTopic,
-            language: responseLanguage,
-            band: responseBand ?? 'unknown',
-            depth: responseDepth,
-            source: outlineResponse['source']?.toString() ?? 'api',
-            cachedBand: CourseApiService.placementBandToString(cachedBand),
-          ),
-        );
-
-        final metadata = RecentOutlineMetadata(
-          id: RecentOutlineMetadata.buildId(
-            topic: rawTopic,
-            language: responseLanguage,
-            band: responseBand,
-            depth: responseBand == null || responseBand.isEmpty
-                ? responseDepth
-                : null,
-          ),
-          topic: rawTopic,
-          language: responseLanguage,
-          band: responseBand?.isNotEmpty == true ? responseBand : null,
-          depth: responseDepth,
-          savedAt: now,
-        );
-        await RecentOutlinesStorage.instance.upsert(metadata);
-
-        if (!mounted) return;
-        assert(() {
-          debugPrint(
-              '[HomeView] navigating to ModuleOutlineView (cached path)');
-          return true;
-        }());
-        await Navigator.of(context).pushNamed(
-          ModuleOutlineView.routeName,
-          arguments: ModuleOutlineArgs(
-            topic: rawTopic,
-            language: responseLanguage,
-            depth: responseDepth,
-            preferredBand: responseBand,
-            initialOutline: outlineList,
-            initialResponse: outlineResponse,
-            initialSource: outlineResponse['source']?.toString(),
-            initialSavedAt: now,
-          ),
-        );
-      }
+          language: languageCode,
+        ),
+      );
 
       await _controller.loadRecents();
       await _controller.loadRecommendations(
@@ -574,35 +508,31 @@ class _HomeViewState extends ConsumerState<HomeView> {
   Future<void> _openCachedOutline(HomeRecentOutline item) async {
     if (!mounted) return;
     final meta = item.metadata;
-    final cached =
-        item.cached ?? await LocalOutlineStorage.instance.findById(meta.id);
-    if (!mounted) return;
 
-    final args = ModuleOutlineArgs(
-      topic: meta.topic,
-      language: cached?.lang ?? meta.language,
-      depth: cached?.depth ?? meta.depth,
-      preferredBand: cached?.band ?? meta.band,
-      recommendRegenerate: false,
-      initialOutline: cached?.outline,
-      initialResponse: cached?.rawResponse,
-      initialSource: cached?.source,
-      initialSavedAt: cached?.savedAt,
-    );
-
-    await Navigator.of(context).pushNamed(
-      ModuleOutlineView.routeName,
-      arguments: args,
-    );
+    // If we have a cached band, go directly to AdaptiveJourneyScreen
+    // Otherwise, go to QuizScreen for placement quiz
+    if (meta.band != null && meta.band!.isNotEmpty) {
+      final band = CourseApiService.placementBandFromString(meta.band!);
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AdaptiveJourneyScreen(
+            topic: meta.topic,
+            target: meta.topic,
+            initialBand: band,
+          ),
+        ),
+      );
+    } else {
+      // No band cached, do placement quiz first
+      await Navigator.of(context).pushNamed(
+        QuizScreen.routeName,
+        arguments: QuizScreenArgs(
+          topic: meta.topic,
+          language: meta.language,
+        ),
+      );
+    }
     await _controller.loadRecents();
-  }
-
-  static List<Map<String, dynamic>> _extractOutlineList(dynamic raw) {
-    if (raw is! List) return <Map<String, dynamic>>[];
-    return raw
-        .whereType<Map>()
-        .map((module) => Map<String, dynamic>.from(module))
-        .toList(growable: false);
   }
 }
 

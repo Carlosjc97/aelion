@@ -15,6 +15,8 @@ class ModuleService {
     PlacementBand? band,
     String language = 'en',
     String? previousModuleId,
+    Duration timeout = const Duration(seconds: 180),  // 3 minutos para plan adaptativo
+    int maxRetries = 3,
   }) async {
     if (moduleNumber < 1) {
       throw ArgumentError('moduleNumber must be >= 1');
@@ -47,6 +49,8 @@ class ModuleService {
     final response = await CourseApiClient.postJson(
       uri: Uri.parse(uri),
       body: payload,
+      timeout: timeout,
+      maxRetries: maxRetries,
     );
 
     final decoded = jsonDecode(response.body);

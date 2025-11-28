@@ -33,6 +33,7 @@ class ApiConfig {
   static String trending(String lang) => '$apiBaseUrl/trending?lang=$lang';
   static String openaiUsageMetrics() => '$apiBaseUrl/openaiUsageMetrics';
   static String adaptivePlanDraft() => '$apiBaseUrl/adaptivePlanDraft';
+  static String adaptiveModuleCount() => '$apiBaseUrl/adaptiveModuleCount';
   static String adaptiveModule() => '$apiBaseUrl/adaptiveModuleGenerate';
   static String adaptiveCheckpointQuiz() =>
       '$apiBaseUrl/adaptiveCheckpointQuiz';

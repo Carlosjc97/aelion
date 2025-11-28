@@ -10,7 +10,7 @@ class CourseApiClient {
 
   static http.Client httpClient = http.Client();
 
-  static const Duration defaultTimeout = Duration(seconds: 45);
+  static const Duration defaultTimeout = Duration(seconds: 120);  // Aumentado para llamadas generativas OpenAI
 
   static Future<http.Response> get({
     required Uri uri,

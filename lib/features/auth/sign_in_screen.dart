@@ -1,8 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'package:edaptia/core/design_system/colors.dart';
+import 'package:edaptia/core/design_system/components/edaptia_card.dart';
+import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/analytics/guest_id.dart';
@@ -132,8 +135,14 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final headlineStyle =
+        EdaptiaTypography.largeTitle.copyWith(color: EdaptiaColors.textPrimary);
+    final subtitleStyle = EdaptiaTypography.title2
+        .copyWith(color: EdaptiaColors.textSecondary);
+    final statusStyle = EdaptiaTypography.subheadline
+        .copyWith(color: EdaptiaColors.textTertiary);
+    final buttonLabel = l10n?.loginButton ?? 'Sign in with Google';
 
     return Scaffold(
       body: SafeArea(
@@ -146,13 +155,13 @@ class _SignInScreenState extends State<SignInScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n?.appTitle ?? 'Aelion',
-                  style: theme.textTheme.headlineLarge,
+                  l10n?.appTitle ?? 'Edaptia',
+                  style: headlineStyle,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   l10n?.loginTitle ?? 'Learn faster with AI',
-                  style: theme.textTheme.titleMedium,
+                  style: subtitleStyle,
                 ),
                 const SizedBox(height: 32),
                 A11yButton(
@@ -164,9 +173,9 @@ class _SignInScreenState extends State<SignInScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.login),
-                  label: l10n?.loginButton ?? 'Sign in with Google',
-                  semanticsLabel: l10n?.loginButton ?? 'Sign in with Google',
-                  onTapHint: l10n?.loginButton ?? 'Sign in with Google',
+                  label: buttonLabel,
+                  semanticsLabel: buttonLabel,
+                  onTapHint: buttonLabel,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -174,8 +183,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ? (l10n?.loginLoading ?? 'Connecting...')
                       : (l10n?.loginSubtitle ??
                           'Your learning path in a few taps'),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: statusStyle,
                 ),
               ],
             );
@@ -219,11 +227,12 @@ class _HighlightsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final colorScheme = theme.colorScheme;
+    final titleStyle =
+        EdaptiaTypography.title3.copyWith(color: Colors.white);
+    final bulletStyle =
+        EdaptiaTypography.body.copyWith(color: Colors.white70);
 
-    final bulletStyle = theme.textTheme.bodyMedium;
     final highlights = <String>[
       l10n?.loginHighlightPersonalized ?? 'Personalized outlines in minutes',
       l10n?.loginHighlightStreak ?? 'Daily streaks keep you motivated',
@@ -231,29 +240,27 @@ class _HighlightsCard extends StatelessWidget {
           'Sync across devices with your Google account',
     ];
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      color: colorScheme.surfaceContainerHighest,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n?.loginTitle ?? 'Learn faster with AI',
-              style: theme.textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            for (final item in highlights) ...[
-              Text(item, style: bulletStyle),
-              if (item != highlights.last) const SizedBox(height: 8),
-            ],
+    return EdaptiaCard(
+      gradient: EdaptiaColors.hookGradient,
+      borderRadius: 24,
+      elevation: 6,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n?.loginTitle ?? 'Learn faster with AI',
+            style: titleStyle,
+          ),
+          const SizedBox(height: 12),
+          for (final item in highlights) ...[
+            Text(item, style: bulletStyle),
+            if (item != highlights.last) const SizedBox(height: 8),
           ],
-        ),
+        ],
       ),
     );
   }
 }
+
 

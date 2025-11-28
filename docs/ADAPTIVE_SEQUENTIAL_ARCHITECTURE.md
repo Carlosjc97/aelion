@@ -1,383 +1,314 @@
-# Arquitectura de Generación Secuencial - Edaptia
-
-## 🎯 Problema Resuelto
-
-**ANTES (Monolítica):** El endpoint `/adaptivePlanDraft` generaba TODO el plan de 4-12 módulos en una sola llamada OpenAI, tomando 3+ minutos y causando timeouts.
-
-**AHORA (Secuencial):** Generación dividida en dos fases:
-1. **Pre-warming:** Conteo rápido de módulos (~5-10s)
-2. **Generación bajo demanda:** Cada módulo se genera cuando el usuario lo necesita
+# Arquitectura Secuencial 2.0 – Edaptia
+Versión 20 de noviembre de 2025  
+Responsable: Equipo Ara / Claude Code / Tú
 
 ---
 
-## 📐 Arquitectura Nueva
+## 1. Por qué existe
 
-### **Fase 1: Pre-Warming (Durante Quiz)**
-
-```
-Usuario completa quiz de colocación
-           │
-           ▼
-┌─────────────────────────────────────┐
-│  POST /adaptiveModuleCount          │
-│                                     │
-│  Request:                           │
-│  {                                  │
-│    "topic": "Inglés A1",            │
-│    "band": "basic",                 │
-│    "target": "conversación fluida"  │
-│  }                                  │
-└──────────┬──────────────────────────┘
-           │
-           ▼ ⏱️ 5-10 segundos
-┌─────────────────────────────────────┐
-│  Response:                          │
-│  {                                  │
-│    "moduleCount": 6,                │
-│    "rationale": "6 módulos para..." │
-│  }                                  │
-└──────────┬──────────────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────┐
-│  UI muestra INMEDIATAMENTE:         │
-│  [M1] [M2] [M3] [M4] [M5] [M6]      │
-│  (botones vacíos, listo para usar)  │
-└─────────────────────────────────────┘
-```
-
-**Características:**
-- ✅ **Ultra-rápido:** ~200 tokens de respuesta
-- ✅ **Determinístico:** temperature=0.3 para consistencia
-- ✅ **Feedback inmediato:** Usuario ve estructura del curso al instante
-
-### **Fase 2: Generación Secuencial (Bajo Demanda)**
-
-```
-Usuario completa quiz
-     │
-     ▼
-┌────────────────────────────────────┐
-│ POST /adaptiveModuleGenerate       │
-│ (YA EXISTÍA - no cambió)           │
-│                                    │
-│ Body: {                            │
-│   "topic": "Inglés A1",            │
-│   "moduleNumber": 1,               │
-│   "focusSkills": ["grammar_basics"]│
-│ }                                  │
-└──────┬─────────────────────────────┘
-       │
-       ▼ ⏱️ 60-90 segundos
-┌────────────────────────────────────┐
-│ Genera SOLO M1:                    │
-│ • 8-20 lessons                     │
-│ • Challenge                        │
-│ • Checkpoint blueprint             │
-│ • Skills targeted                  │
-└──────┬─────────────────────────────┘
-       │
-       ▼
-Usuario estudia M1, pasa checkpoint
-       │
-       ▼
-┌────────────────────────────────────┐
-│ POST /adaptiveModuleGenerate       │
-│ Body: {                            │
-│   "topic": "Inglés A1",            │
-│   "moduleNumber": 2,               │
-│   "focusSkills": [M1 weak areas]   │
-│ }                                  │
-└────────────────────────────────────┘
-       │
-       ▼
-   ... continúa hasta M6
-```
-
-**Ventajas:**
-- ✅ **Sin timeouts:** Cada módulo toma ~60-90s (dentro del límite)
-- ✅ **Adaptativo:** M2 se ajusta según desempeño en M1
-- ✅ **Progresivo:** Usuario empieza a estudiar mientras se generan siguientes módulos
-- ✅ **Alta calidad:** Mantenemos 8-20 lessons, sin reducciones mediocres
+Antes se intentaba generar TODO el curso en una sola llamada a OpenAI: 4‑12 módulos + checkpoints + mock. Resultado: 3 minutos de espera, timeouts en Cloud Functions y usuarios frustrados.  
+La nueva arquitectura divide el viaje en micro-tareas que se resuelven en paralelo, se cachean y se entregan al usuario en el momento exacto. Así se obtiene feedback en <10 s y el contenido pesado se cocina de fondo.
 
 ---
 
-## 🔧 Implementación Técnica
+## 2. Cómo se siente para el usuario
 
-### **1. Nuevo Esquema JSON (schemas.ts:424-433)**
-
-```typescript
-export const ModuleCountSchema = {
-  $id: "https://aelion.ai/schemas/ModuleCount.json",
-  type: "object",
-  additionalProperties: false,
-  required: ["moduleCount", "rationale"],
-  properties: {
-    moduleCount: { type: "integer", minimum: 4, maximum: 12 },
-    rationale: { type: "string", minLength: 20, maxLength: 200 },
-  },
-} as const;
-```
-
-### **2. Nuevo Prompt (openai-service.ts:1260-1284)**
-
-```typescript
-const MODULE_COUNT_SYSTEM_PROMPT =
-  "Eres experto en diseño curricular. Devuelves SOLO JSON. Determinas cuántos módulos son necesarios para cubrir un tema dado el nivel del estudiante.";
-
-function buildModuleCountUserPrompt(params: {
-  topic: string;
-  band: Band;
-  target: string;
-}): string {
-  return [
-    `Tema: "${params.topic}". Nivel inicial del estudiante: ${params.band}.`,
-    `Objetivo final: ${params.target}.`,
-    "",
-    "Determina el número ÓPTIMO de módulos (entre 4 y 12) necesarios para cubrir este tema de forma efectiva.",
-    "Considera:",
-    "- Complejidad del tema",
-    "- Nivel inicial del estudiante (basic = más módulos, advanced = menos módulos)",
-    "- Objetivo final (aplicación práctica requiere más módulos que conocimiento teórico)",
-    // ...
-  ].join("\n");
-}
-```
-
-### **3. Nueva Función OpenAI (openai-service.ts:1512-1543)**
-
-```typescript
-export async function generateModuleCount(params: {
-  topic: string;
-  band: Band;
-  target: string;
-  userId?: string;
-}): Promise<{ moduleCount: number; rationale: string }> {
-  const tracker = createTrackedModelCaller();
-  const result = await generateJson<{ moduleCount: number; rationale: string }>(
-    tracker.caller,
-    ModuleCountSchema.$id,
-    MODULE_COUNT_SYSTEM_PROMPT,
-    buildModuleCountUserPrompt(params),
-    "gpt-4o-mini",
-    0.3, // Lower temperature for more deterministic count
-    200, // Very small response - just a number and short rationale
-    MODEL_SCHEMA_FORMAT("ModuleCount", ModuleCountSchema),
-    2, // Fewer retries needed for simple response
-  );
-  // ... logging ...
-  return result;
-}
-```
-
-**Optimizaciones:**
-- `temperature: 0.3` → Más determinístico (mismo topic = mismo conteo)
-- `max_tokens: 200` → Respuesta ultra-compacta
-- `maxRetries: 2` → Menos reintentos (respuesta simple)
-
-### **4. Nuevo Endpoint (generative-endpoints.ts:1369-1431)**
-
-```typescript
-export const adaptiveModuleCount = onRequest(
-  { cors: true, timeoutSeconds: 60, memory: "256MiB" },
-  async (req, res) => {
-    // ... auth & rate limiting ...
-
-    const { topic, band, target } = req.body ?? {};
-
-    const result = await getOpenAI().generateModuleCount({
-      topic: topic.trim(),
-      band: normalizedBand,
-      target: target.trim(),
-      userId: authContext.userId,
-    });
-
-    res.status(200).json({
-      moduleCount: result.moduleCount,
-      rationale: result.rationale,
-      topic: topic.trim(),
-      band: normalizedBand,
-    });
-  }
-);
-```
-
-**Configuración:**
-- `timeoutSeconds: 60` (vs 300 del plan completo)
-- `memory: "256MiB"` (vs 512MiB del plan completo)
-- Rate limit: 30 requests/5min (más generoso porque es ligero)
+1. **Generar plan con IA** → inmediatamente aparece un skeleton con los slots de M1..Mx (5‑10 s).  
+2. **Módulo 1 se abre** → la IA ya lo estaba generando; ves lecciones reales en ≈60 s.  
+3. **Mientras estudias**, el backend prepara M2. Cuando lo desbloqueas, ya está caliente.  
+4. **Cada checkpoint** recalibra el plan y alimenta los siguientes módulos.  
+5. **Todo el tiempo** recibes mensajes claros si algo falla (sin códigos raros).
 
 ---
 
-## 🚀 Cómo Usar (Flutter/Frontend)
+## 3. Flujo resumido
 
-### **Flujo Recomendado:**
+```mermaid
+flowchart LR
+    A[Quiz de colocación] --> B{placementQuizGrade}
+    B -->|band + learnerState| C[/adaptiveSession/start/]
+    C --> D[adaptiveModuleCount]
+    C --> E[adaptiveModuleGenerate (M1)]
+    E --> F{Usuario abre Módulo 1}
+    F --> G[Prefetch M2]
+    G --> H[Prefetch M3]
+    F --> I[Checkpoint M1]
+    I -->|new learnerState| G
+```
 
-1. **Durante o después del quiz de colocación:**
-   ```dart
-   final response = await CourseApiClient.postJson(
-     uri: Uri.parse('https://us-central1-aelion-c90d2.cloudfunctions.net/adaptiveModuleCount'),
-     body: {
-       'topic': 'Inglés A1',
-       'band': 'basic',
-       'target': 'Conversación fluida',
-     },
-     timeout: Duration(seconds: 30),
-   );
+- El front solo ve `/adaptiveSession/...`. Por dentro, Cloud Functions llama a los endpoints clásicos (`adaptiveModuleCount`, `adaptiveModuleGenerate`, etc.) y persiste todo en Firestore.
 
-   final moduleCount = response['moduleCount']; // e.g., 6
-   final rationale = response['rationale'];
+---
 
-   // Mostrar skeleton UI inmediatamente:
-   setState(() {
-     modules = List.generate(moduleCount, (i) => ModuleSkeleton(number: i + 1));
-   });
+## 4. Componentes clave
+
+| Componente | Rol | Persistencia |
+|------------|-----|--------------|
+| `placementQuizStartLive` | Genera el quiz + guarda `quiz_session` | Firestore `quiz_sessions` |
+| `placementQuizGrade` | Devuelve banda, score y `competencyMap` | Firestore `adaptive_sessions/{userId}` |
+| `adaptiveSession/start` (wrapper nuevo) | Orquesta módulo count + prefetch de M1 | Firestore `adaptive_sessions` |
+| `adaptiveModuleCount` | Devuelve `moduleCount` + `rationale` en 5‑10 s | Guardado en la sesión |
+| `adaptiveModuleGenerate` | Genera un módulo completo (8‑20 lecciones) | Cachea JSON en Storage + metadatos en Firestore |
+| `adaptiveCheckpointQuiz` | Crea mini-quiz por módulo | Misma sesión |
+| `adaptiveEvaluateCheckpoint` | Ajusta `learnerState` y desencadena el siguiente módulo | Firestore |
+| Heath Scheduler (Cloud Function programada) | Prefetch + limpia sesiones viejas | Firestore / Storage |
+
+> Nota: Los endpoints históricos siguen existiendo, pero el cliente solo habla con `adaptiveSession/*`. Esto evita que un cambio en el front deje módulos a medio generar.
+
+---
+
+## 5. Estados y datos que se arrastran
+
+| Campo | Fuente | Uso |
+|-------|--------|-----|
+| `band` | `placementQuizGrade` | Decide nivel inicial y temperatura de prompts |
+| `learnerState` (skills 0‑1) | Quiz + checkpoints | Alimenta prompts de módulos, boosters y checkpoints |
+| `moduleCount` | `adaptiveModuleCount` | Skeleton UI + progress bar |
+| `moduleStatus[n]` | Prefetch service | Informa si M1..Mx están en `pending/generating/ready` |
+| `focusSkills` | Checkpoint + heurísticas | Inyectado en prompt de cada módulo |
+| `locale/preferredLanguage` | Quiz + settings | Informa prompts y UI |
+
+Cada vez que generamos algo, actualizamos este documento en Firestore. Cualquier función puede reconstruir el contexto leyendo un único registro.
+
+---
+
+## 6. Estrategia “Disruptiva” (lo que entusiasma)
+
+1. **Doble disparo al terminar el quiz**  
+   - `adaptiveModuleCount` → respuesta ligera para dibujar el plan.  
+   - `adaptiveModuleGenerate` para M1 → inicia de inmediato.  
+   Esto ocurre en paralelo, sin esperar al usuario.
+
+2. **Prefetch en cadena**  
+   - Cuando M1 termina, Cloud Functions (Heath) lanza M2 en background.  
+   - Si el usuario llega antes de que termine, se muestra el loader; si llega después, lo abre al instante.  
+   - Cada checkpoint desencadena un “prefetch + recalibración” del siguiente.
+
+3. **Cache inteligente**  
+   - Respuestas de generación se guardan en Storage con un hash del prompt.  
+   - Si otro usuario pide “SQL para marketing – banda basic”, reutilizamos resultados siempre que la ventana de frescura (24 h) no haya expirado.
+
+4. **Prompts con narrativa viva**  
+   - Todos los prompts describen escenarios globales, invites reales (LATAM, startups, etc.).  
+   - Se enviarán en inglés para reducir coste y ganar consistencia; la traducción al usuario la hace el front (o el prompt incluye `language = es`).  
+   - El doc de prompts vive en `functions/src/openai-service.ts` y se mantiene versionado.
+
+5. **Mensajes humanos**  
+   - “Estamos armando tu módulo con ejemplos de Growth en CDMX. Tardará ~1 minuto.”  
+   - “Detectamos que te costó `joins`. El siguiente módulo refuerza ese tema.”  
+   Nada de errores JSON o `OPENAI_API_KEY not configured` en la UI.
+
+---
+
+## 7. Errores y cómo reintentamos
+
+| Falla | Acción automática | Mensaje al usuario |
+|-------|------------------|--------------------|
+| Timeout generando módulo | Reintenta hasta 3 veces con backoff | “Estamos tardando más de lo normal, seguimos trabajando en tu módulo.” |
+| 401 OpenAI | Cambia de key según hint → si persiste, alerta ops | “Necesitamos regenerar el contenido. Vuelve en 2 minutos.” |
+| Cloud Firestore unavailable | Reintenta silenciosamente | “Sincronizando tu progreso...” |
+| Skeleton sin contenido >90 s | Marca módulo como `error` y ofrece reintentar | “No pudimos generar M2, ¿reintentamos?” |
+
+Todos los eventos críticos se loguean en `openai_usage` con `endpoint`, `tokens`, `key_type`. Puedes monitorear en BigQuery.
+
+---
+
+## 8. Checklist para cualquier desarrollador nuevo
+
+1. Leer `docs/Context_edaptia.md` → visión general.  
+2. Revisar este archivo para entender cómo fluye el contenido.  
+3. Explorar `functions/src/openai-service.ts` (prompts y lógica).  
+4. Ver `lib/features/quiz/quiz_screen.dart` → `_bootstrap` maneja skeleton + módulos.  
+5. Lanzar `firebase functions:log --only placementQuizStartLive` para confirmar que las keys están vivas.  
+6. Ejecutar `flutter run`, completar un quiz y verificar tiempos (<10 s skeleton, <90 s módulo).  
+7. Si algo se rompe, actualizar el estado en `docs/RESUMEN_PARA_USUARIO.md`.
+
+---
+
+## 9. Roadmap de Implementación (3 Fases)
+
+### **Fase 1: MVP Secuencial (Semana 1 - P0 Critical)**
+**Objetivo**: Skeleton en <10s, M1 en <90s. Usuario ve progreso inmediato.
+
+**Tareas**:
+1. ✅ **Endpoints base ya existen**:
+   - `adaptiveModuleCount` (retorna en 5-10s)
+   - `adaptiveModuleGenerate` (genera módulo completo)
+   - `placementQuizGrade` (calcula band + learnerState)
+
+2. 🔨 **Crear wrapper `/adaptiveSession/start`** (`functions/src/index.ts`):
+   ```typescript
+   // Orquesta:
+   // - Llamar adaptiveModuleCount (rápido)
+   // - Inicializar moduleStatus en Firestore
+   // - Disparar adaptiveModuleGenerate(M1) en background (NO esperar)
+   // - Retornar skeleton inmediatamente
    ```
 
-2. **Generar M1 automáticamente después del quiz:**
-   ```dart
-   final m1Response = await CourseApiClient.postJson(
-     uri: Uri.parse('https://us-central1-aelion-c90d2.cloudfunctions.net/adaptiveModuleGenerate'),
-     body: {
-       'topic': 'Inglés A1',
-       'moduleNumber': 1,
-       'focusSkills': quizErrors, // Del quiz de colocación
-     },
-     timeout: Duration(seconds: 120),
-   );
-
-   setState(() {
-     modules[0] = Module.fromJson(m1Response['module']);
-   });
-   ```
-
-3. **Generar M2 después de pasar checkpoint M1:**
-   ```dart
-   // En onCheckpointPassed(moduleNumber)
-   if (moduleNumber < modules.length) {
-     final nextModule = await generateNextModule(
-       moduleNumber: moduleNumber + 1,
-       weakSkills: checkpointResult['weakSkills'],
-     );
+3. 🔨 **Agregar tracking de `moduleStatus` en Firestore**:
+   ```typescript
+   adaptive_sessions/{userId}/ {
+     moduleStatus: {
+       "1": "ready",      // Ya generado
+       "2": "generating", // En proceso
+       "3": "pending",    // No iniciado
+       "4": "error"       // Falló, reintentar
+     }
    }
    ```
 
-### **Optimización Adicional: Pre-generación en Background**
+4. 🔨 **Flutter: UI skeleton + loader storytelling** (`lib/features/quiz/quiz_screen.dart`):
+   - Mostrar estructura del curso (M1..Mx) en <10s
+   - Loader para M1: "Armando tu módulo con ejemplos de [industria]. ~60s"
+   - Polling cada 5s para actualizar `moduleStatus`
+   - Si error, botón "Reintentar" que llama a `adaptiveModuleGenerate` nuevamente
 
-```dart
-// Mientras el usuario estudia M1, pre-generar M2 en background:
-void _preGenerateNextModule() async {
-  if (_currentModuleNumber + 1 <= _totalModules && !_isPreGenerating) {
-    _isPreGenerating = true;
-    try {
-      final nextModule = await generateNextModule(
-        moduleNumber: _currentModuleNumber + 1,
-        weakSkills: _predictedWeakSkills,
-      );
-      _cache[_currentModuleNumber + 1] = nextModule;
-    } catch (e) {
-      // Si falla, se generará bajo demanda más tarde
-    } finally {
-      _isPreGenerating = false;
-    }
-  }
-}
-```
+**Entregables**:
+- Usuario ve skeleton inmediatamente post-quiz
+- M1 se genera en background, no bloquea UI
+- Si tarda >90s, usuario ve mensaje claro (no timeout genérico)
+
+**Esfuerzo**: 4-5 días | **Prioridad**: P0
 
 ---
 
-## 📊 Comparación de Performance
+### **Fase 2: Prefetch Inteligente (Semana 2-3 - P1 High)**
+**Objetivo**: M2 listo cuando usuario termina M1. Experiencia fluida sin esperas.
 
-| Métrica | ANTES (Monolítica) | AHORA (Secuencial) |
-|---------|-------------------|-------------------|
-| **Tiempo inicial** | 3+ minutos (timeout) | 5-10 segundos ✅ |
-| **Feedback visual** | Loading spinner | Skeleton UI inmediato ✅ |
-| **Calidad contenido** | Reducida (8 módulos, 20 skills) | ALTA (12 módulos, 60 skills) ✅ |
-| **Adaptabilidad** | Estática (todo pre-generado) | Dinámica (M2 ajusta según M1) ✅ |
-| **Tokens por llamada** | ~3200 | ~200 (count) + ~1600 (módulo) ✅ |
-| **Riesgo timeout** | ALTO (186s-219s) | BAJO (~60-90s por módulo) ✅ |
-| **Tasa error** | ~40% (timeouts) | <5% estimado ✅ |
+**Tareas**:
+1. 🔨 **Prefetch con Firestore Triggers** (NO Cloud Scheduler inicialmente):
+   ```typescript
+   // functions/src/index.ts
+   export const onModuleStatusChange = onDocumentWritten(
+     "adaptive_sessions/{userId}",
+     async (event) => {
+       const moduleStatus = event.data.after.get("moduleStatus");
 
----
+       // Si M1 === "ready" && M2 === "pending" && usuario abrió M1
+       if (userOpenedModule(1) && moduleStatus["2"] === "pending") {
+         // Generar M2 en background
+         await adaptiveModuleGenerateInternal({ moduleId: 2, ... });
+       }
+     }
+   );
+   ```
 
-## 🔍 Monitoreo y Debugging
+2. 🔨 **Condición crítica de engagement**:
+   - **SOLO generar M+1 si usuario abrió módulo anterior**
+   - Rastrear `lastOpenedModule` en Firestore
+   - Evitar precalentar cursos abandonados (ahorro de costos)
 
-### **Logs de Firebase:**
+3. 🔨 **Recalibración post-checkpoint**:
+   - Actualizar `adaptiveEvaluateCheckpoint` para marcar siguiente módulo como "prefetching"
+   - Trigger de Firestore pickea y regenera con nuevo `learnerState`
 
-```bash
-# Ver logs del nuevo endpoint
-firebase functions:log --only adaptiveModuleCount
+4. 🔨 **Timeout monitor** (Cloud Function programada cada 5 min):
+   - Buscar módulos en "generating" por >10 minutos
+   - Marcar como "error" y notificar ops
+   - **Nota**: Esto SÍ requiere Cloud Scheduler, pero es opcional para MVP
 
-# Ver métricas de uso
-firebase functions:log | grep "generateModuleCount"
-```
+**Entregables**:
+- M2 listo cuando usuario completa M1
+- Checkpoints ajustan contenido de módulos siguientes en tiempo real
+- No se desperdician tokens OpenAI en cursos abandonados
 
-### **Validación de Respuesta:**
-
-```typescript
-// El schema garantiza:
-moduleCount >= 4 && moduleCount <= 12 // ✅
-rationale.length >= 20 && rationale.length <= 200 // ✅
-```
-
-### **Firestore Usage Tracking:**
-
-```javascript
-// Automáticamente se registra en openai_usage collection:
-{
-  endpoint: "generateModuleCount",
-  model: "gpt-4o-mini",
-  promptTokens: ~150,
-  completionTokens: ~50,
-  estimatedCost: ~$0.0001,
-  timestamp: ...
-}
-```
+**Esfuerzo**: 3-4 días | **Prioridad**: P1
 
 ---
 
-## 🎯 Próximos Pasos
+### **Fase 3: Cache Sharing + Analytics (Semana 4+ - P2 Medium)**
+**Objetivo**: Reducir costos 60-80% en contenido popular. Métricas para optimizar.
 
-### **1. Actualizar UI Flutter** (PENDIENTE)
-- Modificar `adaptive_journey_screen.dart` para llamar `/adaptiveModuleCount` primero
-- Mostrar skeleton UI con módulos vacíos
-- Generar M1 automáticamente después del quiz
-- Implementar generación bajo demanda para M2-M12
+**Tareas**:
+1. 🔨 **Storage caching layer**:
+   ```typescript
+   // Hash = SHA256(prompt + band + locale + PROMPT_VERSION)
+   // Antes de llamar OpenAI:
+   const cacheKey = `gs://aelion-cache/${hash}.json`;
+   const cached = await storage.bucket().file(cacheKey).exists();
+   if (cached && createdAt < 24h) return cached;
 
-### **2. Deprecar `/adaptivePlanDraft`** (OPCIONAL)
-- El endpoint antiguo puede quedarse para compatibilidad
-- O redirigirlo a la nueva arquitectura secuencial
+   // Guardar + timestamp
+   await storage.bucket().file(cacheKey).save(result);
+   ```
 
-### **3. Caché Predictivo** (FUTURO)
-- Mientras usuario estudia M1, pre-generar M2 en background
-- Guardar en Firestore cache con TTL de 7 días
+2. 🔨 **Prompt versioning**:
+   - Incluir `PROMPT_VERSION = "2025-11-21"` en hash
+   - Invalidar cache automáticamente cuando se actualicen prompts
 
-### **4. A/B Testing**
-- Comparar tasas de completación: Monolítica vs Secuencial
-- Medir satisfacción del usuario (NPS)
+3. 🔨 **Métricas en `openai_usage`**:
+   - Agregar campo `cache_hit: boolean`
+   - Dashboard BigQuery: % cache hit rate, tokens ahorrados
 
----
+4. 🔨 **Analytics dashboard**:
+   - Tiempo hasta skeleton (<10s ✅)
+   - Tiempo hasta M1 ready (<90s ✅)
+   - % sesiones donde M2 ready antes de que usuario llegue
+   - Tasa de abandono por módulo
 
-## 📚 Referencias
+**Entregables**:
+- Módulos populares (SQL básico, Inglés A1) se reutilizan entre usuarios
+- Dashboard para monitorear performance
+- Costos OpenAI reducidos drásticamente
 
-- **Schema:** `functions/src/adaptive/schemas.ts:424-433`
-- **Función OpenAI:** `functions/src/openai-service.ts:1512-1543`
-- **Endpoint:** `functions/src/generative-endpoints.ts:1369-1431`
-- **Documentación OpenAI:** https://platform.openai.com/docs/guides/structured-outputs
-
----
-
-## ✅ Cambios Aplicados
-
-1. ✅ Agregado `ModuleCountSchema` a schemas.ts
-2. ✅ Agregado `MODULE_COUNT_SYSTEM_PROMPT` y `buildModuleCountUserPrompt()` a openai-service.ts
-3. ✅ Agregado `generateModuleCount()` a openai-service.ts
-4. ✅ Agregado endpoint `adaptiveModuleCount` a generative-endpoints.ts
-5. ✅ Build exitoso: `npm run build` (exit code 0)
-6. ⏳ Deploy en progreso: `firebase deploy --only functions`
+**Esfuerzo**: 5-6 días | **Prioridad**: P2 (solo si ya hay >100 usuarios/día)
 
 ---
 
-**Arquitectura diseñada por:** Claude Code
-**Fecha:** 14 de Noviembre, 2025
-**Estado:** ✅ Implementada, ⏳ Desplegando
+## 10. Decisiones de Arquitectura Clave
+
+### **¿Cloud Scheduler o Firestore Triggers?**
+**Decisión**: Empezar con **Firestore Triggers** para prefetch.
+
+**Razones**:
+- Cloud Scheduler = costo adicional (free tier solo 3 jobs)
+- Triggers reaccionan en tiempo real a cambios de estado (más eficiente)
+- Si escala mal, migrar a Scheduler en Fase 3
+
+**Excepción**: Timeout monitor SÍ usa Cloud Scheduler (polling cada 5 min).
+
+### **¿Prefetch de cuántos módulos?**
+**Decisión**: Solo **M+1** (siguiente módulo).
+
+**Razones**:
+- Balance costo/beneficio óptimo
+- Reduce tokens desperdiciados en cursos abandonados
+- Si usuario vuela los módulos, el trigger de Firestore mantiene M+2 cerca
+
+### **¿Cache desde MVP?**
+**Decisión**: **NO**. Cache solo en Fase 3.
+
+**Razones**:
+- Complejidad innecesaria para <100 usuarios
+- Riesgo de stale content si bugs en prompts
+- Métricas primero, optimización después
+
+---
+
+## 11. Checklist de Integración
+
+Antes de marcar cada fase como "completa", verificar:
+
+**Fase 1**:
+- [ ] `/adaptiveSession/start` retorna en <10s
+- [ ] Skeleton UI se muestra inmediatamente post-quiz
+- [ ] M1 aparece en <90s desde inicio de generación
+- [ ] Loader muestra mensaje storytelling (no "Loading...")
+- [ ] Error messages son humanos ("Reintentando...", no "500 Internal Server Error")
+
+**Fase 2**:
+- [ ] M2 inicia generación solo si usuario abrió M1
+- [ ] Checkpoint recalibra `learnerState` y regenera siguiente módulo
+- [ ] No hay módulos "stuck" en "generating" >10 min (timeout monitor)
+- [ ] Logs muestran `prefetch triggered by user engagement`
+
+**Fase 3**:
+- [ ] Cache hit rate >60% para módulos populares
+- [ ] Dashboard muestra "Time to skeleton" promedio <10s
+- [ ] Tokens OpenAI consumidos bajaron 50%+ mes a mes
+- [ ] Prompt updates invalidan cache (no stale content)
+
+---
+
+La meta es que cualquier persona que abra esta app diga: *"Wow, se nota que me están creando algo a medida y lo hacen rápido."* Si en algún paso no se siente así, vuelves a este documento, detectas el cuello de botella y lo resuelves. No más monolitos lentos. #VamosPorEl10/10
++++++

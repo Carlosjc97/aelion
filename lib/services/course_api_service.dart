@@ -32,6 +32,7 @@ export 'course/models.dart'
         OutlineTweakResult,
         UsageEntry,
         UsageMetrics,
+        ModuleCountResponse,
         AdaptivePlanResponse,
         AdaptiveLearnerState,
         AdaptiveModuleResponse,
@@ -270,6 +271,22 @@ class CourseApiService {
       throw const FormatException('Invalid outline tweak payload.');
     }
     return OutlineTweakResult.fromJson(Map<String, dynamic>.from(decoded));
+  }
+
+  static Future<ModuleCountResponse> fetchModuleCount({
+    required String topic,
+    required PlacementBand band,
+    required String target,
+    Duration timeout = const Duration(seconds: 30),
+    int maxRetries = 1,
+  }) {
+    return adaptive_service.AdaptiveService.fetchModuleCount(
+      topic: topic,
+      band: band,
+      target: target,
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
   }
 
   static Future<AdaptivePlanResponse> fetchAdaptivePlanDraft({

@@ -346,7 +346,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingBetaDescription =>
-      'Edaptia is in active development. As a beta tester:\\nâ€¢ You get updates before everyone else\\nâ€¢ You unlock experimental features\\nâ€¢ Your feedback helps us improve';
+      'Edaptia is in active development. As a beta tester:\\n• You get updates before everyone else\\n• You unlock experimental features\\n• Your feedback helps us improve';
 
   @override
   String get onboardingBetaOptIn => 'Yes, I want to be a beta tester';
@@ -748,7 +748,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lessonObjectiveSummary =>
-      'â€¢ Understand the core concept.\nâ€¢ Complete a short practice.\nâ€¢ Move on once you feel ready.';
+      '• Understand the core concept.\n• Complete a short practice.\n• Move on once you feel ready.';
 
   @override
   String get lessonQuizTitle => 'Question';

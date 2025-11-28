@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 
 import 'package:edaptia/core/app_colors.dart';
+import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/core/router.dart' as app;
 import 'package:edaptia/services/language_preferences.dart';
 import 'package:edaptia/services/progress_service.dart';
@@ -43,7 +44,7 @@ void main() {
       runApp(
         Phoenix(
           child: const ProviderScope(
-            child: AelionApp(),
+            child: EdaptiaApp(),
           ),
         ),
       );
@@ -76,18 +77,18 @@ Future<void> _loadEnv() async {
   if (!kReleaseMode) {
     final apiBase =
         dotenv.env['API_BASE_URL'] ?? dotenv.env['BASE_URL'] ?? 'NULL';
-    debugPrint('[Aelion][env] API_BASE_URL=$apiBase');
+    debugPrint('[Edaptia][env] API_BASE_URL=$apiBase');
   }
 }
 
-class AelionApp extends StatefulWidget {
-  const AelionApp({super.key});
+class EdaptiaApp extends StatefulWidget {
+  const EdaptiaApp({super.key});
 
   @override
-  State<AelionApp> createState() => _AelionAppState();
+  State<EdaptiaApp> createState() => _EdaptiaAppState();
 }
 
-class _AelionAppState extends State<AelionApp> {
+class _EdaptiaAppState extends State<EdaptiaApp> {
   Locale? _preferredLocale;
 
   @override
@@ -125,18 +126,22 @@ class _AelionAppState extends State<AelionApp> {
         ),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.secondary,
-          foregroundColor: AppColors.onSecondary,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
           centerTitle: true,
           elevation: 0,
         ),
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-          headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          bodyLarge: TextStyle(fontSize: 16, height: 1.35),
-          bodyMedium: TextStyle(fontSize: 14, height: 1.35),
-          labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        textTheme: TextTheme(
+          headlineLarge: EdaptiaTypography.largeTitle,
+          headlineMedium: EdaptiaTypography.title1,
+          headlineSmall: EdaptiaTypography.title2,
+          titleLarge: EdaptiaTypography.title2,
+          titleMedium: EdaptiaTypography.title3,
+          bodyLarge: EdaptiaTypography.body,
+          bodyMedium: EdaptiaTypography.callout,
+          bodySmall: EdaptiaTypography.subheadline,
+          labelLarge: EdaptiaTypography.bodyBold,
+          labelSmall: EdaptiaTypography.caption,
         ).apply(
           bodyColor: AppColors.onSurface,
           displayColor: AppColors.onSurface,
@@ -155,3 +160,4 @@ class _AelionAppState extends State<AelionApp> {
     );
   }
 }
+

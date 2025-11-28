@@ -705,6 +705,13 @@ class AdaptiveLessonPractice {
       expected: map['expected']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'prompt': prompt,
+      'expected': expected,
+    };
+  }
 }
 
 class AdaptiveMcq {
@@ -740,6 +747,17 @@ class AdaptiveMcq {
       skillTag: map['skillTag']?.toString() ?? '',
       rationale: map['rationale']?.toString() ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'stem': stem,
+      'options': options,
+      'correct': correct,
+      'skillTag': skillTag,
+      'rationale': rationale,
+    };
   }
 }
 
@@ -792,6 +810,21 @@ class AdaptiveLesson {
       takeaway: map['takeaway']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'hook': hook,
+      'lessonType': lessonType,
+      'theory': theory,
+      'exampleGlobal': exampleGlobal,
+      'practice': practice.toJson(),
+      'microQuiz': microQuiz.map((q) => q.toJson()).toList(),
+      'hint': hint,
+      'motivation': motivation,
+      'takeaway': takeaway,
+    };
+  }
 }
 
 class AdaptiveChallenge {
@@ -816,6 +849,14 @@ class AdaptiveChallenge {
       rubric: rubric,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'desc': description,
+      'expected': expected,
+      'rubric': rubric,
+    };
+  }
 }
 
 class AdaptiveBlueprintItem {
@@ -835,6 +876,14 @@ class AdaptiveBlueprintItem {
       skillTag: map['skillTag']?.toString() ?? '',
       type: map['type']?.toString() ?? 'mcq',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'skillTag': skillTag,
+      'type': type,
+    };
   }
 }
 
@@ -861,6 +910,13 @@ class AdaptiveCheckpointBlueprint {
       items: items,
       targetReliability: map['targetReliability']?.toString() ?? 'medium',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'items': items.map((item) => item.toJson()).toList(),
+      'targetReliability': targetReliability,
+    };
   }
 }
 
@@ -915,6 +971,18 @@ class AdaptiveModuleOut {
             map['checkpointBlueprint'] as Map? ?? const {}),
       ),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'moduleNumber': moduleNumber,
+      'title': title,
+      'durationMinutes': durationMinutes,
+      'skillsTargeted': skillsTargeted,
+      'lessons': lessons.map((lesson) => lesson.toJson()).toList(),
+      'challenge': challenge.toJson(),
+      'checkpointBlueprint': blueprint.toJson(),
+    };
   }
 }
 

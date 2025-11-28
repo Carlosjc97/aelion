@@ -56,7 +56,7 @@ class ProgressService {
     return next;
   }
 
-  /// Curva simple: nivel crece cada 100 xp (ajÃºstalo cuando quieras)
+  /// Curva simple: nivel crece cada 100 xp (ajústalo cuando quieras)
   int get level => (xp / 100).floor() + 1;
   int xpToNextLevel() => level * 100 - xp;
 
