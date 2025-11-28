@@ -1,10 +1,11 @@
-runtime: nodejs20
-
-# Specify the server directory as the root
+# Use custom Dockerfile for build
 rootDirectory: server
 
+build:
+  context: .
+  dockerfile: Dockerfile
+
 runConfig:
-  entrypoint: npm start
   cpu: 1
   memoryMiB: 512
   minInstances: 0
