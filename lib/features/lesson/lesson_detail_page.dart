@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
+import 'package:edaptia/core/design_system/colors.dart';
+import 'package:edaptia/core/design_system/components/edaptia_card.dart';
+import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course_api_service.dart';
@@ -71,13 +74,13 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
     final isSpanish = l10n.localeName.startsWith('es');
     final challengeTitle =
         isSpanish ? 'Reto interactivo' : 'Interactive challenge';
-    final challengePlaceholder = isSpanish
-        ? 'Escribe tu respuesta...'
-        : 'Write your answer...';
+    final challengePlaceholder =
+        isSpanish ? 'Escribe tu respuesta...' : 'Write your answer...';
     final validateLabel = isSpanish ? 'Validar respuesta' : 'Validate answer';
     final hook = lesson['hook']?.toString();
     final takeaway = lesson['takeaway']?.toString();
-    final reto = lesson['reto'] as Map<String, dynamic>? ?? lesson['challenge'] as Map<String, dynamic>?;
+    final reto = lesson['reto'] as Map<String, dynamic>? ??
+        lesson['challenge'] as Map<String, dynamic>?;
     final challengeDesc =
         reto?['desc']?.toString() ?? reto?['description']?.toString();
     final expectedOutput =
@@ -93,14 +96,15 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
           children: [
             Text(
               args.moduleTitle,
-              style: theme.textTheme.titleMedium,
+              style: EdaptiaTypography.title2
+                  .copyWith(color: EdaptiaColors.textPrimary),
             ),
             if (hook != null && hook.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
                 hook,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
+                style: EdaptiaTypography.body.copyWith(
+                  color: EdaptiaColors.primary,
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -113,14 +117,11 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
             ),
             if (takeaway != null && takeaway.isNotEmpty) ...[
               const SizedBox(height: 16),
-              Card(
-                color: theme.colorScheme.secondaryContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    takeaway,
-                    style: theme.textTheme.bodyMedium,
-                  ),
+              EdaptiaCard(
+                gradient: EdaptiaColors.successGradient,
+                child: Text(
+                  takeaway,
+                  style: EdaptiaTypography.body.copyWith(color: Colors.white),
                 ),
               ),
             ],
@@ -128,12 +129,14 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
               const SizedBox(height: 24),
               Text(
                 challengeTitle,
-                style: theme.textTheme.titleMedium,
+                style: EdaptiaTypography.title3
+                    .copyWith(color: EdaptiaColors.textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 challengeDesc,
-                style: theme.textTheme.bodyLarge,
+                style: EdaptiaTypography.body
+                    .copyWith(color: EdaptiaColors.textSecondary),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -144,10 +147,17 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
                 decoration: InputDecoration(
                   labelText: challengePlaceholder,
                   border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: EdaptiaColors.cardLight,
                 ),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  textStyle: EdaptiaTypography.bodyBold,
+                ),
                 onPressed: _validating
                     ? null
                     : () => _validateChallenge(
@@ -167,8 +177,8 @@ class _LessonDetailPageState extends State<LessonDetailPage> {
                 const SizedBox(height: 8),
                 Text(
                   _validationError!,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.error),
+                  style: EdaptiaTypography.footnote
+                      .copyWith(color: theme.colorScheme.error),
                 ),
               ],
               if (_validation != null) ...[
@@ -298,47 +308,44 @@ class _ChallengeResult extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = result.passed ? Colors.green : theme.colorScheme.error;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  result.passed ? Icons.emoji_events : Icons.info_outline,
-                  color: color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${result.score} / 100',
-                  style: theme.textTheme.titleMedium?.copyWith(color: color),
-                ),
-                if (result.badgeId != null) ...[
-                  const SizedBox(width: 12),
-                  Chip(
-                    label: Text(
-                      result.badgeId!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    ),
-                    backgroundColor: theme.colorScheme.primary,
+    return EdaptiaCard(
+      padding: const EdgeInsets.all(16),
+      backgroundColor: EdaptiaColors.cardLight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                result.passed ? Icons.emoji_events : Icons.info_outline,
+                color: color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${result.score} / 100',
+                style: EdaptiaTypography.title3.copyWith(color: color),
+              ),
+              if (result.badgeId != null) ...[
+                const SizedBox(width: 12),
+                Chip(
+                  label: Text(
+                    result.badgeId!,
+                    style: EdaptiaTypography.caption
+                        .copyWith(color: theme.colorScheme.onPrimary),
                   ),
-                ],
+                  backgroundColor: theme.colorScheme.primary,
+                ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              result.feedback,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            result.feedback,
+            style: EdaptiaTypography.body
+                .copyWith(color: EdaptiaColors.textPrimary),
+          ),
+        ],
       ),
     );
   }
 }
-

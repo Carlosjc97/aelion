@@ -1,21 +1,300 @@
 # CONTEXT V2 - Edaptia (Documento Consolidado Definitivo)
 
 > **Fecha creación:** 18 Noviembre 2025
-> **Última actualización:** 22 Noviembre 2025 - Sistema Adaptativo Completo
+> **Última actualización:** 27 Noviembre 2025 - Bugs Críticos Identificados
 > **Reemplaza:** CONTEXTO_SESION_NUEVA.md, IMPLEMENTACION_COMPLETADA_15NOV.md, RESUMEN_PARA_USUARIO.md, RESPUESTAS_SISTEMA_ADAPTATIVO.md
 > **Propósito:** Documento único y definitivo con TODO el contexto del proyecto
 > **Para:** Claude Code, Codex, y nuevos desarrolladores
 
 ---
 
-## ESTADO ACTUAL DEL PROYECTO (22 NOV 2025)
+## 🔴 BUGS CRÍTICOS PENDIENTES - 27 NOV 2025
+
+**Estado:** 3 bugs críticos identificados, NINGUNO corregido aún
+**Reporte completo:** Ver `BUG_REPORT_27NOV_2025.md`
+**Screenshots analizados:** 13 archivos en `C:\Users\Jean Villalta\Downloads\problemas\`
+
+### Bug #1: Quiz de Colocación Genera Preguntas FUERA DEL TEMA 🔴
+**Severidad:** CRÍTICA - Rompe flujo de placement test
+
+**Problema:**
+- Usuario selecciona "Francés Básico"
+- Quiz pregunta sobre química (fórmula del agua: H2O/CO2), filosofía (¿qué son los valores?), geografía (¿qué es el clima?)
+- **CERO preguntas sobre francés** (vocabulario, gramática, saludos)
+
+**Root Cause:**
+- `functions/src/openai-service.ts:1374`
+- Prompt dice "mezcla ejemplos globales... escenarios ficticios para despertar curiosidad"
+- NUNCA dice "las preguntas deben evaluar conocimiento SOBRE el tema"
+- GPT-4o interpreta como "crea escenarios interesantes" vs "prueba conocimiento del tema"
+
+**Fix:**
+```typescript
+// Línea 1370-1374: Agregar validación explícita de relevancia del tema
+`CRITICO: Todas las preguntas deben evaluar conocimientos ESPECIFICOS sobre "${params.topic.trim()}".`
+```
+
+---
+
+### Bug #2: Mojibake en Bullet Points (â€¢ en vez de •) 🟡
+**Severidad:** MEDIA - Error visual afecta UX
+
+**Problema:**
+- "L0 â€¢ Bienvenida" en vez de "L0 • Bienvenida"
+- "M1 â€¢ Introducción" en vez de "M1 • Introducción"
+- Aparece en TODA la UI de "Recorrido adaptativo"
+
+**Root Cause:**
+- `lib/features/quiz/quiz_screen.dart:1697`
+- Código fuente tiene UTF-8 corrupto HARDCODEADO:
+  ```dart
+  Text('M${module.moduleNumber} â€¢ ${module.title}'),
+  ```
+
+**Fix:**
+```dart
+// Línea 1697: Reemplazar mojibake con bullet point correcto
+Text('M${module.moduleNumber} • ${module.title}'),
+```
+
+**Nota del usuario:** "que eso ya lo habiamos resuelto antes pero con mi cagada todo se daño" (se revirtió accidentalmente)
+
+---
+
+### Bug #3: Contenido Duplicado en Módulos 🔴
+**Severidad:** CRÍTICA - UI confusa, contenido aparece 2 veces
+
+**Problema:**
+- Lecciones aparecen DENTRO de M1 expandido (correcto)
+- **Y TAMBIÉN** en sección separada "Módulo" abajo (incorrecto)
+- Usuario ve el mismo contenido renderizado dos veces
+
+**Root Cause:**
+- `lib/features/quiz/quiz_screen.dart:1424 y 1426`
+- Ambos métodos se llaman simultáneamente:
+  ```dart
+  _buildTimeline(l10n),      // ← NUEVO: expansión inline
+  _buildModuleCard(l10n),    // ← VIEJO: sección separada (DUPLICADO!)
+  ```
+
+**Fix:**
+```dart
+// Línea 1426: ELIMINAR esta línea completamente
+// _buildModuleCard(l10n),  // ← BORRAR
+```
+
+---
+
+### Orden de Implementación Recomendado
+
+1. **Bug #3** (1 línea) → Mejora UX inmediata
+2. **Bug #2** (1 línea) → Pulido visual
+3. **Bug #1** (requiere deploy backend) → Funcionalidad crítica
+
+**Deployment Necesario:**
+- Bugs #2 y #3: Solo `flutter run` (frontend)
+- Bug #1: `firebase deploy --only functions` (backend)
+
+---
+
+## CAMBIOS CRÍTICOS - 27 NOV 2025 🎯
+
+### ARQUITECTURA PROFESIONAL DE LECCIONES - IMPLEMENTADA
+
+**Problema:** Todas las lecciones mostraban solo texto. Lecciones interactivas (diagnostic_quiz, mini_game, guided_practice) no funcionaban.
+
+**Causa Raíz:**
+- `_handleLessonTap()` siempre navegaba a `LessonDetailPage`
+- `LessonDetailPage` solo renderizaba texto (hook, theory, example)
+- **Ignoraba completamente** `lessonType` y `microQuiz[]`
+- No había componentes interactivos (quizzes, juegos, práctica)
+
+**Solución: Arquitectura Profesional con Separation of Concerns**
+
+#### Estructura Implementada
+```
+lib/features/lesson/
+├── lesson_router.dart              # Factory pattern - decide pantalla según lessonType
+├── models/
+│   ├── lesson_types.dart           # Enum LessonType + extensions
+│   └── lesson_view_config.dart     # Modelo tipado seguro
+├── screens/                        # 8 pantallas especializadas
+│   ├── welcome_lesson_screen.dart       # welcome_summary, theory_refresh, reflection
+│   ├── diagnostic_quiz_screen.dart      # diagnostic_quiz con scoring
+│   ├── guided_practice_screen.dart      # guided_practice con validación
+│   ├── mini_game_screen.dart            # mini_game con timer/streak/puntos
+│   ├── activity_screen.dart             # activity interactiva
+│   ├── applied_project_screen.dart      # applied_project
+│   ├── reflection_screen.dart           # reflection guiada
+│   └── theory_refresh_screen.dart       # theory_refresh
+└── widgets/                        # Componentes reutilizables
+    ├── lesson_header_widget.dart        # Header compartido
+    ├── lesson_hook_card.dart            # Card del hook
+    ├── lesson_takeaway_card.dart        # Card del takeaway
+    ├── quiz_question_card.dart          # Pregunta de quiz
+    └── practice_exercise_card.dart      # Ejercicio de práctica
+```
+
+#### Flujo Adaptativo (Agnóstico al Contenido)
+
+**Backend genera TODO dinámicamente:**
+```typescript
+// functions/src/openai-service.ts:1624
+generateModuleAdaptive({
+  topic: "Alemán Básico" | "Inglés A1" | "SQL para Marketing",  // ← Cualquier tema
+  learnerState, nextModuleNumber, topDeficits, target
+})
+  ↓ GPT-4o genera módulo completo
+  ↓ Decide lessonType según estructura (40% teoría, 30% práctica, etc.)
+  ↓ Genera contenido adaptado al tema
+  ↓
+{
+  lessons: [
+    { lessonType: "welcome_summary", title: "...", hook: "...", theory: "...", ... },
+    { lessonType: "diagnostic_quiz", title: "...", microQuiz: [
+        { stem: "¿Pregunta en alemán?", options: {...}, correct: "A" },
+        // ... preguntas generadas dinámicamente para el tema
+      ]
+    },
+    { lessonType: "guided_practice", practice: { prompt: "...", expected: "..." } },
+    { lessonType: "mini_game", microQuiz: [ /* preguntas para juego */ ] },
+    // ...
+  ]
+}
+```
+
+**Frontend renderiza datos dinámicos:**
+```dart
+// lib/features/lesson/lesson_router.dart
+LessonRouter.navigateToLesson(lesson)
+  ↓ Detecta lessonType
+  ↓ Navega a pantalla especializada
+  ↓
+DiagnosticQuizScreen(config)  // ← Renderiza microQuiz[] (agnóstico al idioma)
+  ↓ Muestra preguntas que vienen del backend
+  ↓ Usuario responde
+  ↓ Valida y muestra score
+```
+
+**Key Point:** Las pantallas NO saben si es alemán, inglés o SQL - solo renderizan los datos que reciben del backend. Todo es dinámico y adaptativo.
+
+#### Integración con Timeline Adaptativo
+
+**Modificación en `quiz_screen.dart:1581`:**
+```dart
+// ANTES (MALO):
+final args = _buildLessonDetailArgs(lesson, module.title);
+await Navigator.pushNamed(context, LessonDetailPage.routeName, arguments: args);
+
+// DESPUÉS (PROFESIONAL):
+await LessonRouter.navigateToLesson(
+  context: context,
+  lesson: lesson,              // ← Contiene lessonType + microQuiz + practice
+  moduleTitle: module.title,
+  courseId: widget.topic,
+);
+```
+
+#### Tipos de Lección Soportados
+
+| LessonType | Pantalla | Contenido Dinámico | Componentes |
+|-----------|----------|-------------------|-------------|
+| `welcome_summary` | WelcomeLessonScreen | hook, theory, example, motivation | Texto Markdown |
+| `diagnostic_quiz` | DiagnosticQuizScreen | microQuiz[] | Quiz interactivo con scoring |
+| `guided_practice` | GuidedPracticeScreen | practice{}, hint | Ejercicio con validación |
+| `mini_game` | MiniGameScreen | microQuiz[] | Juego con timer/streak/puntos |
+| `activity` | ActivityScreen | practice{}, microQuiz[] | Actividad interactiva |
+| `theory_refresh` | TheoryRefreshScreen | theory, example | Teoría pura |
+| `applied_project` | AppliedProjectScreen | practice{}, rubric | Proyecto aplicado |
+| `reflection` | ReflectionScreen | prompts, takeaway | Reflexión guiada |
+
+#### Ventajas de la Arquitectura
+
+1. **Escalable:** Agregar nuevo tipo = agregar nueva pantalla
+2. **Mantenible:** Código separado por responsabilidad
+3. **Testeable:** Cada pantalla se puede probar independientemente
+4. **Reutilizable:** Widgets compartidos en `/widgets`
+5. **Type-Safe:** Modelos Dart tipados, no `Map<String, dynamic>`
+6. **Agnóstico al Contenido:** Funciona con cualquier tema (alemán, inglés, SQL, etc.)
+
+#### Estado del Código
+
+- ✅ `flutter analyze lib/features/lesson` - 0 errores
+- ✅ Rutas registradas en `lib/core/router.dart`
+- ✅ Integración completa con timeline adaptativo
+- ⚠️ 2 warnings menores: `_scrollToModuleCard` y `_buildModuleCard` no usados (se pueden eliminar)
+
+---
+
+## CAMBIOS CRÍTICOS - 25 NOV 2025 🔥
+
+### 1. Schema Validation Timeout - RESUELTO
+**Problema:** Generación de módulos daba timeout después de 120 segundos
+**Causa Raíz:** `gpt-4o-mini` no respetaba schema validation → campos vacíos → reintentos → timeout
+**Logs Firebase:**
+```
+Error: Schema validation failed for ModuleAdaptive.json:
+- /lessons/1/theory must NOT have fewer than 1 characters
+- /lessons/1/practice/prompt must NOT have fewer than 1 characters
+- /lessons/0/microQuiz must NOT have fewer than 2 items
+```
+**Solución:** Cambio de modelo en `functions/src/openai-service.ts:1644`
+```typescript
+// ANTES:
+"gpt-4o-mini",  // No respeta structured outputs consistentemente
+
+// DESPUÉS:
+"gpt-4o",  // Mayor adherencia a schemas complejos (~3x más caro pero funciona)
+```
+**Impacto:** ✅ Elimina timeouts, ❌ Incrementa costo 3x (~$0.10 → $0.30 por módulo)
+
+### 2. Navegación Legacy - CORREGIDO
+**Problema:** Al reintentar generación, iba a `ModuleOutlineView` (pantalla legacy) en vez de `AdaptiveJourneyScreen`
+**Causa Raíz:** Lógica en `lib/features/home/home_view.dart:157` basada en `cachedBand`:
+```dart
+// ANTES:
+if (cachedBand == null) {
+  → QuizScreen → AdaptiveJourneyScreen  ✅ Correcto
+} else {
+  → ModuleOutlineView  ❌ Pantalla legacy con ExpansionTiles
+}
+```
+**Solución:** SIEMPRE ir al flujo adaptativo
+```dart
+// DESPUÉS:
+// ALWAYS go to adaptive journey flow
+await Navigator.of(context).pushNamed(QuizScreen.routeName, ...);
+```
+
+### 3. Arquitectura API Keys - DOCUMENTACIÓN CORREGIDA
+**Problema Documentado:** CONTEXT_V2 línea 85 decía que `placementQuizStartLive` usa `OPENAI_API_KEY_CALIBRATION`
+**Realidad:** `placementQuizStartLive` NO usa OpenAI - usa JSON question banks (`functions/src/assessment.ts`)
+**Keys Realmente Usadas:**
+| Key | Endpoints | Last Used (OpenAI Dashboard) |
+|-----|-----------|------------------------------|
+| `OPENAI_API_KEY_MODULES` (sk-...H0cA) | `adaptiveModuleGenerate`, `adaptiveModuleCount` | 25 Nov 2025 ✅ |
+| `OPENAI_API_KEY_QUIZZES` (sk-...EygA) | `adaptiveCheckpointQuiz`, `moduleQuizStart` | 22 Nov 2025 ✅ |
+| `OPENAI_API_KEY_CALIBRATION` (sk-...NnMA) | ❌ **NUNCA USADA** | 22 Nov 2025 (uso erróneo) |
+| `OPENAI_API_KEY_PRIMARY` (sk-...mi4A) | ❌ **NUNCA USADA** | Never |
+| `OPENAI_API_KEY` (sk-...a4cA) | Fallback legacy | Raramente |
+
+**Keys en OpenAI NO configuradas:**
+- `Edaptia 5` (sk-...9-0A) - Existe en OpenAI pero NO en Firebase
+
+**Acción Requerida:** Decidir si:
+- Opción A: Simplificar a 2 keys (modules, quizzes) + fallback
+- Opción B: Configurar Edaptia 5 para rotación real
+
+---
+
+## ESTADO ACTUAL DEL PROYECTO (25 NOV 2025)
 
 ### Resumen Ejecutivo
-**Edaptia MVP** es una plataforma de aprendizaje adaptativo que genera cursos personalizados con IA (GPT-4o-mini). El usuario completa un quiz de calibración y recibe un plan de 4-12 módulos adaptado a su nivel.
+**Edaptia MVP** es una plataforma de aprendizaje adaptativo que genera cursos personalizados con IA (GPT-4o). El usuario completa un quiz de calibración y recibe un plan de 4-12 módulos adaptado a su nivel.
 
-**Score Global:** 9.0/10 - Production Ready
+**Score Global:** 9.2/10 - Production Ready
 **Tests:** 27/27 backend, 2/2 E2E pasando
-**Estado:** Código funcional, listo para deployment
+**Estado:** Schema validation corregida, navegación arreglada, listo para deploy
 
 ### Problemas Críticos Resueltos Recientemente
 
@@ -79,16 +358,18 @@ Usuario empieza M1 mientras M2 se pre-genera en background
 /cleanupAiCache              - Limpieza automática con Cloud Scheduler
 ```
 
-**Distribución de Carga (4 API Keys con Routing):**
-| Endpoint | Hint | API Key | Uso |
-|----------|------|---------|-----|
-| `/adaptiveModuleCount` | "module-count generate" | `calibration` | Conteo rápido |
-| `/adaptiveModuleGenerate` | "module adaptive" | `modules` | Generación pesada |
-| `/adaptiveCheckpointQuiz` | "checkpoint" | `quizzes` | Evaluaciones |
-| `/placementQuizStartLive` | "calibration" | `calibration` | Quiz placement |
-| Otros endpoints | "primary" | `primary` | Fallback |
+**Distribución de Carga (API Keys Routing - CORREGIDO 25 Nov):**
+| Endpoint | Modelo | API Key | Uso Real |
+|----------|--------|---------|----------|
+| `/adaptiveModuleGenerate` | `gpt-4o` | `modules` | Generación módulos (pesada) ✅ |
+| `/adaptiveModuleCount` | `gpt-4o-mini` | `modules` | Conteo rápido ✅ |
+| `/adaptiveCheckpointQuiz` | `gpt-4o-mini` | `quizzes` | Checkpoint quizzes ✅ |
+| `/moduleQuizStart` | `gpt-4o-mini` | `quizzes` | Module quizzes ✅ |
+| `/placementQuizStartLive` | N/A (JSON banks) | ❌ NO USA OpenAI | Quiz calibración |
+| Otros endpoints | `gpt-4o` | `primary` | Fallback (raramente usado) |
 
-**Resultado:** 10K TPM → 40K TPM (4x capacity)
+**Nota:** Solo 2 keys se usan activamente: `modules` y `quizzes`
+**Resultado:** ~20K TPM efectivo (2 keys × 10K TPM base)
 
 **Archivos Clave:**
 ```

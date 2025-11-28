@@ -10,10 +10,11 @@ import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/components/edaptia_card.dart';
 import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/features/assessment/assessment_results_screen.dart';
-import 'package:edaptia/features/lesson/lesson_detail_page.dart';
+import 'package:edaptia/features/lesson/lesson_router.dart';
 import 'package:edaptia/features/paywall/paywall_helper.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/providers/streak_provider.dart';
+import 'package:edaptia/services/adaptive_module_cache.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/course/models.dart';
@@ -880,7 +881,6 @@ class AdaptiveJourneyScreen extends StatefulWidget {
 
 class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   bool _loadingPlan = true;
-  bool _loadingModule = false;
   bool _loadingCheckpoint = false;
   bool _submittingCheckpoint = false;
   bool _loadingBooster = false;
@@ -898,6 +898,10 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   int _activeModuleNumber = 1;
   bool _hasPremium = false;
+
+  // Expansion state for timeline modules
+  final Set<int> _expandedModules = <int>{};
+  final Map<int, AdaptiveModuleOut> _cachedModules = <int, AdaptiveModuleOut>{};
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -975,6 +979,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       });
 
       await _startStateListener(user.uid);
+
+      // Load cached modules in background
+      unawaited(_loadCachedModules());
 
       // FASE 2: Generar M1 (60-90s, pero usuario ya ve skeleton)
       await _generateModule(1);
@@ -1054,7 +1061,6 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   Future<void> _generateModule(int moduleNumber) async {
     setState(() {
-      _loadingModule = true;
       _module = null;
       _checkpoint = null;
       _evaluationResponse = null;
@@ -1078,19 +1084,46 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
       if (!mounted) return;
 
+      // Cache the generated module
+      _cachedModules[moduleNumber] = response.module;
+      unawaited(AdaptiveModuleCache.instance.saveModule(
+        topic: widget.topic,
+        language: 'es',
+        band: widget.initialBand.name,
+        module: response.module,
+      ));
+
       setState(() {
         _module = response.module;
         _learnerState = response.learnerState;
         _timeline[moduleNumber]?.unlocked = true;
         _timeline[moduleNumber]?.completed = false;
-        _loadingModule = false;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString();
-        _loadingModule = false;
       });
+    }
+  }
+
+  /// Load all cached modules from persistent storage
+  Future<void> _loadCachedModules() async {
+    try {
+      for (int moduleNumber = 1; moduleNumber <= _maxTimelineModules; moduleNumber++) {
+        final cached = await AdaptiveModuleCache.instance.loadModule(
+          topic: widget.topic,
+          language: 'es',
+          band: widget.initialBand.name,
+          moduleNumber: moduleNumber,
+        );
+        if (cached != null) {
+          _cachedModules[moduleNumber] = cached;
+        }
+      }
+    } catch (e) {
+      // Fail silently - cache is optional
+      debugPrint('[QuizScreen] Error loading cached modules: $e');
     }
   }
 
@@ -1258,6 +1291,19 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     final tile = _timeline[moduleNumber];
     if (tile == null) return;
 
+    // If module already has cached data, just toggle expansion
+    if (_cachedModules.containsKey(moduleNumber)) {
+      setState(() {
+        if (_expandedModules.contains(moduleNumber)) {
+          _expandedModules.remove(moduleNumber);
+        } else {
+          _expandedModules.add(moduleNumber);
+        }
+      });
+      return;
+    }
+
+    // Otherwise, check permissions and generate module
     if (!tile.unlocked) {
       final previous = moduleNumber - 1;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1286,7 +1332,13 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       }
     }
 
+    // Generate module and auto-expand it
     await _generateModule(moduleNumber);
+    if (mounted && _cachedModules.containsKey(moduleNumber)) {
+      setState(() {
+        _expandedModules.add(moduleNumber);
+      });
+    }
   }
 
   Future<void> _reloadEntitlements() async {
@@ -1366,8 +1418,6 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             _buildPlanCard(l10n),
             const SizedBox(height: 16),
             _buildTimeline(l10n),
-            const SizedBox(height: 16),
-            _buildModuleCard(l10n),
             const SizedBox(height: 16),
             _buildCheckpointCard(l10n),
             const SizedBox(height: 16),
@@ -1452,14 +1502,10 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   Widget _buildTimeline(AppLocalizations l10n) {
     final tiles = _timelineTiles;
-    final locale = Localizations.localeOf(context);
-    final isSpanish = locale.languageCode == 'es';
-    final upgradeLabel = isSpanish ? 'Desbloquear Premium' : 'Unlock Premium';
     return EdaptiaCard(
       padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: tiles.map((tile) {
           final isActive = tile.number == _activeModuleNumber;
           final background = tile.completed
@@ -1486,73 +1532,115 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             icon = Icons.play_circle;
           }
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
+          final isExpanded = _expandedModules.contains(tile.number);
+          final cachedModule = _cachedModules[tile.number];
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Material(
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(16),
-              onTap: () => _handleModuleTileTap(tile.number),
-              child: AnimatedOpacity(
+              child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                opacity: tile.unlocked ? 1 : 0.6,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: background == null ? EdaptiaColors.cardLight : null,
-                    gradient: background,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: baseColor.withValues(alpha: baseColor.a * 0.4),
-                    ),
+                decoration: BoxDecoration(
+                  color: background == null ? EdaptiaColors.cardLight : null,
+                  gradient: background,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: baseColor.withValues(alpha: baseColor.a * 0.4),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(icon, color: foreground, size: 18),
-                          const SizedBox(width: 6),
-                          Text(
-                            'M',
-                            style: EdaptiaTypography.title3.copyWith(color: foreground),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        tile.title,
-                        style: EdaptiaTypography.body.copyWith(color: foreground),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        tile.skills.isEmpty
-                            ? l10n.adaptiveFlowEmptySkills
-                            : tile.skills.take(2).join(', '),
-                        style: EdaptiaTypography.caption.copyWith(
-                          color: foreground.withValues(alpha: foreground.a * 0.9),
-                        ),
-                      ),
-                      if (tile.requiresPremium && !_hasPremium) ...[
-                        const SizedBox(height: 8),
-                        FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: EdaptiaColors.primaryDark,
-                          ),
-                          onPressed: () => PaywallHelper.checkAndShowPaywall(
-                                context,
-                                trigger: 'adaptive_timeline',
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => _handleModuleTileTap(tile.number),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(icon, color: foreground, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'M${tile.number}',
+                                        style: EdaptiaTypography.title3.copyWith(color: foreground),
+                                      ),
+                                      if (isActive) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.3),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            'Activo',
+                                            style: EdaptiaTypography.caption.copyWith(color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  if (cachedModule != null) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      cachedModule.title,
+                                      style: EdaptiaTypography.body.copyWith(color: foreground),
+                                    ),
+                                  ] else ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      tile.title,
+                                      style: EdaptiaTypography.body.copyWith(color: foreground),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    tile.skills.isEmpty
+                                        ? l10n.adaptiveFlowEmptySkills
+                                        : tile.skills.take(2).join(', '),
+                                    style: EdaptiaTypography.caption.copyWith(
+                                      color: foreground.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
                               ),
-                          icon: const Icon(Icons.workspace_premium_outlined),
-                          label: Text(upgradeLabel),
+                            ),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              color: foreground,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ),
+                    if (isExpanded && cachedModule != null) ...[
+                      const Divider(height: 1, color: Colors.white24),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: cachedModule.lessons.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final lesson = entry.value;
+                            return _LessonCard(
+                              index: index,
+                              lesson: lesson,
+                              moduleTitle: cachedModule.title,
+                              courseId: widget.topic,
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
@@ -1562,65 +1650,6 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     );
   }
 
-  Widget _buildModuleCard(AppLocalizations l10n) {
-    final module = _module;
-    if (_loadingModule) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-    if (module == null) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.adaptiveFlowGenerateModule),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => _generateModule(_activeModuleNumber),
-                child: Text(l10n.adaptiveFlowGenerateModule),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.adaptiveFlowModuleSection,
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text('M${module.moduleNumber} â€¢ ${module.title}'),
-            const SizedBox(height: 4),
-            Text(l10n.adaptiveFlowDurationLabel(module.durationMinutes)),
-            const SizedBox(height: 4),
-            Text(
-                l10n.adaptiveFlowSkillsLabel(module.skillsTargeted.join(', '))),
-            const SizedBox(height: 12),
-            ...module.lessons.asMap().entries.map((entry) {
-              final lesson = entry.value;
-              return _LessonCard(
-                index: entry.key + 1,
-                lesson: lesson,
-                moduleTitle: module.title,
-                courseId: widget.topic,
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildCheckpointCard(AppLocalizations l10n) {
     final checkpoint = _checkpoint;
@@ -1828,28 +1857,11 @@ class _LessonCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.pushNamed(
-            context,
-            LessonDetailPage.routeName,
-            arguments: LessonDetailArgs(
-              courseId: courseId,
-              moduleTitle: moduleTitle,
-              lessonTitle: lesson.title,
-              content: null,
-              lesson: {
-                'hook': lesson.hook,
-                'theory': lesson.theory,
-                'exampleGlobal': lesson.exampleGlobal,
-                'practice': {
-                  'prompt': lesson.practice.prompt,
-                  'hint': lesson.hint,
-                  'expected': lesson.practice.expected,
-                },
-                'takeaway': lesson.takeaway,
-                'motivation': lesson.motivation,
-                'lessonType': lesson.lessonType,
-              },
-            ),
+          LessonRouter.navigateToLesson(
+            context: context,
+            lesson: lesson,
+            moduleTitle: moduleTitle,
+            courseId: courseId,
           );
         },
         child: Container(
@@ -1866,7 +1878,7 @@ class _LessonCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text('L$index â€¢ ${lesson.title}',
+                    child: Text('L$index • ${lesson.title}',
                         style: theme.textTheme.titleSmall),
                   ),
                   const SizedBox(width: 8),
