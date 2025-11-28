@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:edaptia/services/course/models.dart';
 
@@ -51,7 +52,7 @@ class AdaptiveModuleCache {
       await prefs.setString(key, jsonEncode(data));
     } catch (e) {
       // Fail silently - cache is optional
-      print('[AdaptiveModuleCache] Error saving module: $e');
+      debugPrint('[AdaptiveModuleCache] Error saving module: $e');
     }
   }
 
@@ -93,7 +94,7 @@ class AdaptiveModuleCache {
       final moduleData = data['module'] as Map<String, dynamic>;
       return AdaptiveModuleOut.fromJson(moduleData);
     } catch (e) {
-      print('[AdaptiveModuleCache] Error loading module: $e');
+      debugPrint('[AdaptiveModuleCache] Error loading module: $e');
       return null;
     }
   }
@@ -108,7 +109,7 @@ class AdaptiveModuleCache {
         await prefs.remove(key);
       }
     } catch (e) {
-      print('[AdaptiveModuleCache] Error clearing cache: $e');
+      debugPrint('[AdaptiveModuleCache] Error clearing cache: $e');
     }
   }
 }
