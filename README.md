@@ -2,7 +2,13 @@
 
 Modern adaptive learning companion built with Flutter and Firebase. Intelligent course generation powered by GPT-4o with Firestore-backed caching, defensive JSON parsing, and observability telemetry.
 
+agent/audit-remediation
 ## Production Status (Nov 28, 2025)
+
+=======
+
+## What's New (November 2025)
+ main
 
 - **GitHub CI**: ✅ PASSING (flutter + functions)
 - **Firebase Functions**: ✅ DEPLOYED
