@@ -1,9 +1,4 @@
-# Use custom Dockerfile for build
-rootDirectory: server
-
-build:
-  context: .
-  dockerfile: Dockerfile
+runtime: nodejs20
 
 runConfig:
   cpu: 1
