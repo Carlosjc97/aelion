@@ -15,6 +15,11 @@ env:
     availability:
       - RUNTIME
 
+  - variable: SERVER_ALLOWED_ORIGINS
+    value: "https://aelion--aelion-c90d2.us-east4.hosted.app,https://aelion-c90d2.web.app,https://aelion-c90d2.firebaseapp.com"
+    availability:
+      - RUNTIME
+
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
     availability:
