@@ -72,7 +72,7 @@ export const OPENAI_SECRETS = [
 
 const firestore = getFirestore();
 const authClient = getAuth();
-const DAILY_AI_CAP = 20;
+const DAILY_AI_CAP = 100; // Increased for development/testing
 
 interface UserEntitlements {
   isPremium: boolean;
@@ -467,8 +467,8 @@ export const placementQuizStartLive = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased from 5 for testing
-        windowSeconds: 300, // 5 minutes instead of 1 minute
+        limit: 30, // Increased for development/testing
+        windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
       });
@@ -673,7 +673,7 @@ export const outlineGenerative = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased for testing
+        limit: 30, // Increased for development/testing
         windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -825,7 +825,7 @@ export const fetchNextModule = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased for testing
+        limit: 50, // Increased for development/testing
         windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1006,7 +1006,7 @@ export const moduleQuizStart = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10,
+        limit: 30, // Increased for development/testing
         windowSeconds: 300,
       });
     } catch (limitError) {
@@ -1346,7 +1346,7 @@ export const outlineTweak = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1566,7 +1566,7 @@ export const adaptiveModuleGenerate = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 8,
+        limit: 40, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1647,7 +1647,7 @@ export const adaptiveCheckpointQuiz = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1890,7 +1890,7 @@ export const adaptiveBooster = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
