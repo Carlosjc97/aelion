@@ -7,10 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:edaptia/core/app_colors.dart';
+import 'package:edaptia/features/adaptive_journey/adaptive_journey_screen.dart';
 import 'package:edaptia/features/home/home_controller.dart';
+import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/features/settings/settings_view.dart';
 import 'package:edaptia/features/support/help_support_screen.dart';
-import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/dataconnect_generated/courses.dart';
@@ -1134,7 +1135,6 @@ class _LessonsPageState extends State<LessonsPage> {
       ),
     );
   }
-
 }
 
 class _ErrorView extends StatelessWidget {
@@ -1204,4 +1204,3 @@ class _ModuleTile extends StatelessWidget {
     );
   }
 }
-

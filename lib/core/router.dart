@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:edaptia/features/adaptive_journey/adaptive_journey_screen.dart';
 import 'package:edaptia/features/auth/auth.dart';
 import 'package:edaptia/features/courses/course_entry_view.dart';
 import 'package:edaptia/features/home/home_view.dart';
@@ -182,6 +183,26 @@ class AppRouter {
             arguments: args,
           ),
         );
+      case AdaptiveJourneyScreen.routeName:
+        final journeyArgs = settings.arguments;
+        if (journeyArgs is! AdaptiveJourneyScreenArgs) {
+          return _invalidRoute(
+            settings,
+            'AdaptiveJourneyScreen requires AdaptiveJourneyScreenArgs.',
+          );
+        }
+
+        return _guarded(
+          AdaptiveJourneyScreen(
+            topic: journeyArgs.topic,
+            target: journeyArgs.target,
+            initialBand: journeyArgs.initialBand,
+          ),
+          RouteSettings(
+            name: AdaptiveJourneyScreen.routeName,
+            arguments: journeyArgs,
+          ),
+        );
       case ModuleGateQuizScreen.routeName:
         final gateArgs = settings.arguments;
         if (gateArgs is! ModuleGateQuizArgs) {
@@ -273,9 +294,3 @@ class AppRouter {
     );
   }
 }
-
-
-
-
-
-
