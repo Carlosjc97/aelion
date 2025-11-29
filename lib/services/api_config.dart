@@ -40,4 +40,5 @@ class ApiConfig {
   static String adaptiveEvaluateCheckpoint() =>
       '$apiBaseUrl/adaptiveEvaluateCheckpoint';
   static String adaptiveBooster() => '$apiBaseUrl/adaptiveBooster';
+  static String markLessonVisited() => '$apiBaseUrl/markLessonVisited';
 }

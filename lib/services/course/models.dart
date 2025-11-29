@@ -529,12 +529,14 @@ class AdaptiveLearnerState {
     required this.skillMastery,
     required this.history,
     required this.target,
+    this.visitedLessons = const {},
   });
 
   final String levelBand;
   final Map<String, double> skillMastery;
   final AdaptiveLearnerHistory history;
   final String target;
+  final Map<String, bool> visitedLessons; // Keys: "topic_m1_l0", etc.
 
   factory AdaptiveLearnerState.fromJson(Map<String, dynamic> map) {
     final mastery = <String, double>{};
@@ -546,6 +548,17 @@ class AdaptiveLearnerState {
         }
       });
     }
+
+    final visited = <String, bool>{};
+    final visitedRaw = map['visitedLessons'];
+    if (visitedRaw is Map) {
+      visitedRaw.forEach((key, value) {
+        if (value == true) {
+          visited[key.toString()] = true;
+        }
+      });
+    }
+
     return AdaptiveLearnerState(
       levelBand: map['level_band']?.toString() ?? 'basic',
       skillMastery: mastery,
@@ -553,6 +566,7 @@ class AdaptiveLearnerState {
         Map<String, dynamic>.from(map['history'] as Map? ?? const {}),
       ),
       target: map['target']?.toString() ?? 'general',
+      visitedLessons: visited,
     );
   }
 }

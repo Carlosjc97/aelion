@@ -20,11 +20,15 @@ class LessonRouter {
     required BuildContext context,
     required AdaptiveLesson lesson,
     required String moduleTitle,
+    required int moduleNumber,
+    required int lessonIndex,
     required String courseId,
   }) async {
     final config = LessonViewConfig.fromAdaptiveLesson(
       lesson,
       moduleTitle: moduleTitle,
+      moduleNumber: moduleNumber,
+      lessonIndex: lessonIndex,
       courseId: courseId,
     );
     final routeName = _getRouteForLessonType(config.lessonType);

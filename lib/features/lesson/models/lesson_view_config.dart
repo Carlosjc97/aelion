@@ -12,6 +12,8 @@ class LessonViewConfig {
   const LessonViewConfig({
     required this.courseId,
     required this.moduleTitle,
+    required this.moduleNumber,
+    required this.lessonIndex,
     required this.lessonTitle,
     required this.hook,
     required this.theory,
@@ -26,6 +28,8 @@ class LessonViewConfig {
 
   final String courseId;
   final String moduleTitle;
+  final int moduleNumber;
+  final int lessonIndex;
   final String lessonTitle;
   final String hook;
   final String theory;
@@ -43,11 +47,15 @@ class LessonViewConfig {
   factory LessonViewConfig.fromAdaptiveLesson(
     AdaptiveLesson lesson, {
     required String moduleTitle,
+    required int moduleNumber,
+    required int lessonIndex,
     required String courseId,
   }) {
     return LessonViewConfig(
       courseId: courseId,
       moduleTitle: moduleTitle,
+      moduleNumber: moduleNumber,
+      lessonIndex: lessonIndex,
       lessonTitle: lesson.title,
       hook: lesson.hook,
       theory: lesson.theory,

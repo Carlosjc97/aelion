@@ -2054,3 +2054,52 @@ export const openaiUsageMetrics = onRequest({ cors: true }, async (req, res) => 
     });
   }
 });
+
+/**
+ * Mark a lesson as visited
+ * POST /markLessonVisited
+ * Body: { topic: string, moduleNumber: number, lessonIndex: number }
+ */
+export const markLessonVisited = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const userId = req.get("x-user-id");
+    if (!userId) {
+      res.status(401).json({ error: "User ID required" });
+      return;
+    }
+
+    const { topic, moduleNumber, lessonIndex } = req.body;
+    if (!topic || moduleNumber === undefined || lessonIndex === undefined) {
+      res.status(400).json({ error: "Missing required fields: topic, moduleNumber, lessonIndex" });
+      return;
+    }
+
+    // Create lesson key: "topic_m1_l0"
+    const normalized = topic.trim().toLowerCase().replace(/\s+/g, "_");
+    const lessonKey = `${normalized}_m${moduleNumber}_l${lessonIndex}`;
+
+    // Update learner state
+    const stateDoc = learnerStateDoc(userId);
+    await stateDoc.set(
+      {
+        visitedLessons: {
+          [lessonKey]: true,
+        },
+      },
+      { merge: true }
+    );
+
+    logger.info(`Marked lesson as visited: ${lessonKey} for user ${userId}`);
+    res.status(200).json({ success: true, lessonKey });
+  } catch (error) {
+    logger.error("markLessonVisited error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});

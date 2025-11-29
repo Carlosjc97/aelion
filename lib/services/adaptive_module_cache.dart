@@ -11,6 +11,7 @@ class AdaptiveModuleCache {
   static final AdaptiveModuleCache instance = AdaptiveModuleCache._();
 
   static const _keyPrefix = 'adaptive_module_cache_';
+  static const _lessonVisitedPrefix = 'adaptive_lesson_visited_';
   static const Duration _retentionWindow = Duration(days: 7);
 
   String _buildKey({

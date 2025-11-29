@@ -1667,11 +1667,17 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                             children: cachedModule.lessons.asMap().entries.map((entry) {
                               final index = entry.key;
                               final lesson = entry.value;
+                              // Check if lesson is visited
+                              final normalized = widget.topic.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+                              final lessonKey = '${normalized}_m${tile.number}_l$index';
+                              final isVisited = _learnerState?.visitedLessons[lessonKey] == true;
                               return _LessonCard(
                                 index: index,
                                 lesson: lesson,
                                 moduleTitle: cachedModule.title,
+                                moduleNumber: tile.number,
                                 courseId: widget.topic,
+                                isVisited: isVisited,
                               );
                             }).toList(),
                           ),
@@ -1898,13 +1904,17 @@ class _LessonCard extends StatelessWidget {
     required this.index,
     required this.lesson,
     required this.moduleTitle,
+    required this.moduleNumber,
     required this.courseId,
+    this.isVisited = false,
   });
 
   final int index;
   final AdaptiveLesson lesson;
   final String moduleTitle;
+  final int moduleNumber;
   final String courseId;
+  final bool isVisited;
 
   @override
   Widget build(BuildContext context) {
@@ -1918,6 +1928,8 @@ class _LessonCard extends StatelessWidget {
             context: context,
             lesson: lesson,
             moduleTitle: moduleTitle,
+            moduleNumber: moduleNumber,
+            lessonIndex: index,
             courseId: courseId,
           );
         },
@@ -1934,8 +1946,15 @@ class _LessonCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  if (isVisited) ...[
+                    Icon(Icons.check_circle,
+                      color: EdaptiaColors.success,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Expanded(
-                    child: Text('L$index • ${lesson.title}',
+                    child: Text('L${index + 1} • ${lesson.title}',
                         style: theme.textTheme.titleSmall),
                   ),
                   const SizedBox(width: 8),
@@ -1954,12 +1973,16 @@ class _LessonCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.arrow_forward, size: 16, color: theme.colorScheme.primary),
+                  Icon(
+                    isVisited ? Icons.arrow_forward : Icons.arrow_forward,
+                    size: 16,
+                    color: isVisited ? EdaptiaColors.success : theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    'Tap to open lesson',
+                    isVisited ? 'Completada' : 'Tap to open lesson',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.primary,
+                      color: isVisited ? EdaptiaColors.success : theme.colorScheme.primary,
                     ),
                   ),
                 ],
