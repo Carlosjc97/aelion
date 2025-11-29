@@ -1861,7 +1861,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                         index: entry.key + 1,
                         lesson: entry.value,
                         moduleTitle: 'Booster: ${booster.boosterFor.join(', ')}',
+                        moduleNumber: 0, // Booster lessons are not part of a module
                         courseId: widget.topic,
+                        isVisited: false, // Boosters don't track visits
                       ),
                 ),
           ],

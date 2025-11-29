@@ -396,13 +396,13 @@ class CourseApiService {
     Duration timeout = const Duration(seconds: 5),
   }) async {
     try {
-      await CourseApiClient.post(
+      await CourseApiClient.postJson(
         uri: Uri.parse(ApiConfig.markLessonVisited()),
-        body: jsonEncode({
+        body: {
           'topic': topic,
           'moduleNumber': moduleNumber,
           'lessonIndex': lessonIndex,
-        }),
+        },
         timeout: timeout,
         maxRetries: 1,
       );
