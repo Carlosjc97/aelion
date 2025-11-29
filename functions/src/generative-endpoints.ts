@@ -72,7 +72,7 @@ export const OPENAI_SECRETS = [
 
 const firestore = getFirestore();
 const authClient = getAuth();
-const DAILY_AI_CAP = 20;
+const DAILY_AI_CAP = 100; // Increased for development/testing
 
 interface UserEntitlements {
   isPremium: boolean;
@@ -467,8 +467,8 @@ export const placementQuizStartLive = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased from 5 for testing
-        windowSeconds: 300, // 5 minutes instead of 1 minute
+        limit: 30, // Increased for development/testing
+        windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
       });
@@ -673,7 +673,7 @@ export const outlineGenerative = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased for testing
+        limit: 30, // Increased for development/testing
         windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -825,7 +825,7 @@ export const fetchNextModule = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased for testing
+        limit: 50, // Increased for development/testing
         windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1006,7 +1006,7 @@ export const moduleQuizStart = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10,
+        limit: 30, // Increased for development/testing
         windowSeconds: 300,
       });
     } catch (limitError) {
@@ -1346,7 +1346,7 @@ export const outlineTweak = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1566,7 +1566,7 @@ export const adaptiveModuleGenerate = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 8,
+        limit: 40, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1647,7 +1647,7 @@ export const adaptiveCheckpointQuiz = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1890,7 +1890,7 @@ export const adaptiveBooster = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -2049,6 +2049,55 @@ export const openaiUsageMetrics = onRequest({ cors: true }, async (req, res) => 
     });
   } catch (error) {
     logger.error("openaiUsageMetrics error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+/**
+ * Mark a lesson as visited
+ * POST /markLessonVisited
+ * Body: { topic: string, moduleNumber: number, lessonIndex: number }
+ */
+export const markLessonVisited = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const userId = req.get("x-user-id");
+    if (!userId) {
+      res.status(401).json({ error: "User ID required" });
+      return;
+    }
+
+    const { topic, moduleNumber, lessonIndex } = req.body;
+    if (!topic || moduleNumber === undefined || lessonIndex === undefined) {
+      res.status(400).json({ error: "Missing required fields: topic, moduleNumber, lessonIndex" });
+      return;
+    }
+
+    // Create lesson key: "topic_m1_l0"
+    const normalized = topic.trim().toLowerCase().replace(/\s+/g, "_");
+    const lessonKey = `${normalized}_m${moduleNumber}_l${lessonIndex}`;
+
+    // Update learner state
+    const stateDoc = learnerStateDoc(userId);
+    await stateDoc.set(
+      {
+        visitedLessons: {
+          [lessonKey]: true,
+        },
+      },
+      { merge: true }
+    );
+
+    logger.info(`Marked lesson as visited: ${lessonKey} for user ${userId}`);
+    res.status(200).json({ success: true, lessonKey });
+  } catch (error) {
+    logger.error("markLessonVisited error:", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : "Internal server error",
     });

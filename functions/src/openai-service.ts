@@ -280,6 +280,7 @@ export interface LearnerState {
     commonErrors: string[];
   };
   target: string;
+  visitedLessons?: Record<string, boolean>; // Keys: "topic_m1_l0", "topic_m1_l1", etc.
 }
 
 export interface MCQ {

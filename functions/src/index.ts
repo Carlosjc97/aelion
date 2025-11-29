@@ -1227,5 +1227,6 @@ export {
   adaptiveCheckpointQuiz,
   adaptiveEvaluateCheckpoint,
   adaptiveBooster,
+  markLessonVisited,
 } from "./generative-endpoints";
 export { cleanupAiCache } from "./maintenance";

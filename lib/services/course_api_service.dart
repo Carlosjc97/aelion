@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 
 import 'package:edaptia/services/api_config.dart';
@@ -384,5 +385,30 @@ class CourseApiService {
       throw const FormatException('Invalid usage metrics payload.');
     }
     return UsageMetrics.fromJson(Map<String, dynamic>.from(decoded));
+  }
+
+  /// Mark a lesson as visited in Firestore
+  /// This will sync across all devices for the user
+  static Future<void> markLessonVisited({
+    required String topic,
+    required int moduleNumber,
+    required int lessonIndex,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    try {
+      await CourseApiClient.postJson(
+        uri: Uri.parse(ApiConfig.markLessonVisited()),
+        body: {
+          'topic': topic,
+          'moduleNumber': moduleNumber,
+          'lessonIndex': lessonIndex,
+        },
+        timeout: timeout,
+        maxRetries: 1,
+      );
+    } catch (error) {
+      // Fail silently - lesson tracking is not critical
+      debugPrint('[CourseApiService] Error marking lesson as visited: $error');
+    }
   }
 }

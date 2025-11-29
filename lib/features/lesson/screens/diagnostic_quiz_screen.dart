@@ -4,6 +4,7 @@ import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/components/edaptia_card.dart';
 import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/services/course/models.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_header_widget.dart';
@@ -27,6 +28,17 @@ class _DiagnosticQuizScreenState extends State<DiagnosticQuizScreen> {
       List<int?>.filled(_questions.length, null, growable: false);
   bool _validated = false;
   int _score = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mark lesson as visited automatically
+    CourseApiService.markLessonVisited(
+      topic: widget.config.courseId,
+      moduleNumber: widget.config.moduleNumber,
+      lessonIndex: widget.config.lessonIndex,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
