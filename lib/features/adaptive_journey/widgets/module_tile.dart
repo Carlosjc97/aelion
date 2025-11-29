@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/typography.dart';
+import 'package:edaptia/services/course/models.dart';
+import 'package:edaptia/services/learner_state_service.dart';
 
 import '../models/module_tile_state.dart';
 
@@ -16,6 +18,9 @@ class ModuleTile extends StatelessWidget {
     required this.skills,
     required this.emptySkillsLabel,
     required this.lessonCards,
+    required this.learnerState,
+    required this.topic,
+    required this.totalLessons,
     required this.onTap,
   });
 
@@ -27,6 +32,9 @@ class ModuleTile extends StatelessWidget {
   final List<String> skills;
   final String emptySkillsLabel;
   final List<Widget> lessonCards;
+  final AdaptiveLearnerState? learnerState;
+  final String topic;
+  final int totalLessons;
   final VoidCallback onTap;
 
   @override
@@ -149,7 +157,10 @@ class ModuleTile extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: lessonCards,
+                      children: [
+                        _buildProgressBar(context),
+                        ...lessonCards,
+                      ],
                     ),
                   )
                 else
@@ -178,6 +189,57 @@ class ModuleTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildProgressBar(BuildContext context) {
+    if (totalLessons <= 0) {
+      return const SizedBox.shrink();
+    }
+    final progress = LearnerStateService.instance.getModuleProgress(
+      state: learnerState,
+      topic: topic,
+      moduleNumber: tile.number,
+      totalLessons: totalLessons,
+    );
+    final pct = (progress * 100).round();
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Progreso del módulo',
+              style: theme.textTheme.bodySmall,
+            ),
+            Text(
+              '$pct%',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: progress >= 1
+                    ? EdaptiaColors.success
+                    : EdaptiaColors.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress.clamp(0.0, 1.0),
+            backgroundColor: Colors.grey.withValues(alpha: 0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              progress >= 1 ? EdaptiaColors.success : EdaptiaColors.primary,
+            ),
+            minHeight: 8,
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

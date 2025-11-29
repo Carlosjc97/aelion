@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +16,7 @@ import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/course/models.dart';
 import 'package:edaptia/services/entitlements_service.dart';
+import 'package:edaptia/services/learner_state_service.dart';
 
 import 'models/module_tile_state.dart';
 import 'widgets/lesson_card.dart';
@@ -77,9 +77,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   final Map<int, AdaptiveModuleOut> _cachedModules = <int, AdaptiveModuleOut>{};
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final EntitlementsService _entitlements = EntitlementsService();
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _stateSub;
+  final LearnerStateService _learnerService = LearnerStateService.instance;
+  StreamSubscription<AdaptiveLearnerState?>? _stateSubscription;
 
   static const int _maxTimelineModules = 12;
 
@@ -91,7 +91,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   @override
   void dispose() {
-    _stateSub?.cancel();
+    _stateSubscription?.cancel();
     super.dispose();
   }
 
@@ -107,7 +107,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       _timeline.clear();
     });
 
-    await _stateSub?.cancel();
+    await _stateSubscription?.cancel();
 
     final user = _auth.currentUser;
     if (user == null) {
@@ -212,30 +212,29 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   }
 
   Future<void> _startStateListener(String userId) async {
-    await _stateSub?.cancel();
-    _stateSub = _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('adaptiveState')
-        .doc('summary')
-        .snapshots()
-        .listen((snapshot) {
-      final data = snapshot.data();
-      if (!snapshot.exists || data == null) {
-        return;
-      }
-      final state = AdaptiveLearnerState.fromJson(
-        Map<String, dynamic>.from(data),
-      );
-      if (!mounted) return;
-      setState(() {
-        _learnerState = state;
-        _syncTimelineWithHistory(state.history);
-      });
-    });
+    debugPrint(
+        '[AdaptiveJourney] Starting real-time state listener for $userId');
+    await _stateSubscription?.cancel();
+    _stateSubscription = _learnerService.watchLearnerState().listen(
+      (newState) {
+        if (!mounted) return;
+        debugPrint(
+          '[AdaptiveJourney] State update received: ${newState?.visitedLessons.length ?? 0} lessons visited',
+        );
+        setState(() {
+          _learnerState = newState;
+          _syncTimelineWithHistory(newState?.history);
+          _checkModuleUnlocks();
+        });
+      },
+      onError: (error) {
+        debugPrint('[AdaptiveJourney] State listener error: $error');
+      },
+    );
   }
 
-  void _syncTimelineWithHistory(AdaptiveLearnerHistory history) {
+  void _syncTimelineWithHistory(AdaptiveLearnerHistory? history) {
+    if (history == null) return;
     for (final entry in _timeline.values) {
       entry.unlocked = entry.number == 1;
       entry.completed = false;
@@ -259,6 +258,54 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       final nextNumber = history.passedModules.reduce(math.max) + 1;
       _ensureTile(nextNumber);
       _timeline[nextNumber]!.unlocked = true;
+    }
+  }
+
+  void _checkModuleUnlocks() {
+    final state = _learnerState;
+    if (state == null) return;
+
+    for (final entry in _timeline.entries.toList()) {
+      final moduleNumber = entry.key;
+      final tile = entry.value;
+
+      final cachedModule = _cachedModules[moduleNumber];
+      final totalLessons = cachedModule?.lessons.length ?? 0;
+      if (cachedModule != null && totalLessons > 0) {
+        final isComplete = _learnerService.isModuleComplete(
+          state: state,
+          topic: widget.topic,
+          moduleNumber: moduleNumber,
+          totalLessons: totalLessons,
+        );
+        tile.completed = isComplete;
+        if (isComplete) {
+          _ensureTile(moduleNumber + 1);
+          final nextTile = _timeline[moduleNumber + 1];
+          if (nextTile != null) {
+            nextTile.unlocked = true;
+          }
+        }
+      }
+
+      if (moduleNumber == 1) {
+        tile.unlocked = true;
+        continue;
+      }
+
+      final previousModule = _cachedModules[moduleNumber - 1];
+      final previousLessons = previousModule?.lessons.length ?? 0;
+      if (previousModule != null && previousLessons > 0) {
+        final previousComplete = _learnerService.isModuleComplete(
+          state: state,
+          topic: widget.topic,
+          moduleNumber: moduleNumber - 1,
+          totalLessons: previousLessons,
+        );
+        if (previousComplete) {
+          tile.unlocked = true;
+        }
+      }
     }
   }
 
@@ -316,6 +363,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         _learnerState = response.learnerState;
         _timeline[moduleNumber]?.unlocked = true;
         _timeline[moduleNumber]?.completed = false;
+        _checkModuleUnlocks();
       });
     } catch (error) {
       if (!mounted) return;
@@ -717,6 +765,8 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   Widget _buildTimeline(AppLocalizations l10n) {
     final tiles = _timelineTiles;
+    final learnerState = _learnerState;
+    final topic = widget.topic;
     return EdaptiaCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -730,19 +780,18 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
               : cachedModule.lessons.asMap().entries.map((entry) {
                   final index = entry.key;
                   final lesson = entry.value;
-                  final normalized = widget.topic
-                      .trim()
-                      .toLowerCase()
-                      .replaceAll(RegExp(r'\s+'), '_');
-                  final lessonKey = '${normalized}_m${tile.number}_l$index';
-                  final isVisited =
-                      _learnerState?.visitedLessons[lessonKey] == true;
+                  final isVisited = _learnerService.isLessonVisited(
+                    state: learnerState,
+                    topic: topic,
+                    moduleNumber: tile.number,
+                    lessonIndex: index,
+                  );
                   return LessonCard(
                     index: index,
                     lesson: lesson,
                     moduleTitle: cachedModule.title,
                     moduleNumber: tile.number,
-                    courseId: widget.topic,
+                    courseId: topic,
                     isVisited: isVisited,
                   );
                 }).toList();
@@ -756,6 +805,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             skills: cachedModule?.skillsTargeted ?? tile.skills,
             emptySkillsLabel: l10n.adaptiveFlowEmptySkills,
             lessonCards: lessons,
+            learnerState: learnerState,
+            topic: topic,
+            totalLessons: cachedModule?.lessons.length ?? 0,
             onTap: () => _handleModuleTileTap(tile.number),
           );
         }).toList(),

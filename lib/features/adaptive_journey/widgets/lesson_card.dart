@@ -25,6 +25,12 @@ class LessonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final backgroundColor = isVisited
+        ? EdaptiaColors.success.withValues(alpha: 0.05)
+        : theme.colorScheme.surfaceContainerHighest;
+    final borderColor = isVisited
+        ? EdaptiaColors.success.withValues(alpha: 0.6)
+        : theme.colorScheme.outline.withValues(alpha: 0.3);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -44,7 +50,11 @@ class LessonCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: theme.colorScheme.surfaceContainerHighest,
+            color: backgroundColor,
+            border: Border.all(
+              color: borderColor,
+              width: isVisited ? 2 : 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
