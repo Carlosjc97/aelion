@@ -237,11 +237,7 @@ class AppRouter {
           const HelpSupportScreen(),
           const RouteSettings(name: HelpSupportScreen.routeName),
         );
-      case LessonsPage.routeName:
-        return _guarded(
-          const LessonsPage(),
-          const RouteSettings(name: LessonsPage.routeName),
-        );
+      // Removed deprecated LessonsPage route (no longer exists)
       default:
         return onUnknownRoute(settings);
     }
