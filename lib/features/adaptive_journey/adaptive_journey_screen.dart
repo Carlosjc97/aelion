@@ -18,9 +18,20 @@ import 'package:edaptia/services/course/models.dart';
 import 'package:edaptia/services/entitlements_service.dart';
 import 'package:edaptia/services/learner_state_service.dart';
 
+import 'widgets/adaptive_loading_indicator.dart';
 import 'models/module_tile_state.dart';
 import 'widgets/lesson_card.dart';
 import 'widgets/module_tile.dart';
+
+/// Different loading states for the adaptive journey.
+enum AdaptiveLoadingState {
+  none,
+  plan,
+  moduleFirst,
+  module,
+  checkpoint,
+  booster,
+}
 
 class AdaptiveJourneyScreenArgs {
   const AdaptiveJourneyScreenArgs({
@@ -53,10 +64,8 @@ class AdaptiveJourneyScreen extends StatefulWidget {
 }
 
 class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
-  bool _loadingPlan = true;
-  bool _loadingCheckpoint = false;
   bool _submittingCheckpoint = false;
-  bool _loadingBooster = false;
+  AdaptiveLoadingState _loadingState = AdaptiveLoadingState.none;
   String? _error;
 
   AdaptivePlanDraft? _plan;
@@ -75,11 +84,16 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   // Expansion state for timeline modules
   final Set<int> _expandedModules = <int>{};
   final Map<int, AdaptiveModuleOut> _cachedModules = <int, AdaptiveModuleOut>{};
+  final Set<int> _generatingModules = <int>{};
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final EntitlementsService _entitlements = EntitlementsService();
   final LearnerStateService _learnerService = LearnerStateService.instance;
   StreamSubscription<AdaptiveLearnerState?>? _stateSubscription;
+
+  bool get _isLoadingCheckpoint =>
+      _loadingState == AdaptiveLoadingState.checkpoint;
+  bool get _isLoadingBooster => _loadingState == AdaptiveLoadingState.booster;
 
   static const int _maxTimelineModules = 12;
 
@@ -97,7 +111,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   Future<void> _bootstrap() async {
     setState(() {
-      _loadingPlan = true;
+      _loadingState = AdaptiveLoadingState.plan;
       _error = null;
       _module = null;
       _checkpoint = null;
@@ -112,7 +126,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     final user = _auth.currentUser;
     if (user == null) {
       setState(() {
-        _loadingPlan = false;
+        _loadingState = AdaptiveLoadingState.none;
         _error = 'AUTH_REQUIRED';
       });
       return;
@@ -155,7 +169,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           _activeModuleNumber = 1;
           _module = cachedM1;
           _hasPremium = _entitlements.isPremium;
-          _loadingPlan = false;
+          _loadingState = AdaptiveLoadingState.none;
         });
 
         await _startStateListener(user.uid);
@@ -196,7 +210,8 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           ..addAll(seeds);
         _activeModuleNumber = 1;
         _hasPremium = _entitlements.isPremium;
-        _loadingPlan = false; // âœ… UI visible inmediatamente
+        _loadingState =
+            AdaptiveLoadingState.none; // âœ… UI visible inmediatamente
       });
 
       await _startStateListener(user.uid);
@@ -206,7 +221,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     } catch (error) {
       setState(() {
         _error = error.toString();
-        _loadingPlan = false;
+        _loadingState = AdaptiveLoadingState.none;
       });
     }
   }
@@ -325,6 +340,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   }
 
   Future<void> _generateModule(int moduleNumber) async {
+    final moduleLoadingState = moduleNumber == 1
+        ? AdaptiveLoadingState.moduleFirst
+        : AdaptiveLoadingState.module;
     setState(() {
       _module = null;
       _checkpoint = null;
@@ -333,6 +351,8 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       _checkpointAnswers.clear();
       _error = null;
       _activeModuleNumber = moduleNumber;
+      _generatingModules.add(moduleNumber);
+      _loadingState = moduleLoadingState;
     });
 
     try {
@@ -370,6 +390,15 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       setState(() {
         _error = error.toString();
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _generatingModules.remove(moduleNumber);
+          if (_loadingState == moduleLoadingState) {
+            _loadingState = AdaptiveLoadingState.none;
+          }
+        });
+      }
     }
   }
 
@@ -397,12 +426,12 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   Future<void> _generateCheckpoint() async {
     final module = _module;
-    if (module == null || _loadingCheckpoint) {
+    if (module == null || _isLoadingCheckpoint) {
       return;
     }
 
     setState(() {
-      _loadingCheckpoint = true;
+      _loadingState = AdaptiveLoadingState.checkpoint;
       _checkpoint = null;
       _evaluationResponse = null;
       _booster = null;
@@ -425,14 +454,18 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         for (final item in response.quiz.items) {
           _checkpointAnswers[item.id] = '';
         }
-        _loadingCheckpoint = false;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString();
-        _loadingCheckpoint = false;
       });
+    } finally {
+      if (mounted && _loadingState == AdaptiveLoadingState.checkpoint) {
+        setState(() {
+          _loadingState = AdaptiveLoadingState.none;
+        });
+      }
     }
   }
 
@@ -494,12 +527,12 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     final evaluation = _evaluationResponse;
     if (evaluation == null ||
         evaluation.result.weakSkills.isEmpty ||
-        _loadingBooster) {
+        _isLoadingBooster) {
       return;
     }
 
     setState(() {
-      _loadingBooster = true;
+      _loadingState = AdaptiveLoadingState.booster;
       _error = null;
     });
 
@@ -514,14 +547,18 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       setState(() {
         _booster = response.booster;
         _learnerState = response.learnerState;
-        _loadingBooster = false;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString();
-        _loadingBooster = false;
       });
+    } finally {
+      if (mounted && _loadingState == AdaptiveLoadingState.booster) {
+        setState(() {
+          _loadingState = AdaptiveLoadingState.none;
+        });
+      }
     }
   }
 
@@ -558,6 +595,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     final l10n = AppLocalizations.of(context)!;
     final tile = _timeline[moduleNumber];
     if (tile == null) return;
+    if (_generatingModules.contains(moduleNumber)) {
+      return;
+    }
 
     // If module already has cached data, just toggle expansion
     if (_cachedModules.containsKey(moduleNumber)) {
@@ -629,66 +669,122 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (_loadingPlan) {
-      return Scaffold(
-        appBar: AppBar(title: Text(l10n.adaptiveFlowTitle)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
+    Widget body;
     if (_error == 'AUTH_REQUIRED') {
-      return Scaffold(
-        appBar: AppBar(title: Text(l10n.adaptiveFlowTitle)),
-        body: Center(child: Text('Sign in required to continue.')),
-      );
-    }
-
-    if (_error != null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(l10n.adaptiveFlowTitle)),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.adaptiveFlowError,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _bootstrap,
-                  child: Text(l10n.commonRetry),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      body = Center(child: Text('Sign in required to continue.'));
+    } else if (_error != null) {
+      body = _buildErrorView(l10n);
+    } else {
+      body = _buildMainContent(l10n);
     }
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.adaptiveFlowTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildLearnerStateCard(l10n),
-          const SizedBox(height: 16),
-          _buildPlanCard(l10n),
-          const SizedBox(height: 16),
-          _buildTimeline(l10n),
-          const SizedBox(height: 16),
-          _buildCheckpointCard(l10n),
-          const SizedBox(height: 16),
-          _buildBoosterCard(l10n),
-        ],
+      body: body,
+    );
+  }
+
+  Widget _buildMainContent(AppLocalizations l10n) {
+    final content = ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildLearnerStateCard(l10n),
+        const SizedBox(height: 16),
+        _buildPlanCard(l10n),
+        const SizedBox(height: 16),
+        _buildTimeline(l10n),
+        const SizedBox(height: 16),
+        _buildCheckpointCard(l10n),
+        const SizedBox(height: 16),
+        _buildBoosterCard(l10n),
+      ],
+    );
+
+    if (_loadingState == AdaptiveLoadingState.none) {
+      return content;
+    }
+
+    if (_timeline.isEmpty) {
+      return _buildLoadingView();
+    }
+
+    return Stack(
+      children: [
+        content,
+        Positioned.fill(
+          child: Container(
+            color: Colors.white.withValues(alpha: 0.85),
+            child: _buildLoadingView(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorView(AppLocalizations l10n) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.adaptiveFlowError,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _error ?? '',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _bootstrap,
+              child: Text(l10n.commonRetry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingView() {
+    String message;
+    String? subtitle;
+    final topic = widget.topic;
+
+    switch (_loadingState) {
+      case AdaptiveLoadingState.plan:
+        message = 'Generando tu plan personalizado';
+        subtitle =
+            'Estamos analizando "$topic" para crear el mejor recorrido para ti';
+        break;
+      case AdaptiveLoadingState.moduleFirst:
+        message = 'Creando tu primer módulo';
+        subtitle = 'GPT está generando lecciones adaptadas a tu nivel...';
+        break;
+      case AdaptiveLoadingState.module:
+        message = 'Generando siguiente módulo';
+        subtitle = 'Preparando nuevas lecciones para ti...';
+        break;
+      case AdaptiveLoadingState.checkpoint:
+        message = 'Creando checkpoint de evaluación';
+        subtitle = 'Generando preguntas personalizadas...';
+        break;
+      case AdaptiveLoadingState.booster:
+        message = 'Preparando contenido de refuerzo';
+        subtitle = 'Creando ejercicios adicionales...';
+        break;
+      case AdaptiveLoadingState.none:
+        return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      child: AdaptiveLoadingIndicator(
+        message: message,
+        subtitle: subtitle,
       ),
     );
   }
@@ -775,6 +871,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           final isActive = tile.number == _activeModuleNumber;
           final cachedModule = _cachedModules[tile.number];
           final isExpanded = _expandedModules.contains(tile.number);
+          final isGenerating = _generatingModules.contains(tile.number);
           final lessons = cachedModule == null
               ? const <Widget>[]
               : cachedModule.lessons.asMap().entries.map((entry) {
@@ -808,6 +905,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             learnerState: learnerState,
             topic: topic,
             totalLessons: cachedModule?.lessons.length ?? 0,
+            isGenerating: isGenerating,
             onTap: () => _handleModuleTileTap(tile.number),
           );
         }).toList(),
@@ -834,8 +932,8 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                   ),
                 ),
                 FilledButton.icon(
-                  onPressed: _loadingCheckpoint ? null : _generateCheckpoint,
-                  icon: _loadingCheckpoint
+                  onPressed: _isLoadingCheckpoint ? null : _generateCheckpoint,
+                  icon: _isLoadingCheckpoint
                       ? const SizedBox(
                           width: 16,
                           height: 16,
@@ -923,8 +1021,8 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
               if (evaluation.action == 'booster') ...[
                 const SizedBox(height: 12),
                 FilledButton.icon(
-                  onPressed: _loadingBooster ? null : _requestBooster,
-                  icon: _loadingBooster
+                  onPressed: _isLoadingBooster ? null : _requestBooster,
+                  icon: _isLoadingBooster
                       ? const SizedBox(
                           width: 16,
                           height: 16,

@@ -21,6 +21,7 @@ class ModuleTile extends StatelessWidget {
     required this.learnerState,
     required this.topic,
     required this.totalLessons,
+    this.isGenerating = false,
     required this.onTap,
   });
 
@@ -35,6 +36,7 @@ class ModuleTile extends StatelessWidget {
   final AdaptiveLearnerState? learnerState;
   final String topic;
   final int totalLessons;
+  final bool isGenerating;
   final VoidCallback onTap;
 
   @override
@@ -152,6 +154,28 @@ class ModuleTile extends StatelessWidget {
               ),
               if (isExpanded) ...[
                 const Divider(height: 1, color: Colors.white24),
+                if (isGenerating)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Generando lecciones...',
+                            style: EdaptiaTypography.body.copyWith(
+                              color: foreground.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (lessonCards.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(16),
@@ -163,7 +187,7 @@ class ModuleTile extends StatelessWidget {
                       ],
                     ),
                   )
-                else
+                else if (!isGenerating)
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       vertical: 32,
