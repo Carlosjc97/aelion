@@ -948,6 +948,45 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     try {
       await _entitlements.ensureLoaded();
 
+      // ✅ CACHE FIRST: Load cached modules immediately
+      await _loadCachedModules();
+
+      // If we have cached M1, show it immediately and skip API calls
+      if (_cachedModules.containsKey(1)) {
+        final cachedM1 = _cachedModules[1]!;
+        final seeds = <int, _ModuleTileState>{};
+
+        // Create timeline from cached modules
+        for (var entry in _cachedModules.entries) {
+          final moduleNumber = entry.key;
+          final module = entry.value;
+          seeds[moduleNumber] = _ModuleTileState(
+            number: moduleNumber,
+            title: module.title,
+            skills: module.focusSkills,
+            unlocked: moduleNumber == 1,
+            completed: false,
+            requiresPremium: moduleNumber > 1,
+          );
+        }
+
+        setState(() {
+          _timeline
+            ..clear()
+            ..addAll(seeds);
+          _activeModuleNumber = 1;
+          _module = cachedM1;
+          _hasPremium = _entitlements.isPremium;
+          _loadingPlan = false;
+        });
+
+        await _startStateListener(user.uid);
+
+        debugPrint('[QuizScreen] Loaded M1 from cache, skipping API to avoid rate limit');
+        return; // ✅ Exit early - we have cached content
+      }
+
+      // No cache - must fetch from API
       // FASE 1: Obtener conteo rÃ¡pido (5-10 segundos)
       final countResponse = await CourseApiService.fetchModuleCount(
         topic: widget.topic,
@@ -979,9 +1018,6 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       });
 
       await _startStateListener(user.uid);
-
-      // Load cached modules in background
-      unawaited(_loadCachedModules());
 
       // FASE 2: Generar M1 (60-90s, pero usuario ya ve skeleton)
       await _generateModule(1);
@@ -1621,24 +1657,45 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                         ),
                       ),
                     ),
-                    if (isExpanded && cachedModule != null) ...[
+                    if (isExpanded) ...[
                       const Divider(height: 1, color: Colors.white24),
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: cachedModule.lessons.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final lesson = entry.value;
-                            return _LessonCard(
-                              index: index,
-                              lesson: lesson,
-                              moduleTitle: cachedModule.title,
-                              courseId: widget.topic,
-                            );
-                          }).toList(),
+                      if (cachedModule != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: cachedModule.lessons.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final lesson = entry.value;
+                              return _LessonCard(
+                                index: index,
+                                lesson: lesson,
+                                moduleTitle: cachedModule.title,
+                                courseId: widget.topic,
+                              );
+                            }).toList(),
+                          ),
                         ),
-                      ),
+                      ] else ...[
+                        // Show loading indicator while module is being generated
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Generando módulo ${tile.number}...',
+                                  style: EdaptiaTypography.body.copyWith(
+                                    color: foreground.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ],
                 ),
