@@ -963,7 +963,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           seeds[moduleNumber] = _ModuleTileState(
             number: moduleNumber,
             title: module.title,
-            skills: module.focusSkills,
+            skills: module.skillsTargeted,
             unlocked: moduleNumber == 1,
             completed: false,
             requiresPremium: moduleNumber > 1,
