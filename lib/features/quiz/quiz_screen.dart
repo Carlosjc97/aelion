@@ -956,17 +956,20 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         final cachedM1 = _cachedModules[1]!;
         final seeds = <int, _ModuleTileState>{};
 
-        // Create timeline from cached modules
-        for (var entry in _cachedModules.entries) {
-          final moduleNumber = entry.key;
-          final module = entry.value;
-          seeds[moduleNumber] = _ModuleTileState(
-            number: moduleNumber,
-            title: module.title,
-            skills: module.skillsTargeted,
-            unlocked: moduleNumber == 1,
+        // Create timeline for all modules (not just cached ones)
+        // This ensures M2, M3, etc. are visible even if only M1 is cached
+        const defaultModuleCount = 6; // Default number of modules to show
+        for (int i = 1; i <= defaultModuleCount; i++) {
+          final cachedModule = _cachedModules[i];
+          final suggestion = _suggestionFor(i);
+
+          seeds[i] = _ModuleTileState(
+            number: i,
+            title: cachedModule?.title ?? suggestion?.title ?? 'Módulo $i',
+            skills: cachedModule?.skillsTargeted ?? suggestion?.skills ?? const <String>[],
+            unlocked: i == 1,
             completed: false,
-            requiresPremium: moduleNumber > 1,
+            requiresPremium: i > 1,
           );
         }
 
@@ -982,7 +985,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
         await _startStateListener(user.uid);
 
-        debugPrint('[QuizScreen] Loaded M1 from cache, skipping API to avoid rate limit');
+        debugPrint('[QuizScreen] Loaded M1 from cache, showing ${seeds.length} modules total');
         return; // ✅ Exit early - we have cached content
       }
 
@@ -1444,22 +1447,19 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.adaptiveFlowTitle)),
-      body: RefreshIndicator(
-        onRefresh: _bootstrap,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildLearnerStateCard(l10n),
-            const SizedBox(height: 16),
-            _buildPlanCard(l10n),
-            const SizedBox(height: 16),
-            _buildTimeline(l10n),
-            const SizedBox(height: 16),
-            _buildCheckpointCard(l10n),
-            const SizedBox(height: 16),
-            _buildBoosterCard(l10n),
-          ],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildLearnerStateCard(l10n),
+          const SizedBox(height: 16),
+          _buildPlanCard(l10n),
+          const SizedBox(height: 16),
+          _buildTimeline(l10n),
+          const SizedBox(height: 16),
+          _buildCheckpointCard(l10n),
+          const SizedBox(height: 16),
+          _buildBoosterCard(l10n),
+        ],
       ),
     );
   }
