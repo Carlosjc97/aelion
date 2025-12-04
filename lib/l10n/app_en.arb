@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "en",
   "appTitle": "Edaptia",
   "loginTitle": "Learn faster with AI",
@@ -71,15 +71,15 @@
     }
   },
   "moduleGateTake": "Take module quiz",
-  "homeEnglishComingTitle": "ðŸŒ Technical English for Devs",
-  "homeEnglishComingSubtitle": "COMING SOON\nLearn technical terms, code review English, and more.",
-  "homeEnglishNotifyCta": "NOTIFY ME",
-  "homeEnglishNotifyDone": "YOU'RE IN",
-  "homeEnglishNotifySuccess": "We'll let you know when it's ready!",
-  "homeEnglishNotifyError": "We couldn't save your request. Try again.",
-  "assessmentResultTitle": "Your {topic} level in 60s",
-  "assessmentResultLevelLabel": "YOUR {topic} LEVEL",
-  "assessmentResultPercentile": "Top {percentile}% of 1,248 learners",
+  "homeEnglishComingTitle": "Early Access",
+  "homeEnglishComingSubtitle": "Be the first to try new features and suggest improvements",
+  "homeEnglishNotifyCta": "Notify me",
+  "homeEnglishNotifyDone": "Already registered",
+  "homeEnglishNotifySuccess": "You'll be notified when Technical English launches!",
+  "homeEnglishNotifyError": "Could not register notification",
+  "assessmentResultTitle": "Your level: {level}",
+  "assessmentResultLevelLabel": "Your level: {level}",
+  "assessmentResultPercentile": "You scored better than {percentile}% of learners",
   "@assessmentResultPercentile": {
     "placeholders": {
       "percentile": {
@@ -87,28 +87,28 @@
       }
     }
   },
-  "assessmentResultStrengthsTitle": "Skills you already have",
-  "assessmentResultGapsTitle": "Next skills to unlock",
-  "assessmentResultPlanTitle": "Personalized next steps",
-  "assessmentResultShare": "Share on LinkedIn",
-  "assessmentResultCta": "Start my personalized plan",
-  "assessmentResultShareMessage": "I'm {level} in {topic} (Top {percentile}%) on @Edaptia dYZ_\\n\\nDiscover your level: https://edaptia.io",
+  "assessmentResultStrengthsTitle": "Strengths",
+  "assessmentResultGapsTitle": "Areas to improve",
+  "assessmentResultPlanTitle": "Suggested plan",
+  "assessmentResultShare": "Share results",
+  "assessmentResultCta": "Generate my learning plan",
+  "assessmentResultShareMessage": "I just completed my {topic} assessment on Edaptia! Level: {level}, Score: {score}%",
   "@assessmentResultShareMessage": {
     "placeholders": {
-      "level": {
-        "type": "String"
-      },
       "topic": {
         "type": "String"
       },
-      "percentile": {
+      "level": {
+        "type": "String"
+      },
+      "score": {
         "type": "int"
       }
     }
   },
   "assessmentResultClose": "Close",
-  "assessmentResultResponsesTitle": "Quiz performance",
-  "settingsLanguageTitle": "Language / Idioma",
+  "assessmentResultResponsesTitle": "Your answers",
+  "settingsLanguageTitle": "App Language",
   "settingsLanguageSpanish": "Spanish",
   "settingsLanguageEnglish": "English",
   "homeLogoutTooltip": "Sign out",
@@ -547,7 +547,7 @@
   "helpReportBug": "Report a bug",
   "helpReportBugDescription": "Include screenshots or steps if possible.",
   "helpAboutTitle": "About this app",
-  "helpAboutDescription": "Built with Flutter and Firebase; all content is generated via secure Cloud Functions.",
+  "helpAboutDescription": "Built with Flutter, Firebase Cloud Functions, and OpenAI; adaptive content is generated securely on demand.",
   "helpPrivacyPolicy": "Privacy Policy",
   "helpTermsOfService": "Terms of Service",
   "helpLaunchError": "We couldn't open the link. Please try again.",
@@ -560,76 +560,6 @@
   "helpBugReportSubject": "{appName} bug report (v{version} Â· {device})",
   "helpBugReportBody": "Timestamp: {timestamp}\nLocale: {locale}\nVersion: {version}\nDevice: {device}\n\nSteps to reproduce:\n- ",
   "helpAboutVersion": "Version {version}",
-  "helpFaqQuestion1": "How do I generate my first learning plan?",
-  "helpFaqAnswer1": "On the Home screen, enter a topic and tap Generate AI learning plan.",
-  "helpFaqQuestion2": "Where can I find my recent outlines?",
-  "helpFaqAnswer2": "Scroll to the Recents section on Home; each card reopens the saved outline instantly.",
-  "helpFaqQuestion3": "How are trending topics selected?",
-  "helpFaqAnswer3": "We mix your latest searches with popular requests in your language to suggest new ideas.",
-  "helpFaqQuestion4": "What is a placement quiz?",
-  "helpFaqAnswer4": "It is a 10-question calibration that sets the right level before we build a tailored plan.",
-  "helpFaqQuestion5": "Can I change the depth of a plan later?",
-  "helpFaqAnswer5": "Open the outline, tap Refine plan, and select the depth that matches your goal.",
-  "helpFaqQuestion6": "How do I switch the outline language?",
-  "helpFaqAnswer6": "Generate again after choosing your preferred language in the quiz or topic prompt.",
-  "helpFaqQuestion7": "What happens if I lose connection?",
-  "helpFaqAnswer7": "Cached outlines and recents stay available offline; new generations wait until you are online.",
-  "helpFaqQuestion8": "How is my progress saved?",
-  "helpFaqAnswer8": "Metadata and cached outlines are stored securely on your device via SharedPreferences.",
-  "helpFaqQuestion9": "How do I sign out safely?",
-  "helpFaqAnswer9": "Use the logout icon on the Home app bar; it signs you out of Firebase and Google on mobile.",
-  "helpFaqQuestion10": "How do I switch Google accounts?",
-  "helpFaqAnswer10": "Sign out first, then pick the other account when the Google sign-in sheet appears.",
-  "helpFaqQuestion11": "How can I clear my recent searches?",
-  "helpFaqAnswer11": "Search history is capped to the latest entries per account and is cleared automatically when you sign out.",
-  "helpFaqQuestion12": "What data do you store in Firestore?",
-  "helpFaqAnswer12": "Only anonymized outline cache entries and observability metrics generated by Cloud Functions.",
-  "helpFaqQuestion13": "How do I report incorrect content?",
-  "helpFaqAnswer13": "Use the Report a bug button below and describe what needs to be fixed.",
-  "helpFaqQuestion14": "Where do recommendations come from?",
-  "helpFaqAnswer14": "They combine aggregated demand with your recent activity to surface relevant topics.",
-  "helpFaqQuestion15": "Can I regenerate a plan after finishing a quiz?",
-  "helpFaqAnswer15": "Yes. Applying quiz results automatically rebuilds the outline with the new band.",
-  "helpFaqQuestion16": "How long are cached outlines kept?",
-  "helpFaqAnswer16": "They remain until you replace them or clear storage; stale badges appear after 24 hours.",
-  "helpFaqQuestion17": "Why was I asked to retake the quiz?",
-  "helpFaqAnswer17": "We prompt a retake when your level looks outdated or the cache exceeded its freshness window.",
-  "helpFaqQuestion18": "Can I use the app on multiple devices?",
-  "helpFaqAnswer18": "Yes. Sign in with the same Google account on web or Android to stay in sync.",
-  "helpFaqQuestion19": "Does the app support dark mode?",
-  "helpFaqAnswer19": "The interface follows your system theme and keeps contrast within accessibility guidelines.",
-  "helpFaqQuestion20": "How do I reset my learning streak?",
-  "helpFaqAnswer20": "Clear local data from system settings or sign in with a new account.",
-  "helpFaqQuestion21": "How can I request a new feature?",
-  "helpFaqAnswer21": "Send your idea through the English support email and include Feature idea in the message.",
-  "helpFaqQuestion22": "Do I need an account to use the app?",
-  "helpFaqAnswer22": "Yes, Google authentication protects your content and enables personalization.",
-  "helpFaqQuestion23": "What happens if I close the app during a quiz?",
-  "helpFaqAnswer23": "You can restart the quiz anytime; progress resets to keep the calibration accurate.",
-  "helpFaqQuestion24": "How do I delete cached outlines?",
-  "helpFaqAnswer24": "Cached outlines live only on your device; uninstalling or clearing the app data removes them.",
-  "helpFaqQuestion25": "Is my personal data shared with third parties?",
-  "helpFaqAnswer25": "No. We only use aggregate telemetry for reliability and never sell personal information.",
-  "helpFaqQuestion26": "Can I use the app without Firebase Functions?",
-  "helpFaqAnswer26": "No. Direct Firestore access is blocked; all requests go through secure HTTPS Functions.",
-  "helpFaqQuestion27": "Why do I see a stale badge?",
-  "helpFaqAnswer27": "It means the cached outline is older than the freshness threshold and should be regenerated.",
-  "helpFaqQuestion28": "How do I join the community?",
-  "helpFaqAnswer28": "Tap Join Community to open the Telegram news channel or chat group.",
-  "helpFaqQuestion29": "How do I check the app version?",
-  "helpFaqAnswer29": "Open Help & Support and scroll to About; the version number is listed there.",
-  "helpFaqQuestion30": "Can I run the app with local emulators?",
-  "helpFaqAnswer30": "Yes. Set USE_FUNCTIONS_EMULATOR=true in env.public and start the Firebase emulators.",
-  "helpFaqQuestion31": "How do I contact support in Spanish?",
-  "helpFaqAnswer31": "Use the Spanish email button; it routes directly to our Spanish-speaking support team.",
-  "helpFaqQuestion32": "How quickly does support respond?",
-  "helpFaqAnswer32": "We aim to reply within one business day and usually respond much sooner.",
-  "helpFaqQuestion33": "What details help with a bug report?",
-  "helpFaqAnswer33": "Include the timestamp, locale, app version, device, and clear reproduction steps.",
-  "helpFaqQuestion34": "How do I get the latest release?",
-  "helpFaqAnswer34": "Install updates from your app store or pull the main branch if you are contributing.",
-  "helpFaqQuestion35": "Where can I read the privacy policy and terms?",
-  "helpFaqAnswer35": "Use the Privacy Policy and Terms of Service links in the About section.",
   "@helpEmailSubject": {
     "placeholders": {
       "appName": {
@@ -681,14 +611,14 @@
   },
   "@assessmentResultTitle": {
     "placeholders": {
-      "topic": {
+      "level": {
         "type": "String"
       }
     }
   },
   "@assessmentResultLevelLabel": {
     "placeholders": {
-      "topic": {
+      "level": {
         "type": "String"
       }
     }
@@ -753,62 +683,28 @@
     }
   },
   "adaptiveFlowLockedPremium": "Unlock Premium to keep advancing.",
-
-  "assessmentResultTitle": "Your level: {level}",
-  "@assessmentResultTitle": {
-    "placeholders": {
-      "level": {
-        "type": "String"
-      }
-    }
-  },
-  "assessmentResultClose": "Close",
-  "assessmentResultStrengthsTitle": "Strengths",
-  "assessmentResultGapsTitle": "Areas to improve",
-  "assessmentResultShare": "Share results",
-  "assessmentResultCta": "Generate my learning plan",
-  "assessmentResultLevelLabel": "Detected level: {level}",
-  "@assessmentResultLevelLabel": {
-    "placeholders": {
-      "level": {
-        "type": "String"
-      }
-    }
-  },
-  "assessmentResultPercentile": "You scored better than {percentile}% of learners",
-  "@assessmentResultPercentile": {
-    "placeholders": {
-      "percentile": {
-        "type": "int"
-      }
-    }
-  },
-  "assessmentResultResponsesTitle": "Your answers",
-  "assessmentResultPlanTitle": "Suggested plan",
-  "assessmentResultShareMessage": "I just completed my {topic} assessment on Edaptia! Level: {level}, Score: {score}%",
-  "@assessmentResultShareMessage": {
-    "placeholders": {
-      "topic": {
-        "type": "String"
-      },
-      "level": {
-        "type": "String"
-      },
-      "score": {
-        "type": "int"
-      }
-    }
-  },
-
-  "homeEnglishNotifySuccess": "You'll be notified when Technical English launches!",
-  "homeEnglishNotifyError": "Could not register notification",
-  "homeEnglishNotifyDone": "Already registered",
-  "homeEnglishNotifyCta": "Notify me",
-  "homeEnglishComingTitle": "Early Access",
-  "homeEnglishComingSubtitle": "Be the first to try new features and suggest improvements",
-
-  "settingsLanguageSpanish": "Spanish",
-  "settingsLanguageEnglish": "English",
-  "settingsLanguageTitle": "App Language"
+  "helpFaqQuestion1": "How do I start my first adaptive journey?",
+  "helpFaqAnswer1": "On Home enter a topic, tap Generate plan, finish the placement quiz, and we open your adaptive journey with the first module immediately.",
+  "helpFaqQuestion2": "What does the placement quiz calibrate?",
+  "helpFaqAnswer2": "The 10-question assessment sets your level (basic, intermediate, or advanced) and surfaces weak skills so every module focuses on what you need.",
+  "helpFaqQuestion3": "When does the next module unlock?",
+  "helpFaqAnswer3": "After you visit every lesson and pass the module quiz, the next module unlocks automatically and the timeline refreshes in real time.",
+  "helpFaqQuestion4": "How are modules generated?",
+  "helpFaqAnswer4": "Each module is produced through our Cloud Functions + OpenAI pipeline; we enforce a 12-lesson structure and validate the schema before caching it.",
+  "helpFaqQuestion5": "How do checkpoints and boosters work?",
+  "helpFaqAnswer5": "Once you finish a module you can generate a checkpoint quiz or a booster; both reuse your weak skills to give fresh exercises before advancing.",
+  "helpFaqQuestion6": "Can I regenerate a module or the entire plan?",
+  "helpFaqAnswer6": "Use ?Regenerate module? inside the module tile or ?Rebuild plan? from the plan card to request a new version with your latest learner state.",
+  "helpFaqQuestion7": "Can I listen to lessons?",
+  "helpFaqAnswer7": "Yes. Every lesson includes a speaker icon powered by text-to-speech so you can keep learning while driving, cooking, or exercising.",
+  "helpFaqQuestion8": "How do I keep my daily streak alive?",
+  "helpFaqAnswer8": "Complete at least one lesson or module quiz per day; the app records the streak automatically the moment you mark a lesson as completed.",
+  "helpFaqQuestion9": "What happens if I go offline?",
+  "helpFaqAnswer9": "Previously generated modules stay in the local cache, so you can reopen them offline; as soon as you regain connection we sync pending progress.",
+  "helpFaqQuestion10": "How is progress synced across devices?",
+  "helpFaqAnswer10": "Your LearnerState lives in Firestore and we listen to it in real time, so visits, unlocks, and streaks stay consistent across phone, tablet, or desktop.",
+  "helpFaqQuestion11": "Where do recommendations come from?",
+  "helpFaqAnswer11": "We mix your latest searches with trending topics in your locale; nothing is sponsored or manually curated.",
+  "helpFaqQuestion12": "How do I report inaccurate content or get help?",
+  "helpFaqAnswer12": "Open Help & Support and tap Email support or Report bug; we attach the module, version, and device info so the team can respond quickly."
 }
-
