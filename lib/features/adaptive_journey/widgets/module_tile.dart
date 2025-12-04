@@ -22,6 +22,8 @@ class ModuleTile extends StatelessWidget {
     required this.topic,
     required this.totalLessons,
     this.isGenerating = false,
+    this.isLocked = false,
+    this.onQuizPressed,
     required this.onTap,
   });
 
@@ -37,22 +39,34 @@ class ModuleTile extends StatelessWidget {
   final String topic;
   final int totalLessons;
   final bool isGenerating;
+  final bool isLocked;
+  final VoidCallback? onQuizPressed;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final background = tile.completed
-        ? EdaptiaColors.successGradient
+    final Color backgroundColor;
+    final Gradient? gradient;
+    if (tile.completed) {
+      backgroundColor = Colors.white;
+      gradient = EdaptiaColors.successGradient;
+    } else if (isActive) {
+      backgroundColor = Colors.white;
+      gradient = null;
+    } else {
+      backgroundColor = Colors.white;
+      gradient = null;
+    }
+    final borderColor = tile.completed
+        ? EdaptiaColors.success.withValues(alpha: 0.4)
         : isActive
-            ? EdaptiaColors.hookGradient
-            : null;
-    final baseColor = tile.completed
-        ? EdaptiaColors.success
-        : isActive
-            ? EdaptiaColors.primary
-            : EdaptiaColors.border;
-    final foreground =
-        (tile.completed || isActive) ? Colors.white : EdaptiaColors.textPrimary;
+            ? EdaptiaColors.primary.withValues(alpha: 0.4)
+            : EdaptiaColors.border.withValues(alpha: 0.3);
+    final foreground = tile.completed
+        ? Colors.white
+        : isLocked
+            ? EdaptiaColors.textSecondary
+            : EdaptiaColors.textPrimary;
 
     IconData icon;
     if (tile.completed) {
@@ -73,11 +87,11 @@ class ModuleTile extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           decoration: BoxDecoration(
-            color: background == null ? EdaptiaColors.cardLight : null,
-            gradient: background,
+            color: gradient == null ? backgroundColor : null,
+            gradient: gradient,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: baseColor.withValues(alpha: baseColor.a * 0.4),
+              color: borderColor,
             ),
           ),
           child: Column(
@@ -103,7 +117,7 @@ class ModuleTile extends StatelessWidget {
                                   style: EdaptiaTypography.title3
                                       .copyWith(color: foreground),
                                 ),
-                                if (isActive) ...[
+                                if (isActive && !tile.completed) ...[
                                   const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -127,8 +141,11 @@ class ModuleTile extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               moduleTitle,
-                              style: EdaptiaTypography.body
-                                  .copyWith(color: foreground),
+                              style: EdaptiaTypography.body.copyWith(
+                                color: tile.completed
+                                    ? Colors.white
+                                    : EdaptiaColors.textPrimary,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -184,6 +201,8 @@ class ModuleTile extends StatelessWidget {
                       children: [
                         _buildProgressBar(context),
                         ...lessonCards,
+                        const SizedBox(height: 8),
+                        _buildQuizButton(context),
                       ],
                     ),
                   )
@@ -264,6 +283,20 @@ class ModuleTile extends StatelessWidget {
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildQuizButton(BuildContext context) {
+    if (onQuizPressed == null) {
+      return const SizedBox.shrink();
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: onQuizPressed,
+        icon: const Icon(Icons.quiz_outlined),
+        label: Text('Quiz módulo ${tile.number}'),
+      ),
     );
   }
 }

@@ -9,6 +9,8 @@ import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/components/edaptia_card.dart';
 import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/features/paywall/paywall_helper.dart';
+import 'package:edaptia/features/paywall/paywall_modal.dart';
+import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/providers/streak_provider.dart';
 import 'package:edaptia/services/adaptive_module_cache.dart';
@@ -17,6 +19,8 @@ import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/course/models.dart';
 import 'package:edaptia/services/entitlements_service.dart';
 import 'package:edaptia/services/learner_state_service.dart';
+import 'package:edaptia/services/local_outline_storage.dart';
+import 'package:edaptia/services/recent_outlines_storage.dart';
 
 import 'widgets/adaptive_loading_indicator.dart';
 import 'models/module_tile_state.dart';
@@ -134,19 +138,23 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
     try {
       await _entitlements.ensureLoaded();
+      await _loadCachedModules(); // Cargar módulos de caché primero
 
-      // ✅ CACHE FIRST: Load cached modules immediately
-      await _loadCachedModules();
+      // Obtener siempre el recuento total de módulos para construir el esqueleto de la UI
+      final countResponse = await CourseApiService.fetchModuleCount(
+        topic: widget.topic,
+        band: widget.initialBand,
+        target: widget.target,
+        timeout: const Duration(seconds: 30),
+      );
+      final int moduleCount = countResponse.moduleCount;
 
-      // If we have cached M1, show it immediately and skip API calls
+      // Si M1 está en caché, usamos el recuento dinámico para los esqueletos y cargamos M1
       if (_cachedModules.containsKey(1)) {
         final cachedM1 = _cachedModules[1]!;
         final seeds = <int, ModuleTileState>{};
 
-        // Create timeline for all modules (not just cached ones)
-        // This ensures M2, M3, etc. are visible even if only M1 is cached
-        const defaultModuleCount = 6; // Default number of modules to show
-        for (int i = 1; i <= defaultModuleCount; i++) {
+        for (int i = 1; i <= moduleCount && i <= _maxTimelineModules; i++) {
           final cachedModule = _cachedModules[i];
           final suggestion = _suggestionFor(i);
 
@@ -172,26 +180,18 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           _loadingState = AdaptiveLoadingState.none;
         });
 
+        unawaited(_persistPlanSnapshot());
         await _startStateListener(user.uid);
 
         debugPrint(
-            '[QuizScreen] Loaded M1 from cache, showing ${seeds.length} modules total');
-        return; // ✅ Exit early - we have cached content
+            '[AdaptiveJourney] Loaded M1 from cache, showing ${seeds.length} skeleton modules from dynamic count');
+        return;
       }
 
-      // No cache - must fetch from API
-      // FASE 1: Obtener conteo rÃ¡pido (5-10 segundos)
-      final countResponse = await CourseApiService.fetchModuleCount(
-        topic: widget.topic,
-        band: widget.initialBand,
-        target: widget.target,
-        timeout: const Duration(seconds: 30),
-      );
-
-      // Crear skeleton UI inmediatamente con mÃ³dulos vacÃ­os
+      // Si M1 no está en caché, usamos el recuento ya obtenido para construir el esqueleto
       final seeds = <int, ModuleTileState>{};
       for (int i = 1;
-          i <= countResponse.moduleCount && i <= _maxTimelineModules;
+          i <= moduleCount && i <= _maxTimelineModules;
           i++) {
         seeds[i] = ModuleTileState(
           number: i,
@@ -211,7 +211,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         _activeModuleNumber = 1;
         _hasPremium = _entitlements.isPremium;
         _loadingState =
-            AdaptiveLoadingState.none; // âœ… UI visible inmediatamente
+            AdaptiveLoadingState.none; // ✅ UI visible inmediatamente
       });
 
       await _startStateListener(user.uid);
@@ -250,10 +250,6 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
   void _syncTimelineWithHistory(AdaptiveLearnerHistory? history) {
     if (history == null) return;
-    for (final entry in _timeline.values) {
-      entry.unlocked = entry.number == 1;
-      entry.completed = false;
-    }
 
     for (final moduleNumber in history.passedModules) {
       _ensureTile(moduleNumber);
@@ -265,14 +261,21 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     for (final moduleNumber in history.failedModules) {
       _ensureTile(moduleNumber);
       final tile = _timeline[moduleNumber]!;
-      tile.unlocked = true;
       tile.completed = false;
+      tile.unlocked = true;
     }
 
-    if (history.passedModules.isNotEmpty) {
-      final nextNumber = history.passedModules.reduce(math.max) + 1;
-      _ensureTile(nextNumber);
-      _timeline[nextNumber]!.unlocked = true;
+    final highestPassed =
+        history.passedModules.isEmpty ? 1 : history.passedModules.reduce(math.max) + 1;
+    _ensureTile(highestPassed);
+    final nextTile = _timeline[highestPassed];
+    if (nextTile != null) {
+      nextTile.unlocked = true;
+    }
+
+    final firstTile = _timeline[1];
+    if (firstTile != null) {
+      firstTile.unlocked = true;
     }
   }
 
@@ -321,6 +324,63 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           tile.unlocked = true;
         }
       }
+    }
+  }
+
+  Future<void> _persistPlanSnapshot() async {
+    if (!mounted || _cachedModules.isEmpty) return;
+    try {
+      final modules = _cachedModules.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+      if (modules.isEmpty) return;
+
+      final language =
+          Localizations.maybeLocaleOf(context)?.languageCode ?? 'es';
+      final outline = modules.map((entry) {
+        final module = entry.value;
+        final lessons = module.lessons.asMap().entries.map((lessonEntry) {
+          final lesson = lessonEntry.value;
+          return <String, dynamic>{
+            'index': lessonEntry.key,
+            'title': lesson.title,
+            'takeaway': lesson.takeaway,
+          };
+        }).toList(growable: false);
+        return <String, dynamic>{
+          'moduleNumber': module.moduleNumber,
+          'title': module.title,
+          'skills': module.skillsTargeted,
+          'lessons': lessons,
+        };
+      }).toList(growable: false);
+
+      await LocalOutlineStorage.instance.save(
+        topic: widget.topic,
+        payload: <String, dynamic>{
+          'outline': outline,
+          'band': widget.initialBand.name,
+          'language': language,
+          'source': 'adaptive_journey',
+        },
+      );
+
+      final metadata = RecentOutlineMetadata(
+        id: RecentOutlineMetadata.buildId(
+          topic: widget.topic,
+          language: language,
+          band: widget.initialBand.name,
+        ),
+        topic: widget.topic,
+        language: language,
+        savedAt: DateTime.now(),
+        band: widget.initialBand.name,
+        depth: null,
+      );
+      await RecentOutlinesStorage.instance.upsert(metadata);
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[AdaptiveJourney] Failed to persist home snapshot: $error\n$stackTrace',
+      );
     }
   }
 
@@ -385,11 +445,30 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         _timeline[moduleNumber]?.completed = false;
         _checkModuleUnlocks();
       });
+      unawaited(_persistPlanSnapshot());
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _error = error.toString();
-      });
+
+      // Check if this is a course limit error
+      final errorString = error.toString();
+      if (errorString.contains('COURSE_LIMIT_REACHED')) {
+        // Show paywall modal
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => PaywallModal(
+            trigger: 'course_limit_reached',
+            onTrialStarted: () {
+              // Retry generating the module after trial started
+              _generateModule(moduleNumber);
+            },
+          ),
+        );
+      } else {
+        setState(() {
+          _error = error.toString();
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -591,6 +670,25 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     unawaited(_recordDailyCheckIn('adaptive_module_$moduleNumber'));
   }
 
+  Future<void> _startModuleQuiz(
+    int moduleNumber,
+    AdaptiveModuleOut module,
+  ) async {
+    final language = Localizations.localeOf(context).languageCode;
+    await Navigator.of(context).pushNamed(
+      ModuleGateQuizScreen.routeName,
+      arguments: ModuleGateQuizArgs(
+        moduleNumber: moduleNumber,
+        topic: widget.topic,
+        language: language,
+        moduleTitle: module.title,
+        lessonTitles: module.lessons
+            .map((lesson) => lesson.title)
+            .toList(growable: false),
+      ),
+    );
+  }
+
   Future<void> _handleModuleTileTap(int moduleNumber) async {
     final l10n = AppLocalizations.of(context)!;
     final tile = _timeline[moduleNumber];
@@ -790,13 +888,37 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   }
 
   Widget _buildLearnerStateCard(AppLocalizations l10n) {
-    final mastery = _learnerState?.skillMastery ?? const <String, double>{};
+    final learnerState = _learnerState;
+    final mastery = learnerState?.skillMastery ?? const <String, double>{};
     final chips = mastery.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final headline = EdaptiaTypography.title2.copyWith(color: Colors.white);
     final subtitle = EdaptiaTypography.body.copyWith(color: Colors.white70);
     final chipStyle = EdaptiaTypography.caption
         .copyWith(color: Colors.white, fontWeight: FontWeight.w600);
+
+    // Count lessons visited for THIS course only
+    final totalVisited = _learnerService.countVisitedLessons(
+      state: learnerState,
+      topic: widget.topic,
+    );
+
+    // Translate level band to Spanish
+    String getLevelBandSpanish(String? band) {
+      if (band == null || band.isEmpty) return 'Por determinar';
+      final normalized = band.toLowerCase();
+      switch (normalized) {
+        case 'basic':
+        case 'beginner':
+          return 'Básico';
+        case 'intermediate':
+          return 'Intermedio';
+        case 'advanced':
+          return 'Avanzado';
+        default:
+          return band; // Return original if unknown
+      }
+    }
 
     return EdaptiaCard(
       gradient: EdaptiaColors.hookGradient,
@@ -806,16 +928,22 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         children: [
           Text(l10n.adaptiveFlowLearnerState, style: headline),
           const SizedBox(height: 8),
-          Text(' · ', style: subtitle),
-          const SizedBox(height: 4),
           Text(
-            'Band: ',
+            'Objetivo: ${widget.target}',
             style: subtitle,
           ),
-          const SizedBox(height: 12),
-          if (chips.isEmpty)
-            Text(l10n.adaptiveFlowEmptySkills, style: subtitle)
-          else
+          const SizedBox(height: 4),
+          Text(
+            'Nivel: ${getLevelBandSpanish(learnerState?.levelBand)}',
+            style: subtitle,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Lecciones completadas: $totalVisited',
+            style: subtitle,
+          ),
+          if (chips.isNotEmpty) ...[
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -828,6 +956,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                 );
               }).toList(),
             ),
+          ],
         ],
       ),
     );
@@ -872,9 +1001,13 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           final cachedModule = _cachedModules[tile.number];
           final isExpanded = _expandedModules.contains(tile.number);
           final isGenerating = _generatingModules.contains(tile.number);
+          final moduleLessons =
+              cachedModule?.lessons ?? const <AdaptiveLesson>[];
+          final isLockedModule = !tile.unlocked;
+
           final lessons = cachedModule == null
               ? const <Widget>[]
-              : cachedModule.lessons.asMap().entries.map((entry) {
+              : moduleLessons.asMap().entries.map((entry) {
                   final index = entry.key;
                   final lesson = entry.value;
                   final isVisited = _learnerService.isLessonVisited(
@@ -883,6 +1016,17 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                     moduleNumber: tile.number,
                     lessonIndex: index,
                   );
+                  final previousLessonVisited = index == 0
+                      ? true
+                      : _learnerService.isLessonVisited(
+                          state: learnerState,
+                          topic: topic,
+                          moduleNumber: tile.number,
+                          lessonIndex: index - 1,
+                        );
+                  final isLessonLocked =
+                      isLockedModule || (index > 0 && !previousLessonVisited);
+
                   return LessonCard(
                     index: index,
                     lesson: lesson,
@@ -890,8 +1034,23 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
                     moduleNumber: tile.number,
                     courseId: topic,
                     isVisited: isVisited,
+                    isLocked: isLessonLocked,
+                    allModuleLessons: moduleLessons,
                   );
                 }).toList();
+
+          AdaptiveModuleOut? moduleForQuiz;
+          if (cachedModule != null &&
+              moduleLessons.isNotEmpty &&
+              !isLockedModule &&
+              (!tile.requiresPremium || _hasPremium)) {
+            moduleForQuiz = cachedModule;
+          }
+          VoidCallback? quizCallback;
+          if (moduleForQuiz != null) {
+            final module = moduleForQuiz;
+            quizCallback = () => _startModuleQuiz(tile.number, module);
+          }
 
           return ModuleTile(
             tile: tile,
@@ -904,8 +1063,10 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             lessonCards: lessons,
             learnerState: learnerState,
             topic: topic,
-            totalLessons: cachedModule?.lessons.length ?? 0,
+            totalLessons: moduleLessons.length,
             isGenerating: isGenerating,
+            isLocked: isLockedModule,
+            onQuizPressed: quizCallback,
             onTap: () => _handleModuleTileTap(tile.number),
           );
         }).toList(),

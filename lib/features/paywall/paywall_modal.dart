@@ -3,7 +3,7 @@ import 'package:edaptia/services/entitlements_service.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
 
 class PaywallModal extends StatelessWidget {
-  final String trigger; // 'post_calibration', 'module_locked', 'mock_locked'
+  final String trigger; // 'post_calibration', 'module_locked', 'mock_locked', 'course_limit_reached'
   final VoidCallback? onTrialStarted;
   final VoidCallback? onDismissed;
 
@@ -22,6 +22,8 @@ class PaywallModal extends StatelessWidget {
         return 'Continuar con Premium';
       case 'mock_locked':
         return 'Acceder a examen de práctica';
+      case 'course_limit_reached':
+        return 'Toma los cursos que quieras';
       default:
         return 'Acceder a Premium';
     }
@@ -35,6 +37,8 @@ class PaywallModal extends StatelessWidget {
         return 'Desbloquea M2-M6 generados para tu plan personalizado.';
       case 'mock_locked':
         return 'Practica con casos reales antes de tu entrevista.';
+      case 'course_limit_reached':
+        return 'Has alcanzado el límite de 3 cursos gratuitos. Accede a cursos ilimitados por solo \$9.99/mes.';
       default:
         return 'Accede a todo el contenido premium.';
     }
@@ -82,13 +86,32 @@ class PaywallModal extends StatelessWidget {
             // Trial CTA
             ElevatedButton(
               onPressed: () async {
-                await entitlements.startTrial();
+                try {
+                  debugPrint('[PaywallModal] Starting trial...');
+                  await entitlements.startTrial();
+                  debugPrint('[PaywallModal] Trial started successfully');
 
-                // Track trial start event
-                await AnalyticsService().trackTrialStarted(trigger);
+                  // Track trial start event
+                  await AnalyticsService().trackTrialStarted(trigger);
 
-                onTrialStarted?.call();
-                navigator.pop(true); // Return true = trial started
+                  onTrialStarted?.call();
+
+                  if (navigator.mounted) {
+                    navigator.pop(true); // Return true = trial started
+                  }
+                } catch (error, stackTrace) {
+                  debugPrint('[PaywallModal] Error starting trial: $error');
+                  debugPrintStack(stackTrace: stackTrace);
+
+                  if (navigator.mounted) {
+                    ScaffoldMessenger.of(navigator.context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al iniciar prueba: $error'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,

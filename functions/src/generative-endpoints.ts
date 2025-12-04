@@ -72,7 +72,8 @@ export const OPENAI_SECRETS = [
 
 const firestore = getFirestore();
 const authClient = getAuth();
-const DAILY_AI_CAP = 100; // Increased for development/testing
+const DAILY_AI_CAP = 30; // Daily AI operations limit for free users
+const FREE_TIER_COURSE_LIMIT = 3; // Maximum active courses for free users
 
 interface UserEntitlements {
   isPremium: boolean;
@@ -129,6 +130,48 @@ async function ensurePremiumAccess(
   }
 
   throw new Error("PREMIUM_REQUIRED");
+}
+
+/**
+ * Enforces course creation limits for free tier users.
+ * Premium users can create unlimited courses.
+ * Free users are limited to FREE_TIER_COURSE_LIMIT active courses.
+ */
+async function enforceCourseLimits(
+  userId: string,
+  topic: string,
+): Promise<void> {
+  const entitlements = await getUserEntitlements(userId);
+
+  // Premium users have no limits
+  if (entitlements.isPremium || isTrialActive(entitlements.trialEndsAt)) {
+    return;
+  }
+
+  // Get user's active courses from learner_state collection
+  const userCoursesSnapshot = await firestore
+    .collection("learner_state")
+    .where("userId", "==", userId)
+    .get();
+
+  const activeCourses = new Set<string>();
+
+  userCoursesSnapshot.forEach((doc) => {
+    const data = doc.data();
+    const courseTopic = data.topic?.toString().trim().toLowerCase();
+    if (courseTopic) {
+      activeCourses.add(courseTopic);
+    }
+  });
+
+  const normalizedTopic = topic.trim().toLowerCase();
+
+  // If this is a new course (not already in active courses)
+  if (!activeCourses.has(normalizedTopic)) {
+    if (activeCourses.size >= FREE_TIER_COURSE_LIMIT) {
+      throw new Error("COURSE_LIMIT_REACHED");
+    }
+  }
 }
 
 function gateDocRef(userId: string, moduleNumber: number) {
@@ -1592,6 +1635,20 @@ export const adaptiveModuleGenerate = onRequest(
       return;
     }
 
+    // Enforce course creation limits for free tier users
+    try {
+      await enforceCourseLimits(authContext.userId, topic);
+    } catch (limitError) {
+      if (limitError instanceof Error && limitError.message === "COURSE_LIMIT_REACHED") {
+        res.status(403).json({
+          error: "COURSE_LIMIT_REACHED",
+          message: "Has alcanzado el límite de cursos gratuitos. Actualiza a premium para acceso ilimitado."
+        });
+        return;
+      }
+      throw limitError;
+    }
+
     const learnerState = await loadLearnerState(authContext.userId);
     const fallbackModuleNumber =
       Math.max(0, ...(learnerState.history.passedModules ?? []), ...(learnerState.history.failedModules ?? [])) + 1;
@@ -1978,6 +2035,49 @@ export const adaptiveBooster = onRequest(
   },
 );
 
+export const startTrial = onRequest(
+  { cors: true, timeoutSeconds: 60, memory: "256MiB" },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    try {
+      const authContext = await authenticateRequest(req, authClient);
+      if (!authContext.userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      const userId = authContext.userId;
+      const entitlements = await getUserEntitlements(userId);
+      if (entitlements.isPremium || isTrialActive(entitlements.trialEndsAt)) {
+        res.status(200).json({ trialEndsAt: entitlements.trialEndsAt });
+        return;
+      }
+
+      const trialEndsAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      await firestore.collection("users").doc(userId).set(
+        {
+          entitlements: {
+            trialEndsAt: Timestamp.fromMillis(trialEndsAt),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+        },
+        { merge: true },
+      );
+
+      res.status(200).json({ trialEndsAt });
+    } catch (error) {
+      logger.error("startTrial error:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  },
+);
+
 export const openaiUsageMetrics = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
@@ -2056,6 +2156,141 @@ export const openaiUsageMetrics = onRequest({ cors: true }, async (req, res) => 
 });
 
 /**
+ * POST /moduleQuizGenerate
+ * Generate quiz based on module lessons (on-demand, live generation)
+ * Body: { topic: string, moduleNumber: number, moduleTitle: string, lessonTitles: string[], lang: string }
+ * Returns: { quizId, questions: [...], expiresAt, policy }
+ */
+export const moduleQuizGenerate = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:module_quiz_generate`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 30,
+        windowSeconds: 300,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
+        res.status(429).json({ error: "Too many quiz generation requests" });
+        return;
+      }
+      throw limitError;
+    }
+
+    const { topic, moduleNumber, moduleTitle, lessonTitles, lang } = req.body;
+
+    // Validation
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    if (!moduleNumber || typeof moduleNumber !== "number" || moduleNumber < 1) {
+      res.status(400).json({ error: "Invalid moduleNumber" });
+      return;
+    }
+
+    if (!moduleTitle || typeof moduleTitle !== "string") {
+      res.status(400).json({ error: "moduleTitle is required" });
+      return;
+    }
+
+    if (!Array.isArray(lessonTitles) || lessonTitles.length === 0) {
+      res.status(400).json({ error: "lessonTitles array is required" });
+      return;
+    }
+
+    const language = lang === "es" ? "es" : "en";
+
+    // Generate quiz with OpenAI based on module content
+    const questions = await getOpenAI().generateModuleLessonQuiz({
+      topic: topic.trim(),
+      moduleNumber,
+      moduleTitle: moduleTitle.trim(),
+      lessonTitles: lessonTitles.map((title) => String(title).trim()),
+      lang: language,
+      userId: authContext.userId,
+    });
+
+    const quizId = getAssessment().generateQuizId();
+    const createdAt = Date.now();
+    const expiresAt = createdAt + 30 * 60 * 1000; // 30 minutes
+
+    // Store session for grading
+    await saveModuleSession({
+      quizId,
+      moduleId: `module-${moduleNumber}`,
+      moduleNumber,
+      topic: topic.trim(),
+      language,
+      createdAt,
+      expiresAt,
+      userId: authContext.userId,
+      questions: questions.map((q, idx) => ({
+        id: q.id || `gen-${Date.now()}-${idx}`,
+        question: q.question,
+        options: q.options,
+        correct_answer: q.correct_answer,
+        tags: q.tags || [],
+      })),
+    });
+
+    // Get attempt state for practice mode
+    const attemptState = await getGateAttemptState(authContext.userId, moduleNumber);
+
+    // Return questions without correct answers
+    const questionsForClient = questions.map((q) => ({
+      id: q.id,
+      text: q.question,
+      choices: q.options,
+    }));
+
+    res.status(200).json({
+      quizId,
+      moduleNumber,
+      expiresAt,
+      questions: questionsForClient,
+      policy: {
+        passingScore: 70,
+        numQuestions: questions.length,
+        practiceMode: attemptState.practiceUnlocked,
+        attempts: attemptState.attempts,
+        maxAttempts: 3,
+      },
+      practice: {
+        enabled: attemptState.practiceUnlocked,
+        attempts: attemptState.attempts,
+        maxAttempts: 3,
+      },
+    });
+
+    logger.info(`moduleQuizGenerate: quiz ${quizId} for module ${moduleNumber} by ${authContext.userId}`);
+  } catch (error) {
+    logger.error("moduleQuizGenerate error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+  },
+);
+
+/**
  * Mark a lesson as visited
  * POST /markLessonVisited
  * Body: { topic: string, moduleNumber: number, lessonIndex: number }
@@ -2067,8 +2302,12 @@ export const markLessonVisited = onRequest({ cors: true }, async (req, res) => {
   }
 
   try {
-    const userId = req.get("x-user-id");
+    // Accept both X-User-Id (from client) and x-user-id (legacy)
+    const userId = req.get("X-User-Id") || req.get("x-user-id");
     if (!userId) {
+      logger.error("markLessonVisited: No user ID in headers", {
+        headers: req.headers,
+      });
       res.status(401).json({ error: "User ID required" });
       return;
     }

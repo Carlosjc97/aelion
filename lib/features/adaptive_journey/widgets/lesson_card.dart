@@ -13,6 +13,8 @@ class LessonCard extends StatelessWidget {
     required this.moduleNumber,
     required this.courseId,
     this.isVisited = false,
+    this.isLocked = false,
+    this.allModuleLessons = const <AdaptiveLesson>[],
   });
 
   final int index;
@@ -21,30 +23,39 @@ class LessonCard extends StatelessWidget {
   final int moduleNumber;
   final String courseId;
   final bool isVisited;
+  final bool isLocked;
+  final List<AdaptiveLesson> allModuleLessons;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final backgroundColor = isVisited
-        ? EdaptiaColors.success.withValues(alpha: 0.05)
-        : theme.colorScheme.surfaceContainerHighest;
-    final borderColor = isVisited
-        ? EdaptiaColors.success.withValues(alpha: 0.6)
-        : theme.colorScheme.outline.withValues(alpha: 0.3);
+    final backgroundColor = isLocked
+        ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+        : isVisited
+            ? EdaptiaColors.success.withValues(alpha: 0.03)
+            : theme.colorScheme.surfaceContainerHighest;
+    final borderColor = isLocked
+        ? theme.colorScheme.outline.withValues(alpha: 0.2)
+        : isVisited
+            ? EdaptiaColors.success.withValues(alpha: 0.3)
+            : theme.colorScheme.outline.withValues(alpha: 0.3);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          LessonRouter.navigateToLesson(
-            context: context,
-            lesson: lesson,
-            moduleTitle: moduleTitle,
-            moduleNumber: moduleNumber,
-            lessonIndex: index,
-            courseId: courseId,
-          );
-        },
+        onTap: isLocked
+            ? null
+            : () {
+                LessonRouter.navigateToLesson(
+                  context: context,
+                  lesson: lesson,
+                  moduleTitle: moduleTitle,
+                  moduleNumber: moduleNumber,
+                  lessonIndex: index,
+                  courseId: courseId,
+                  allModuleLessons: allModuleLessons,
+                );
+              },
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(12),
@@ -62,7 +73,14 @@ class LessonCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (isVisited) ...[
+                  if (isLocked) ...[
+                    Icon(
+                      Icons.lock,
+                      color: theme.colorScheme.outline,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                  ] else if (isVisited) ...[
                     Icon(
                       Icons.check_circle,
                       color: EdaptiaColors.success,
@@ -73,12 +91,12 @@ class LessonCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'L${index + 1} - ${lesson.title}',
-                      style: theme.textTheme.titleSmall,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: isLocked
+                            ? theme.colorScheme.outline
+                            : theme.textTheme.titleSmall?.color,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Chip(
-                    label: Text(lesson.lessonType.replaceAll('_', ' ')),
                   ),
                 ],
               ),
@@ -93,19 +111,31 @@ class LessonCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    Icons.arrow_forward,
+                    isLocked
+                        ? Icons.lock_outline
+                        : isVisited
+                            ? Icons.check
+                            : Icons.arrow_forward,
                     size: 16,
-                    color: isVisited
-                        ? EdaptiaColors.success
-                        : theme.colorScheme.primary,
+                    color: isLocked
+                        ? theme.colorScheme.outline
+                        : isVisited
+                            ? EdaptiaColors.success
+                            : theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    isVisited ? 'Completada' : 'Tap to open lesson',
+                    isLocked
+                        ? 'Bloqueada — completa la lección anterior'
+                        : isVisited
+                            ? 'Completada'
+                            : 'Abrir lección',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isVisited
-                          ? EdaptiaColors.success
-                          : theme.colorScheme.primary,
+                      color: isLocked
+                          ? theme.colorScheme.outline
+                          : isVisited
+                              ? EdaptiaColors.success
+                              : theme.colorScheme.primary,
                     ),
                   ),
                 ],
