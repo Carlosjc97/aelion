@@ -20,9 +20,9 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView> {
   static final Uri _privacyPolicyUri =
-      Uri.parse('https://www.edaptia.io/privacy-policy.html');
+      Uri.parse('https://aelion-c90d2.web.app/privacy-policy.html');
   static final Uri _termsOfServiceUri =
-      Uri.parse('https://www.edaptia.io/terms-of-service.html');
+      Uri.parse('https://aelion-c90d2.web.app/terms-of-service.html');
 
   String? _currentLanguage;
   bool _isSavingLanguage = false;

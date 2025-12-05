@@ -15,9 +15,9 @@ class HelpSupportScreen extends StatefulWidget {
   static final Uri _telegramGroupUri =
       Uri.parse('https://t.me/adaptia_club');
   static final Uri _privacyUri =
-      Uri.parse('https://www.edaptia.io/privacy-policy.html');
+      Uri.parse('https://aelion-c90d2.web.app/privacy-policy.html');
   static final Uri _termsUri =
-      Uri.parse('https://www.edaptia.io/terms-of-service.html');
+      Uri.parse('https://aelion-c90d2.web.app/terms-of-service.html');
   static final Future<_SupportContext> _supportContextFuture =
       _loadSupportContext();
 
