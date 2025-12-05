@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import 'package:edaptia/core/design_system/typography.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_header_widget.dart';
 import '../widgets/lesson_takeaway_card.dart';
+import '../widgets/next_lesson_button.dart';
 
 class AppliedProjectScreen extends StatefulWidget {
   const AppliedProjectScreen({super.key, required this.config});
@@ -22,6 +24,16 @@ class _AppliedProjectScreenState extends State<AppliedProjectScreen> {
   final TextEditingController _approachController = TextEditingController();
   final TextEditingController _deliverableController = TextEditingController();
   bool _submitted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    CourseApiService.markLessonVisited(
+      topic: widget.config.courseId,
+      moduleNumber: widget.config.moduleNumber,
+      lessonIndex: widget.config.lessonIndex,
+    );
+  }
 
   @override
   void dispose() {
@@ -68,7 +80,11 @@ class _AppliedProjectScreenState extends State<AppliedProjectScreen> {
             child: Text(_submitted ? 'Proyecto enviado' : 'Enviar proyecto'),
           ),
           const SizedBox(height: 16),
-          if (_submitted) LessonTakeawayCard(takeaway: widget.config.takeaway),
+          if (_submitted) ...[
+            LessonTakeawayCard(takeaway: widget.config.takeaway),
+            const SizedBox(height: 12),
+            NextLessonButton(config: widget.config),
+          ],
         ],
       ),
     );

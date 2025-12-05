@@ -70,6 +70,46 @@ class QuizService {
     );
   }
 
+  /// Generate quiz based on module lessons (new generative endpoint)
+  static Future<PlacementQuizStart> startModuleQuizGenerate({
+    required int moduleNumber,
+    required String topic,
+    required String moduleTitle,
+    required List<String> lessonTitles,
+    String language = 'en',
+    Duration timeout = const Duration(seconds: 90),
+    int maxRetries = 1,
+  }) async {
+    if (moduleNumber < 1) {
+      throw ArgumentError('moduleNumber must be >= 1');
+    }
+    if (moduleTitle.trim().isEmpty) {
+      throw ArgumentError('moduleTitle cannot be empty');
+    }
+    if (lessonTitles.isEmpty) {
+      throw ArgumentError('lessonTitles cannot be empty');
+    }
+
+    final normalizedLanguage = normalizePlacementLanguage(language);
+    final response = await CourseApiClient.postJson(
+      uri: Uri.parse(ApiConfig.moduleQuizGenerate()),
+      body: {
+        'moduleNumber': moduleNumber,
+        'topic': topic.trim(),
+        'moduleTitle': moduleTitle.trim(),
+        'lessonTitles': lessonTitles,
+        'lang': normalizedLanguage,
+      },
+      timeout: timeout,
+      maxRetries: maxRetries,
+    );
+
+    return _parsePlacementQuizStartResponse(
+      response.body,
+      normalizedLanguage,
+    );
+  }
+
   static Future<PlacementQuizGrade> gradePlacementQuiz({
     required String quizId,
     required List<PlacementQuizAnswer> answers,

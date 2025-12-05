@@ -9,6 +9,7 @@ import 'package:edaptia/services/course_api_service.dart';
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_header_widget.dart';
 import '../widgets/lesson_takeaway_card.dart';
+import '../widgets/next_lesson_button.dart';
 import '../widgets/quiz_question_card.dart';
 
 class DiagnosticQuizScreen extends StatefulWidget {
@@ -96,10 +97,7 @@ class _DiagnosticQuizScreenState extends State<DiagnosticQuizScreen> {
             const SizedBox(height: 16),
             LessonTakeawayCard(takeaway: widget.config.takeaway),
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('Continuar'),
-            ),
+            NextLessonButton(config: widget.config),
           ],
         ],
       ),

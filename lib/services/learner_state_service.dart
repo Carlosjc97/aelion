@@ -101,6 +101,18 @@ class LearnerStateService {
     return true;
   }
 
+  /// Count total lessons visited for a specific topic.
+  int countVisitedLessons({
+    required AdaptiveLearnerState? state,
+    required String topic,
+  }) {
+    if (state == null) return 0;
+    final normalized = _normalizedTopic(topic);
+    return state.visitedLessons.entries
+        .where((entry) => entry.key.startsWith('${normalized}_') && entry.value)
+        .length;
+  }
+
   String _normalizedTopic(String topic) {
     return topic.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
   }

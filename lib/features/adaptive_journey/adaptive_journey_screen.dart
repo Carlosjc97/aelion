@@ -176,7 +176,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             ..addAll(seeds);
           _activeModuleNumber = 1;
           _module = cachedM1;
-          _hasPremium = _entitlements.isPremium;
+          _hasPremium = _entitlements.hasPremiumAccess;
           _loadingState = AdaptiveLoadingState.none;
         });
 
@@ -209,7 +209,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           ..clear()
           ..addAll(seeds);
         _activeModuleNumber = 1;
-        _hasPremium = _entitlements.isPremium;
+        _hasPremium = _entitlements.hasPremiumAccess;
         _loadingState =
             AdaptiveLoadingState.none; // ✅ UI visible inmediatamente
       });
@@ -753,7 +753,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     } catch (_) {}
     if (!mounted) return;
     setState(() {
-      _hasPremium = _entitlements.isPremium;
+      _hasPremium = _entitlements.hasPremiumAccess;
     });
   }
 

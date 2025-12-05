@@ -3,10 +3,12 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/typography.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_header_widget.dart';
 import '../widgets/lesson_takeaway_card.dart';
+import '../widgets/next_lesson_button.dart';
 import '../widgets/practice_exercise_card.dart';
 
 class GuidedPracticeScreen extends StatefulWidget {
@@ -25,6 +27,16 @@ class _GuidedPracticeScreenState extends State<GuidedPracticeScreen> {
   bool _validated = false;
   String? _feedback;
   bool _validating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    CourseApiService.markLessonVisited(
+      topic: widget.config.courseId,
+      moduleNumber: widget.config.moduleNumber,
+      lessonIndex: widget.config.lessonIndex,
+    );
+  }
 
   @override
   void dispose() {
@@ -86,6 +98,8 @@ class _GuidedPracticeScreenState extends State<GuidedPracticeScreen> {
           Text(widget.config.exampleGlobal, style: EdaptiaTypography.body),
           const SizedBox(height: 24),
           LessonTakeawayCard(takeaway: widget.config.takeaway),
+          const SizedBox(height: 12),
+          NextLessonButton(config: widget.config),
         ],
       ),
     );

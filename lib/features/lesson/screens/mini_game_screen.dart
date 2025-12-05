@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:edaptia/core/design_system/colors.dart';
 import 'package:edaptia/core/design_system/typography.dart';
 import 'package:edaptia/services/course/models.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_takeaway_card.dart';
+import '../widgets/next_lesson_button.dart';
 import '../widgets/quiz_question_card.dart';
 
 class MiniGameScreen extends StatefulWidget {
@@ -35,6 +37,11 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   @override
   void initState() {
     super.initState();
+    CourseApiService.markLessonVisited(
+      topic: widget.config.courseId,
+      moduleNumber: widget.config.moduleNumber,
+      lessonIndex: widget.config.lessonIndex,
+    );
     if (_questions.isNotEmpty) {
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (!mounted) return;
@@ -187,10 +194,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         const SizedBox(height: 20),
         LessonTakeawayCard(takeaway: widget.config.takeaway),
         const SizedBox(height: 16),
-        FilledButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          child: const Text('Cerrar'),
-        ),
+        NextLessonButton(config: widget.config),
       ],
     );
   }

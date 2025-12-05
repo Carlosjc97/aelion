@@ -14,6 +14,7 @@ import 'package:edaptia/features/settings/settings_view.dart';
 import 'package:edaptia/features/support/help_support_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
+import 'package:edaptia/dataconnect_generated/courses.dart';
 import 'package:edaptia/services/google_sign_in_helper.dart';
 import 'package:edaptia/services/learner_state_service.dart';
 import 'package:edaptia/widgets/skeleton.dart';
@@ -28,7 +29,7 @@ class HomeView extends ConsumerStatefulWidget {
   ConsumerState<HomeView> createState() => _HomeViewState();
 }
 
-enum _HomeMenuAction { settings, help, earlyAccess }
+enum _HomeMenuAction { settings, help, catalog }
 
 class _HomeViewState extends ConsumerState<HomeView> {
   final TextEditingController _searchController = TextEditingController();
@@ -38,6 +39,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   StreamSubscription<AdaptiveLearnerState?>? _learnerSubscription;
   bool _loading = false;
   bool _initializedRecommendations = false;
+  bool _englishWaitlistSubmitting = false;
   bool _englishWaitlistCompleted = false;
 
   FirebaseAuth? _safeAuth() {
@@ -117,8 +119,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
       case _HomeMenuAction.help:
         Navigator.of(context).pushNamed(HelpSupportScreen.routeName);
         break;
-      case _HomeMenuAction.earlyAccess:
-        _showEarlyAccessSheet();
+      case _HomeMenuAction.catalog:
+        Navigator.of(context).pushNamed(LessonsPage.routeName);
         break;
     }
   }
@@ -233,114 +235,80 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final userId = _safeAuth()?.currentUser?.uid;
     if (userId == null) return null;
 
-    final hasStreak = state.days > 0;
     final title = isSpanish ? 'Racha diaria' : 'Daily streak';
-    final subtitle = hasStreak
+    final subtitle = state.lastCheckIn == null
         ? (isSpanish
-            ? 'Mantén tu impulso encendido'
-            : 'Keep your momentum burning')
+            ? 'Tu primera racha comienza hoy'
+            : 'Start your first streak today')
         : (isSpanish
-            ? 'Completa una lección hoy para activarla'
-            : 'Finish a lesson today to spark it up');
+            ? 'Último check-in: ${_formatDate(state.lastCheckIn!)}'
+            : 'Last check-in: ${_formatDate(state.lastCheckIn!)}');
+    final helperText = isSpanish
+        ? 'Tu racha se actualiza automáticamente al terminar una lección o módulo.'
+        : 'Your streak updates automatically after finishing a lesson or module.';
 
-    final fireColor = hasStreak
-        ? Colors.white
-        : theme.colorScheme.outline.withValues(alpha: 0.8);
-
-    // To keep the highlight color for active streak, but without the gradient
-    final cardBackgroundColor =
-        hasStreak ? const Color(0xFF7F5CFF) : theme.colorScheme.surface;
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: cardBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            spreadRadius: 0,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: hasStreak
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : theme.colorScheme.surfaceContainerHighest,
-              border: Border.all(
-                color: hasStreak
-                    ? Colors.white.withValues(alpha: 0.4)
-                    : theme.colorScheme.outlineVariant,
-              ),
-            ),
-            child: Icon(
-              Icons.local_fire_department,
-              color: fireColor,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: hasStreak ? Colors.white : null,
-                    fontWeight: FontWeight.w600,
+                Icon(
+                  Icons.local_fire_department,
+                  color: theme.colorScheme.primary,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: hasStreak
-                        ? Colors.white70
-                        : theme.colorScheme.outline,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  '${state.days}',
+                  style: theme.textTheme.headlineSmall,
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${state.days}',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  color: hasStreak ? Colors.white : theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+            const SizedBox(height: 12),
+            if (state.loading) const LinearProgressIndicator(minHeight: 4),
+            if (state.loading) const SizedBox(height: 8),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
               ),
+            ),
+            if (state.error != null) ...[
+              const SizedBox(height: 8),
               Text(
-                isSpanish ? 'días' : 'days',
+                state.error!,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: hasStreak
-                      ? Colors.white70
-                      : theme.colorScheme.outline,
-                  fontSize: 11,
+                  color: theme.colorScheme.error,
                 ),
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final local = date.toLocal();
+    return '${local.day}/${local.month}/${local.year}';
   }
 
   void _handleRecommendationTap(String topic) {
@@ -354,11 +322,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
     unawaited(_startFlow(presetTopic: normalized));
   }
 
-  Future<bool> _notifyEnglishTechWaitlist() async {
-    if (_englishWaitlistCompleted) {
-      return true;
+  Future<void> _notifyEnglishTechWaitlist() async {
+    if (_englishWaitlistSubmitting || _englishWaitlistCompleted) {
+      return;
     }
 
+    setState(() => _englishWaitlistSubmitting = true);
     final user = _safeAuth()?.currentUser;
     final locale = Localizations.localeOf(context);
     final l10n = AppLocalizations.of(context)!;
@@ -378,122 +347,23 @@ class _HomeViewState extends ConsumerState<HomeView> {
           .collection('waitlist_english_tech')
           .add(payload);
 
-      if (!mounted) {
-        return true;
-      }
+      if (!mounted) return;
       setState(() => _englishWaitlistCompleted = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.homeEnglishNotifySuccess)),
       );
-      return true;
     } catch (error, stackTrace) {
       debugPrint('[HomeView] waitlist english tech failed: $error');
       debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeEnglishNotifyError)),
+      );
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.homeEnglishNotifyError)),
-        );
+        setState(() => _englishWaitlistSubmitting = false);
       }
-      return false;
     }
-  }
-
-  Future<void> _showEarlyAccessSheet() async {
-    if (!mounted) return;
-    await showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        bool submitting = false;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final theme = Theme.of(context);
-            final l10n = AppLocalizations.of(context)!;
-            final completed = _englishWaitlistCompleted;
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF7F5CFF), Color(0xFFB86FFF)],
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.homeEnglishComingTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.homeEnglishComingSubtitle,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: completed || submitting
-                        ? null
-                        : () async {
-                            setModalState(() => submitting = true);
-                            final success = await _notifyEnglishTechWaitlist();
-                            if (!context.mounted) return;
-                            setModalState(() => submitting = false);
-                            if (success &&
-                                Navigator.of(sheetContext).canPop()) {
-                              Navigator.of(sheetContext).pop();
-                            }
-                          },
-                    icon: submitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Icon(
-                            completed
-                                ? Icons.check_circle
-                                : Icons.notifications_active_outlined,
-                          ),
-                    label: Text(
-                      completed
-                          ? l10n.homeEnglishNotifyDone
-                          : l10n.homeEnglishNotifyCta,
-                    ),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(),
-                    child: Text(l10n.commonOk),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   Future<void> _handleSignOut() async {
@@ -543,37 +413,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
       locale.languageCode == 'es',
     );
 
-    final greetingCard = _GreetingCard(
-      greeting: greeting,
-      motivation: motivation,
-    );
-
-    final double layoutWidth = MediaQuery.sizeOf(context).width;
-    final Widget? streakWidget = streakCard;
-
-    final Widget topSection;
-    if (streakWidget != null && layoutWidth >= 720) {
-      topSection = Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(flex: 1, child: greetingCard),
-          const SizedBox(width: 16),
-          Expanded(child: streakWidget),
-        ],
-      );
-    } else {
-      topSection = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          greetingCard,
-          if (streakWidget != null) ...[
-            const SizedBox(height: 16),
-            streakWidget,
-          ],
-        ],
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
@@ -594,12 +433,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
               PopupMenuItem<_HomeMenuAction>(
-                value: _HomeMenuAction.earlyAccess,
+                value: _HomeMenuAction.catalog,
                 child: Row(
                   children: [
-                    const Icon(Icons.auto_awesome),
+                    const Icon(Icons.menu_book_outlined),
                     const SizedBox(width: 12),
-                    Text(l10n.homeEnglishComingTitle),
+                    Text(l10n.homeShortcutCourse),
                   ],
                 ),
               ),
@@ -628,7 +467,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                topSection,
+                _GreetingCard(
+                  greeting: greeting,
+                  motivation: motivation,
+                ),
                 const SizedBox(height: 16),
                 _PromptCard(
                   controller: _searchController,
@@ -638,6 +480,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   hintText: l10n.homeInputHint,
                   title: l10n.homePromptTitle,
                 ),
+                if (streakCard != null) ...[
+                  const SizedBox(height: 24),
+                  streakCard,
+                ],
                 const SizedBox(height: 24),
                 _RecommendationsSection(
                   l10n: l10n,
@@ -649,6 +495,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     userId: userId,
                   ),
                   onSelected: _handleRecommendationTap,
+                ),
+                const SizedBox(height: 24),
+                _EnglishTechCard(
+                  l10n: l10n,
+                  loading: _englishWaitlistSubmitting,
+                  completed: _englishWaitlistCompleted,
+                  onNotify: _notifyEnglishTechWaitlist,
                 ),
                 const SizedBox(height: 24),
                 if (_controller.recentOutlines.isNotEmpty) ...[
@@ -853,6 +706,54 @@ class _RecommendationError extends StatelessWidget {
   }
 }
 
+class _EnglishTechCard extends StatelessWidget {
+  const _EnglishTechCard({
+    required this.l10n,
+    required this.loading,
+    required this.completed,
+    required this.onNotify,
+  });
+
+  final AppLocalizations l10n;
+  final bool loading;
+  final bool completed;
+  final VoidCallback onNotify;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleMedium;
+    final subtitleStyle = theme.textTheme.bodySmall;
+    final buttonLabel =
+        completed ? l10n.homeEnglishNotifyDone : l10n.homeEnglishNotifyCta;
+
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.language, size: 40),
+        title: Text(l10n.homeEnglishComingTitle, style: titleStyle),
+        subtitle: Text(
+          l10n.homeEnglishComingSubtitle,
+          style: subtitleStyle,
+        ),
+        isThreeLine: true,
+        trailing: SizedBox(
+          width: 140,
+          child: FilledButton(
+            onPressed: (loading || completed) ? null : onNotify,
+            child: loading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(buttonLabel),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _GreetingCard extends StatelessWidget {
   const _GreetingCard({
     required this.greeting,
@@ -865,19 +766,7 @@ class _GreetingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            spreadRadius: 1,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -922,15 +811,8 @@ class _PromptCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            spreadRadius: 1,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.neutral),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1385,3 +1267,200 @@ class _HomeLoadingOverlay extends StatelessWidget {
   }
 }
 
+class LessonsPage extends StatefulWidget {
+  const LessonsPage({super.key});
+
+  static const routeName = '/lessons';
+
+  @override
+  State<LessonsPage> createState() => _LessonsPageState();
+}
+
+class _LessonsPageState extends State<LessonsPage> {
+  bool _initialized = false;
+  bool _loading = false;
+  String? _errorMessage;
+  GetCourseOutlineCourses? _course;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final catalogResult = await CoursesConnector.instance
+          .getCourseCatalog(language: languageCode)
+          .limit(10)
+          .execute();
+
+      final catalog = catalogResult.data.courses;
+      if (catalog.isEmpty) {
+        setState(() {
+          _course = null;
+          _errorMessage = 'No hay cursos publicados todavia.';
+        });
+        return;
+      }
+
+      final selectedSlug = catalog.first.slug;
+      final outlineResult = await CoursesConnector.instance
+          .getCourseOutline(slug: selectedSlug)
+          .execute();
+
+      final outlineCourses = outlineResult.data.courses;
+      setState(() {
+        _course = outlineCourses.isNotEmpty ? outlineCourses.first : null;
+        _errorMessage = outlineCourses.isEmpty
+            ? 'No se encontro el detalle del curso seleccionado.'
+            : null;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('[LessonsPage] Failed to load courses: $error\n$stackTrace');
+      setState(() {
+        _errorMessage = 'No se pudo cargar el catalogo.';
+        _course = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Catalogo de cursos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loading ? null : _loadData,
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _buildBody(theme),
+      ),
+    );
+  }
+
+  Widget _buildBody(ThemeData theme) {
+    if (_loading && _course == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return _ErrorView(message: _errorMessage!, onRetry: _loadData);
+    }
+
+    final course = _course;
+    if (course == null) {
+      return const Center(child: Text('Sin contenido disponible.'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          Text(course.title, style: theme.textTheme.headlineSmall),
+          if (course.subtitle?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Text(course.subtitle!, style: theme.textTheme.titleMedium),
+          ],
+          if (course.summary?.isNotEmpty == true) ...[
+            const SizedBox(height: 12),
+            Text(course.summary!, style: theme.textTheme.bodyMedium),
+          ],
+          const SizedBox(height: 20),
+          for (final module in course.modules) _ModuleTile(module: module),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message,
+                textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleTile extends StatelessWidget {
+  const _ModuleTile({required this.module});
+
+  final GetCourseOutlineCoursesModules module;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ExpansionTile(
+        key: PageStorageKey(module.id),
+        title: Text(module.title, style: theme.textTheme.titleMedium),
+        subtitle: module.summary?.isNotEmpty == true
+            ? Text(module.summary!, style: theme.textTheme.bodySmall)
+            : null,
+        children: [
+          for (final lesson in module.lessons)
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: Text(lesson.title),
+              subtitle: lesson.summary?.isNotEmpty == true
+                  ? Text(
+                      lesson.summary!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : null,
+              trailing: lesson.durationMinutes != null
+                  ? Text('${lesson.durationMinutes} min')
+                  : null,
+            ),
+        ],
+      ),
+    );
+  }
+}

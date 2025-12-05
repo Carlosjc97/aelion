@@ -394,7 +394,7 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     final entitlements = EntitlementsService();
     try {
       await entitlements.ensureLoaded();
-      if (entitlements.isPremium) {
+      if (entitlements.hasPremiumAccess) {
         return true;
       }
     } catch (error, stackTrace) {

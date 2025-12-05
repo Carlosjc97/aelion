@@ -30,7 +30,7 @@ class PaywallHelper {
     }
     if (!navigator.mounted) return false;
 
-    if (entitlements.isPremium) {
+    if (await entitlements.isPremium()) {
       return true;
     }
 

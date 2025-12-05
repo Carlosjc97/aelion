@@ -48,7 +48,7 @@ class _ModuleCardState extends State<ModuleCard> {
       );
     }
 
-    final hasPremium = entitlements.isPremium;
+    final hasPremium = entitlements.hasPremiumAccess;
     if (!hasPremium) {
       return const _ModuleAccessState(
         unlocked: false,

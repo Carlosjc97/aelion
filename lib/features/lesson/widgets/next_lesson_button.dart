@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:edaptia/features/lesson/lesson_router.dart';
 import 'package:edaptia/features/lesson/models/lesson_view_config.dart';
+import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
 
 class NextLessonButton extends StatelessWidget {
   const NextLessonButton({
@@ -30,12 +31,24 @@ class NextLessonButton extends StatelessWidget {
             allModuleLessons: config.allModuleLessons,
           );
         } else {
-          // Last lesson of module - return to adaptive journey
+          // Last lesson of module - navigate to module quiz
           Navigator.of(context).pop();
+          Navigator.of(context).pushNamed(
+            ModuleGateQuizScreen.routeName,
+            arguments: ModuleGateQuizArgs(
+              moduleNumber: config.moduleNumber,
+              topic: config.courseId,
+              language: 'es',
+              moduleTitle: config.moduleTitle,
+              lessonTitles: config.allModuleLessons
+                  .map((l) => '${l.title}: ${l.hook}')
+                  .toList(),
+            ),
+          );
         }
       },
-      icon: Icon(hasNext ? Icons.arrow_forward : Icons.check_circle),
-      label: Text(hasNext ? 'Siguiente lección' : 'Volver al recorrido'),
+      icon: Icon(hasNext ? Icons.arrow_forward : Icons.quiz),
+      label: Text(hasNext ? 'Siguiente lección' : 'Quiz del módulo'),
     );
   }
 }

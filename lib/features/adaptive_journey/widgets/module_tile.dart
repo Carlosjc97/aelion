@@ -45,25 +45,14 @@ class ModuleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor;
-    final Gradient? gradient;
-    if (tile.completed) {
-      backgroundColor = Colors.white;
-      gradient = EdaptiaColors.successGradient;
-    } else if (isActive) {
-      backgroundColor = Colors.white;
-      gradient = null;
-    } else {
-      backgroundColor = Colors.white;
-      gradient = null;
-    }
+    final Color backgroundColor = Colors.white;
     final borderColor = tile.completed
-        ? EdaptiaColors.success.withValues(alpha: 0.4)
+        ? EdaptiaColors.success.withValues(alpha: 0.5)
         : isActive
-            ? EdaptiaColors.primary.withValues(alpha: 0.4)
+            ? EdaptiaColors.primary.withValues(alpha: 0.5)
             : EdaptiaColors.border.withValues(alpha: 0.3);
     final foreground = tile.completed
-        ? Colors.white
+        ? EdaptiaColors.success
         : isLocked
             ? EdaptiaColors.textSecondary
             : EdaptiaColors.textPrimary;
@@ -87,8 +76,7 @@ class ModuleTile extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           decoration: BoxDecoration(
-            color: gradient == null ? backgroundColor : null,
-            gradient: gradient,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: borderColor,
@@ -125,14 +113,15 @@ class ModuleTile extends StatelessWidget {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.3),
+                                      color: EdaptiaColors.primary
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       'Activo',
-                                      style: EdaptiaTypography.caption
-                                          .copyWith(color: Colors.white),
+                                      style: EdaptiaTypography.caption.copyWith(
+                                        color: EdaptiaColors.primary,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -142,9 +131,7 @@ class ModuleTile extends StatelessWidget {
                             Text(
                               moduleTitle,
                               style: EdaptiaTypography.body.copyWith(
-                                color: tile.completed
-                                    ? Colors.white
-                                    : EdaptiaColors.textPrimary,
+                                color: EdaptiaColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -170,7 +157,10 @@ class ModuleTile extends StatelessWidget {
                 ),
               ),
               if (isExpanded) ...[
-                const Divider(height: 1, color: Colors.white24),
+                Divider(
+                  height: 1,
+                  color: EdaptiaColors.border.withValues(alpha: 0.2),
+                ),
                 if (isGenerating)
                   Padding(
                     padding: const EdgeInsets.all(16),

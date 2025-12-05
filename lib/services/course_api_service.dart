@@ -396,7 +396,8 @@ class CourseApiService {
     Duration timeout = const Duration(seconds: 5),
   }) async {
     try {
-      await CourseApiClient.postJson(
+      debugPrint('[CourseApiService] Marking lesson as visited: $topic M$moduleNumber L$lessonIndex');
+      final response = await CourseApiClient.postJson(
         uri: Uri.parse(ApiConfig.markLessonVisited()),
         body: {
           'topic': topic,
@@ -404,11 +405,14 @@ class CourseApiService {
           'lessonIndex': lessonIndex,
         },
         timeout: timeout,
-        maxRetries: 1,
+        maxRetries: 2, // Increased retries
       );
-    } catch (error) {
-      // Fail silently - lesson tracking is not critical
-      debugPrint('[CourseApiService] Error marking lesson as visited: $error');
+      debugPrint('[CourseApiService] Lesson marked successfully: ${response.body}');
+    } catch (error, stackTrace) {
+      // Log detailed error for debugging
+      debugPrint('[CourseApiService] ERROR marking lesson as visited: $error');
+      debugPrint('[CourseApiService] Stack trace: $stackTrace');
+      // Don't throw - tracking should not block user experience
     }
   }
 }

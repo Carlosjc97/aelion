@@ -1218,6 +1218,7 @@ export {
   fetchNextModule,
   moduleQuizStart,
   moduleQuizGrade,
+  moduleQuizGenerate,
   validateChallenge,
   outlineTweak,
   openaiUsageMetrics,
@@ -1228,5 +1229,7 @@ export {
   adaptiveEvaluateCheckpoint,
   adaptiveBooster,
   markLessonVisited,
+  startTrial,
+  verifyGooglePlayPurchase,
 } from "./generative-endpoints";
 export { cleanupAiCache } from "./maintenance";

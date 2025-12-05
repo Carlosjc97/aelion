@@ -109,6 +109,7 @@ class LessonCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
                     isLocked
@@ -124,18 +125,22 @@ class LessonCard extends StatelessWidget {
                             : theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    isLocked
-                        ? 'Bloqueada — completa la lección anterior'
-                        : isVisited
-                            ? 'Completada'
-                            : 'Abrir lección',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isLocked
-                          ? theme.colorScheme.outline
+                  Expanded(
+                    child: Text(
+                      isLocked
+                          ? 'Bloqueada - completa la lección anterior'
                           : isVisited
-                              ? EdaptiaColors.success
-                              : theme.colorScheme.primary,
+                              ? 'Completada'
+                              : 'Abrir lección',
+                      maxLines: 2,
+                      softWrap: true,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isLocked
+                            ? theme.colorScheme.outline
+                            : isVisited
+                                ? EdaptiaColors.success
+                                : theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ],

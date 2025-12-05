@@ -26,15 +26,17 @@ void main() {
 
   test('EntitlementsService - Trial unlocks everything', () async {
     final service = EntitlementsService();
+    // ignore: deprecated_member_use_from_same_package
     await service.startTrial();
 
-    expect(service.isPremium, true);
+    expect(service.hasPremiumAccess, true);
     expect(service.isModuleUnlocked('M2'), true);
     expect(service.isModuleUnlocked('M6'), true);
   });
 
   test('EntitlementsService - Trial expires after 7 days', () async {
     final service = EntitlementsService();
+    // ignore: deprecated_member_use_from_same_package
     await service.startTrial();
 
     expect(service.isInTrial, true);

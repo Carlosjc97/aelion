@@ -222,11 +222,17 @@ export function selectModuleQuestions(
   moduleId: string,
   numQuestions = 7
 ): Question[] {
-  // Filter questions by module
-  const moduleQuestions = bank.questions.filter(q => q.module === moduleId);
+  // Normalize moduleId to match question bank format
+  // "module-1" -> "M1", "module-2" -> "M2", etc.
+  const normalizedId = moduleId.replace(/^module-(\d+)$/i, (_, num) => `M${num}`);
+
+  // Filter questions by module (try both normalized and original format)
+  const moduleQuestions = bank.questions.filter(
+    q => q.module === normalizedId || q.module === moduleId
+  );
 
   if (moduleQuestions.length === 0) {
-    throw new Error(`No questions found for module: ${moduleId}`);
+    throw new Error(`No questions found for module: ${moduleId} (normalized: ${normalizedId})`);
   }
 
   // Stratify by difficulty

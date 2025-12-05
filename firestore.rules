@@ -166,6 +166,8 @@ service cloud.firestore {
         entitlements.keys().hasOnly(entitlementsAllowedKeys()) &&
         (!entitlements.keys().hasAny(['isPremium']) ||
           entitlements.isPremium is bool) &&
+        (!entitlements.keys().hasAny(['trialEndsAt']) ||
+          isTimestampValue(entitlements.trialEndsAt)) &&
         (!entitlements.keys().hasAny(['updatedAt']) ||
           isTimestampValue(entitlements.updatedAt)) &&
         (!entitlements.keys().hasAny(['source']) ||

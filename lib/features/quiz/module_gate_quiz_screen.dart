@@ -2,18 +2,22 @@ import 'package:flutter/material.dart';
 
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
-import 'package:edaptia/widgets/skeleton.dart';
+import 'package:edaptia/services/course/quiz_service.dart' as quiz_service;
 
 class ModuleGateQuizArgs {
   const ModuleGateQuizArgs({
     required this.moduleNumber,
     required this.topic,
     required this.language,
+    this.moduleTitle,
+    this.lessonTitles = const <String>[],
   });
 
   final int moduleNumber;
   final String topic;
   final String language;
+  final String? moduleTitle;
+  final List<String> lessonTitles;
 }
 
 class ModuleGateQuizScreen extends StatefulWidget {
@@ -22,6 +26,8 @@ class ModuleGateQuizScreen extends StatefulWidget {
     required this.moduleNumber,
     required this.topic,
     required this.language,
+    this.moduleTitle,
+    this.lessonTitles = const <String>[],
   });
 
   static const routeName = '/module-gate-quiz';
@@ -29,6 +35,8 @@ class ModuleGateQuizScreen extends StatefulWidget {
   final int moduleNumber;
   final String topic;
   final String language;
+  final String? moduleTitle;
+  final List<String> lessonTitles;
 
   @override
   State<ModuleGateQuizScreen> createState() => _ModuleGateQuizScreenState();
@@ -39,12 +47,17 @@ enum _GateQuizStage { loading, questions, result, error }
 class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
   _GateQuizStage _stage = _GateQuizStage.loading;
   PlacementQuizStartResponse? _session;
+  List<QuizQuestionDto>? _generatedQuestions;
   List<int?> _answers = const [];
   int _currentIndex = 0;
   bool _submitting = false;
   String? _error;
   ModuleQuizGradeResponse? _grade;
   GatePracticeState? _practice;
+  _GenerativeQuizResult? _generatedResult;
+
+  bool get _useGenerative =>
+      widget.moduleTitle != null && widget.moduleTitle!.trim().isNotEmpty;
 
   @override
   void initState() {
@@ -53,6 +66,51 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
   }
 
   Future<void> _loadQuiz() async {
+    if (_useGenerative) {
+      await _loadGenerativeQuiz();
+      return;
+    }
+    await _loadBankQuiz();
+  }
+
+  Future<void> _loadGenerativeQuiz() async {
+    setState(() {
+      _stage = _GateQuizStage.loading;
+      _error = null;
+      _generatedQuestions = null;
+      _generatedResult = null;
+      _answers = const [];
+      _currentIndex = 0;
+    });
+
+    try {
+      // Use the new generative endpoint that generates based on lesson content
+      final session = await quiz_service.QuizService.startModuleQuizGenerate(
+        moduleNumber: widget.moduleNumber,
+        topic: widget.topic,
+        moduleTitle: widget.moduleTitle!,
+        lessonTitles: widget.lessonTitles,
+        language: widget.language,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _session = session;
+        _practice = session.practice;
+        _answers = List<int?>.filled(session.questions.length, null);
+        _currentIndex = 0;
+        _stage = _GateQuizStage.questions;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString();
+        _stage = _GateQuizStage.error;
+      });
+    }
+  }
+
+  Future<void> _loadBankQuiz() async {
     setState(() {
       _stage = _GateQuizStage.loading;
       _error = null;
@@ -107,6 +165,52 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
   }
 
   Future<void> _submitQuiz() async {
+    if (_useGenerative) {
+      await _submitGenerativeQuiz();
+    } else {
+      await _submitBankQuiz();
+    }
+  }
+
+  Future<void> _submitGenerativeQuiz() async {
+    final questions = _generatedQuestions;
+    if (questions == null) return;
+
+    setState(() => _submitting = true);
+    try {
+      var correct = 0;
+      final incorrect = <String>[];
+      for (var i = 0; i < questions.length; i++) {
+        final selected = _answers[i];
+        final question = questions[i];
+        if (selected != null &&
+            selected >= 0 &&
+            selected < question.options.length &&
+            question.options[selected] == question.answer) {
+          correct++;
+        } else {
+          incorrect.add(question.question);
+        }
+      }
+      final scorePct = (correct / questions.length * 100).round();
+      final passed = scorePct >= 70;
+      if (!mounted) return;
+      setState(() {
+        _generatedResult = _GenerativeQuizResult(
+          scorePct: scorePct,
+          passed: passed,
+          incorrectQuestions: incorrect,
+        );
+        _stage = _GateQuizStage.result;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<void> _submitBankQuiz() async {
     final session = _session;
     if (session == null) return;
 
@@ -162,7 +266,9 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final title = 'Quiz módulo ${widget.moduleNumber + 1}';
+    final title = widget.moduleTitle?.isNotEmpty == true
+        ? 'Quiz ${widget.moduleTitle}'
+        : 'Quiz módulo ${widget.moduleNumber}';
 
     switch (_stage) {
       case _GateQuizStage.loading:
@@ -171,19 +277,9 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
           body: const _GateQuizSkeleton(),
         );
       case _GateQuizStage.questions:
-        final session = _session;
-        if (session == null) {
-          return _GateQuizScaffold(
-            title: title,
-            body: _GateQuizError(
-              message: l10n.quizUnknownError,
-              onRetry: _loadQuiz,
-            ),
-          );
-        }
         return _GateQuizScaffold(
           title: title,
-          body: _buildQuestionView(l10n, session),
+          body: _buildQuestionView(l10n),
         );
       case _GateQuizStage.result:
         final grade = _grade;
@@ -211,10 +307,71 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
     }
   }
 
-  Widget _buildQuestionView(
-    AppLocalizations l10n,
-    PlacementQuizStartResponse session,
-  ) {
+  Widget _buildQuestionView(AppLocalizations l10n) {
+    if (_useGenerative) {
+      final questions = _generatedQuestions ?? const <QuizQuestionDto>[];
+      if (questions.isEmpty) {
+        return _GateQuizError(
+          message: l10n.quizUnknownError,
+          onRetry: _loadQuiz,
+        );
+      }
+      final currentQuestion = questions[_currentIndex];
+      final selected = _answers[_currentIndex];
+      final isLast = _currentIndex == questions.length - 1;
+
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _GateQuizHeader(
+              moduleNumber: widget.moduleNumber,
+              currentIndex: _currentIndex,
+              total: questions.length,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              currentQuestion.question,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            ...currentQuestion.options.asMap().entries.map(
+                  (entry) => _GateChoiceTile(
+                    key: Key('gate-module-q$_currentIndex-option-${entry.key}'),
+                    label: entry.value,
+                    selected: selected == entry.key,
+                    onTap: () => _selectAnswer(entry.key),
+                  ),
+                ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed:
+                    selected == null || _submitting ? null : _nextOrSubmit,
+                child: _submitting && isLast
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(isLast ? l10n.quizSubmit : l10n.quizNext),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final session = _session;
+    if (session == null) {
+      return _GateQuizError(
+        message: l10n.quizUnknownError,
+        onRetry: _loadQuiz,
+      );
+    }
+
     final questions = session.questions;
     final currentQuestion = questions[_currentIndex];
     final selected = _answers[_currentIndex];
@@ -256,8 +413,7 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed:
-                  selected == null || _submitting ? null : _nextOrSubmit,
+              onPressed: selected == null || _submitting ? null : _nextOrSubmit,
               child: _submitting && isLast
                   ? const SizedBox(
                       width: 18,
@@ -276,6 +432,80 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
     AppLocalizations l10n,
     ModuleQuizGradeResponse grade,
   ) {
+    if (_useGenerative) {
+      final result = _generatedResult;
+      if (result == null) {
+        return _GateQuizError(
+          message: l10n.quizUnknownError,
+          onRetry: _loadQuiz,
+        );
+      }
+      final passed = result.passed;
+      final icon = passed ? Icons.check_circle : Icons.error_outline;
+      final color = passed ? Colors.green : Colors.orange;
+      final reinforcementLessons =
+          widget.lessonTitles.isEmpty ? null : widget.lessonTitles;
+
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 48),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    passed ? l10n.gateQuizPassed : l10n.gateQuizFailed,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(l10n.quizScorePercentage(result.scorePct)),
+            if (result.incorrectQuestions.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Revisa estas preguntas',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              ...result.incorrectQuestions.map(
+                (question) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text('• $question'),
+                ),
+              ),
+            ],
+            if (reinforcementLessons != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Lecciones recomendadas',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              ...reinforcementLessons.map(
+                (lesson) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text('• $lesson'),
+                ),
+              ),
+            ],
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(context).pop(passed),
+                child: Text(passed ? l10n.quizContinue : l10n.quizDone),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final passed = grade.passed;
     final icon = passed ? Icons.check_circle : Icons.error_outline;
     final color = passed ? Colors.green : Colors.orange;
@@ -298,19 +528,52 @@ class _ModuleGateQuizScreenState extends State<ModuleGateQuizScreen> {
           const SizedBox(height: 16),
           Text(l10n.quizScorePercentage(grade.scorePct)),
           if (grade.incorrectTags.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
-              l10n.gateQuizReviewTopics,
-              style: Theme.of(context).textTheme.titleMedium,
+              passed
+                  ? '¡Excelente! Aquí algunas áreas para seguir mejorando:'
+                  : 'Debes repasar estas lecciones del módulo:',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: grade.incorrectTags
-                  .map((tag) => Chip(label: Text(tag)))
-                  .toList(growable: false),
-            ),
+            const SizedBox(height: 12),
+            ...grade.incorrectTags.map((tag) {
+              // Extract lesson info from tag (e.g., "Lección 1: Variables")
+              final isLesson = tag.contains('Lección') || tag.contains('Module');
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isLesson ? Icons.school : Icons.lightbulb_outline,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          tag,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ],
           if (!passed && _practice != null) ...[
             const SizedBox(height: 16),
@@ -498,20 +761,39 @@ class _GateQuizSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Skeleton(height: 20, width: 160),
-          SizedBox(height: 16),
-          Skeleton(height: 18, width: double.infinity),
-          SizedBox(height: 8),
-          Skeleton(height: 18, width: double.infinity),
-          SizedBox(height: 8),
-          Skeleton(height: 18, width: double.infinity),
-          Spacer(),
-          Skeleton(height: 48, width: double.infinity),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 24),
+          Text(
+            'Estamos generando tu test para que puedas avanzar al siguiente nivel',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Esto demorará un poco debido a que el test se está generando en vivo basado en todo lo que aprendiste en este módulo',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Esto tomará unos segundos...',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -551,4 +833,16 @@ class _GateQuizError extends StatelessWidget {
       ),
     );
   }
+}
+
+class _GenerativeQuizResult {
+  const _GenerativeQuizResult({
+    required this.scorePct,
+    required this.passed,
+    required this.incorrectQuestions,
+  });
+
+  final int scorePct;
+  final bool passed;
+  final List<String> incorrectQuestions;
 }

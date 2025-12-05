@@ -8,6 +8,8 @@ import { defineSecret } from "firebase-functions/params";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
+import { androidpublisher } from "@googleapis/androidpublisher";
+import { GoogleAuth } from "google-auth-library";
 import * as logger from "firebase-functions/logger";
 import type {
   LearnerState,
@@ -75,9 +77,21 @@ const authClient = getAuth();
 const DAILY_AI_CAP = 30; // Daily AI operations limit for free users
 const FREE_TIER_COURSE_LIMIT = 3; // Maximum active courses for free users
 
+const GOOGLE_PLAY_SCOPE = "https://www.googleapis.com/auth/androidpublisher";
+const googlePlayAuthClient = new GoogleAuth({
+  scopes: [GOOGLE_PLAY_SCOPE],
+});
+const androidPublisherClient = androidpublisher({
+  version: "v3",
+  auth: googlePlayAuthClient,
+});
+
 interface UserEntitlements {
   isPremium: boolean;
   trialEndsAt?: Timestamp | Date;
+  subscriptionExpiresAt?: Timestamp | Date;
+  googlePlayPurchaseToken?: string;
+  googlePlayProductId?: string;
 }
 
 interface GateResult {
@@ -109,10 +123,19 @@ async function getUserEntitlements(userId: string): Promise<UserEntitlements> {
   const data = userDoc.data() ?? {};
   const entitlements = data.entitlements ?? {};
   const trial = entitlements.trialEndsAt ?? data.trialEndsAt;
+  const subscriptionExpiresAt =
+    entitlements.subscriptionExpiresAt ?? data.subscriptionExpiresAt;
+  const googlePlayPurchaseToken =
+    entitlements.googlePlayPurchaseToken ?? data.googlePlayPurchaseToken;
+  const googlePlayProductId =
+    entitlements.googlePlayProductId ?? data.googlePlayProductId;
 
   return {
     isPremium: Boolean(entitlements.isPremium ?? data.isPremium ?? false),
     trialEndsAt: trial,
+    subscriptionExpiresAt,
+    googlePlayPurchaseToken: typeof googlePlayPurchaseToken === 'string' ? googlePlayPurchaseToken : undefined,
+    googlePlayProductId: typeof googlePlayProductId === 'string' ? googlePlayProductId : undefined,
   };
 }
 
@@ -2071,6 +2094,209 @@ export const startTrial = onRequest(
       res.status(200).json({ trialEndsAt });
     } catch (error) {
       logger.error("startTrial error:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  },
+);
+
+
+export const verifyGooglePlayPurchase = onRequest(
+  { cors: true, timeoutSeconds: 30, memory: "256MiB" },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    try {
+      const authContext = await authenticateRequest(req, authClient);
+      if (!authContext.userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:verify_google_play_purchase`;
+      try {
+        await enforceRateLimit({
+          key: rateKey,
+          limit: 20,
+          windowSeconds: 300,
+          userId: authContext.userId,
+        });
+      } catch (limitError) {
+        if (limitError instanceof Error) {
+          if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+            res.status(429).json({ error: "Too many verification attempts" });
+            return;
+          }
+          if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+            res.status(429).json({ error: "Daily verification limit reached" });
+            return;
+          }
+        }
+        throw limitError;
+      }
+
+      const { purchaseToken, productId, packageName } = req.body ?? {};
+      if (
+        typeof purchaseToken !== "string" ||
+        typeof productId !== "string" ||
+        typeof packageName !== "string"
+      ) {
+        res.status(400).json({ error: "Invalid purchase payload" });
+        return;
+      }
+
+      const trimmedToken = purchaseToken.trim();
+      const trimmedProductId = productId.trim();
+      const trimmedPackageName = packageName.trim();
+
+      if (!trimmedToken || !trimmedProductId || !trimmedPackageName) {
+        res.status(400).json({ error: "Missing purchase attributes" });
+        return;
+      }
+
+      const logRef = firestore.collection("purchase_verifications").doc();
+      await logRef.set({
+        userId: authContext.userId,
+        packageName: trimmedPackageName,
+        productId: trimmedProductId,
+        purchaseTokenSuffix: trimmedToken.slice(-8),
+        createdAt: FieldValue.serverTimestamp(),
+        status: "pending",
+      });
+
+      try {
+        const response = await androidPublisherClient.purchases.subscriptions.get({
+          packageName: trimmedPackageName,
+          subscriptionId: trimmedProductId,
+          token: trimmedToken,
+        });
+
+        const subscription = response.data;
+        const expiryTimeMillis = Number(subscription.expiryTimeMillis ?? 0);
+        const paymentState =
+          typeof subscription.paymentState === "number" ? subscription.paymentState : -1;
+        const autoRenewing = subscription.autoRenewing ?? false;
+
+        if (!expiryTimeMillis) {
+          await logRef.set(
+            {
+              status: "invalid",
+              reason: "MISSING_EXPIRY",
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          res.status(400).json({ error: "Unable to determine subscription expiry" });
+          return;
+        }
+
+        if (paymentState !== 1) {
+          const pending = paymentState === 0 || paymentState === 3;
+          await logRef.set(
+            {
+              status: pending ? "pending" : "unpaid",
+              paymentState,
+              expiresAt: Timestamp.fromMillis(expiryTimeMillis),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          res.status(pending ? 202 : 403).json({
+            error: pending ? "PURCHASE_PENDING" : "PURCHASE_NOT_CHARGED",
+            paymentState,
+          });
+          return;
+        }
+
+        if (expiryTimeMillis <= Date.now()) {
+          await logRef.set(
+            {
+              status: "expired",
+              paymentState,
+              expiresAt: Timestamp.fromMillis(expiryTimeMillis),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          res.status(403).json({ error: "SUBSCRIPTION_EXPIRED" });
+          return;
+        }
+
+        await firestore
+          .collection("users")
+          .doc(authContext.userId)
+          .set(
+            {
+              entitlements: {
+                isPremium: true,
+                googlePlayPurchaseToken: trimmedToken,
+                googlePlayProductId: trimmedProductId,
+                subscriptionExpiresAt: Timestamp.fromMillis(expiryTimeMillis),
+                autoRenewing,
+                verifiedAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
+              },
+            },
+            { merge: true },
+          );
+
+        await logRef.set(
+          {
+            status: "verified",
+            paymentState,
+            autoRenewing,
+            expiresAt: Timestamp.fromMillis(expiryTimeMillis),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+
+        res.status(200).json({
+          verified: true,
+          expiresAt: expiryTimeMillis,
+          autoRenewing,
+        });
+      } catch (apiError) {
+        const statusCode = (apiError as { code?: number }).code ?? 502;
+        const errorMessage =
+          apiError instanceof Error ? apiError.message : "Google Play verification failed";
+
+        await logRef.set(
+          {
+            status: "error",
+            errorCode: statusCode,
+            errorMessage,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+
+        logger.error("verifyGooglePlayPurchase: Google API error", {
+          userId: authContext.userId,
+          productId: trimmedProductId,
+          packageName: trimmedPackageName,
+          statusCode,
+          error: errorMessage,
+        });
+
+        if (statusCode === 404 || statusCode === 410) {
+          res.status(400).json({ error: "INVALID_TOKEN" });
+          return;
+        }
+
+        if (statusCode === 401) {
+          res.status(502).json({ error: "GOOGLE_AUTH_ERROR" });
+          return;
+        }
+
+        res.status(502).json({ error: "GOOGLE_VERIFICATION_FAILED" });
+      }
+    } catch (error) {
+      logger.error("verifyGooglePlayPurchase error", error);
       res.status(500).json({
         error: error instanceof Error ? error.message : "Internal server error",
       });

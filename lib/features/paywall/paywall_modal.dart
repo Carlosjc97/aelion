@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:edaptia/services/entitlements_service.dart';
-import 'package:edaptia/services/analytics/analytics_service.dart';
 
-class PaywallModal extends StatelessWidget {
-  final String trigger; // 'post_calibration', 'module_locked', 'mock_locked', 'course_limit_reached'
+import 'package:edaptia/services/analytics/analytics_service.dart';
+import 'package:edaptia/services/entitlements_service.dart';
+import 'package:edaptia/services/google_play_billing_service.dart';
+
+class PaywallModal extends StatefulWidget {
+  final String trigger;
   final VoidCallback? onTrialStarted;
   final VoidCallback? onDismissed;
 
@@ -14,133 +16,125 @@ class PaywallModal extends StatelessWidget {
     this.onDismissed,
   });
 
+  @override
+  State<PaywallModal> createState() => _PaywallModalState();
+}
+
+class _PaywallModalState extends State<PaywallModal> {
+  static const double _priceUsd = 9.99;
+  final EntitlementsService _entitlements = EntitlementsService();
+
+  bool _isProcessingPurchase = false;
+  bool _isRestoringPurchases = false;
+
   String get _title {
-    switch (trigger) {
+    switch (widget.trigger) {
       case 'post_calibration':
-        return 'Desbloquear plan completo';
+        return 'Desbloquea tu plan completo';
       case 'module_locked':
-        return 'Continuar con Premium';
-      case 'mock_locked':
-        return 'Acceder a examen de práctica';
+        return 'Accede a todos los modulos';
       case 'course_limit_reached':
-        return 'Toma los cursos que quieras';
+        return 'Cursos ilimitados con Premium';
       default:
-        return 'Acceder a Premium';
+        return 'Suscripcion Premium';
     }
   }
 
   String get _subtitle {
-    switch (trigger) {
+    switch (widget.trigger) {
       case 'post_calibration':
-        return 'Completa los 6 módulos y domina tu nueva habilidad.';
+        return 'Obtiene los 6 modulos personalizados y seguimiento en tiempo real.';
       case 'module_locked':
-        return 'Desbloquea M2-M6 generados para tu plan personalizado.';
-      case 'mock_locked':
-        return 'Practica con casos reales antes de tu entrevista.';
+        return 'Activa los modulos 2 al 6 y avanza sin bloqueos.';
       case 'course_limit_reached':
-        return 'Has alcanzado el límite de 3 cursos gratuitos. Accede a cursos ilimitados por solo \$9.99/mes.';
+        return 'Tu biblioteca no tiene limites con Premium por solo \$9.99 USD/mes.';
       default:
-        return 'Accede a todo el contenido premium.';
+        return 'Todo el contenido avanzado, sin limites diarios de IA.';
     }
   }
 
+  List<String> get _benefits => const <String>[
+        'Cursos ilimitados y modulos avanzados',
+        'Sin limite diario de IA ni colas',
+        'Actualizaciones semanales y retos exclusivos',
+        'Soporte prioritario y progreso sincronizado',
+      ];
+
   @override
   Widget build(BuildContext context) {
-    final entitlements = EntitlementsService();
     final navigator = Navigator.of(context);
+    final theme = Theme.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Lock icon
-            Icon(Icons.lock_outline, size: 64, color: Colors.purple),
-            SizedBox(height: 16),
-
-            // Title
+            Icon(Icons.workspace_premium_outlined, size: 64, color: theme.primaryColor),
+            const SizedBox(height: 16),
             Text(
               _title,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 8),
-
-            // Subtitle
+            const SizedBox(height: 8),
             Text(
               _subtitle,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 16, color: theme.textTheme.bodySmall?.color),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24),
-
-            // Benefits
-            _buildBenefit('Acceso a los 6 módulos completos'),
-            _buildBenefit('Mock exam de práctica'),
-            _buildBenefit('Cheat sheet PDF descargable'),
-            _buildBenefit('Progreso guardado automáticamente'),
-            SizedBox(height: 24),
-
-            // Trial CTA
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  debugPrint('[PaywallModal] Starting trial...');
-                  await entitlements.startTrial();
-                  debugPrint('[PaywallModal] Trial started successfully');
-
-                  // Track trial start event
-                  await AnalyticsService().trackTrialStarted(trigger);
-
-                  onTrialStarted?.call();
-
-                  if (navigator.mounted) {
-                    navigator.pop(true); // Return true = trial started
-                  }
-                } catch (error, stackTrace) {
-                  debugPrint('[PaywallModal] Error starting trial: $error');
-                  debugPrintStack(stackTrace: stackTrace);
-
-                  if (navigator.mounted) {
-                    ScaffoldMessenger.of(navigator.context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error al iniciar prueba: $error'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Empezar prueba gratis (7 días)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+            const SizedBox(height: 16),
+            Text(
+              'Suscripcion mensual auto-renovable por \$${_priceUsd.toStringAsFixed(2)} USD',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 12),
-
-            // Cancel
+            const SizedBox(height: 16),
+            for (final benefit in _benefits) _buildBenefit(benefit),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isProcessingPurchase ? null : _handlePurchase,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: _isProcessingPurchase
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text(
+                      'Suscribirse por \$9.99/mes',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: (_isProcessingPurchase || _isRestoringPurchases) ? null : _handleRestore,
+              child: _isRestoringPurchases
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Restaurar compras'),
+            ),
+            const SizedBox(height: 4),
             TextButton(
               onPressed: () {
-                onDismissed?.call();
+                widget.onDismissed?.call();
                 navigator.pop(false);
               },
-              child: const Text('Tal vez después'),
+              child: const Text('Tal vez despues'),
             ),
-            SizedBox(height: 8),
-
-            // Fine print
-            Text(
-              'Sin tarjeta requerida • Cancela cuando quieras',
+            const SizedBox(height: 8),
+            const Text(
+              'Los pagos se procesan a traves de Google Play. Cancela cuando quieras en la app de Google Play.',
               style: TextStyle(fontSize: 12, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
@@ -150,16 +144,70 @@ class PaywallModal extends StatelessWidget {
     );
   }
 
+  Future<void> _handlePurchase() async {
+    setState(() => _isProcessingPurchase = true);
+    try {
+      final success = await _entitlements.purchasePremium();
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      if (success) {
+        await AnalyticsService().trackPurchaseCompleted(
+          plan: 'edaptia_premium_monthly',
+          priceUsd: _priceUsd,
+        );
+        widget.onTrialStarted?.call();
+        navigator.pop(true);
+      } else {
+        _showMessage('Compra cancelada.');
+      }
+    } on PurchaseException catch (error) {
+      _showMessage(error.message, isError: true);
+    } catch (error) {
+      _showMessage('Error al procesar la compra: $error', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPurchase = false);
+      }
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    setState(() => _isRestoringPurchases = true);
+    try {
+      await _entitlements.restorePurchases();
+      if (!mounted) return;
+      _showMessage('Compras restauradas correctamente.');
+    } on PurchaseException catch (error) {
+      _showMessage(error.message, isError: true);
+    } catch (error) {
+      _showMessage('Error al restaurar compras: $error', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isRestoringPurchases = false);
+      }
+    }
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : null,
+      ),
+    );
+  }
+
   Widget _buildBenefit(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(Icons.check_circle, color: Colors.green, size: 20),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(text, style: TextStyle(fontSize: 14)),
-          ),
+          const Icon(Icons.check_circle, color: Colors.green, size: 20),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );

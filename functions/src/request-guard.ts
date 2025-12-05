@@ -102,6 +102,10 @@ export async function enforceRateLimit(options: {
   });
 
   if (userId && userDailyCap && userDailyCap > 0) {
+    const hasPremium = await userHasActiveSubscription(userId);
+    if (hasPremium) {
+      return;
+    }
     await enforceDailyUserLimit(userId, userDailyCap);
   }
 }
@@ -118,6 +122,72 @@ export function resolveRateLimitKey(req: Request, userId?: string): string {
 
   const ip = req.ip || req.socket.remoteAddress || "unknown";
   return `ip_${ip}`;
+}
+
+async function userHasActiveSubscription(userId: string): Promise<boolean> {
+  try {
+    const snapshot = await firestore.collection('users').doc(userId).get();
+    if (!snapshot.exists) {
+      return false;
+    }
+    const data = snapshot.data() ?? {};
+    const entitlements = data.entitlements ?? {};
+    const expiresAt = firstValidTimestamp([
+      entitlements.subscriptionExpiresAt,
+      data.subscriptionExpiresAt,
+    ]);
+    const trialExpiresAt = firstValidTimestamp([
+      entitlements.trialEndsAt,
+      data.trialEndsAt,
+    ]);
+    const premiumFlag = entitlements.isPremium === true || data.isPremium === true;
+
+    if (premiumFlag && (!expiresAt || expiresAt > Date.now())) {
+      return true;
+    }
+    if (expiresAt && expiresAt > Date.now()) {
+      return true;
+    }
+    if (trialExpiresAt && trialExpiresAt > Date.now()) {
+      return true;
+    }
+  } catch (error) {
+    logger.warn('Failed to resolve premium status for rate limit', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return false;
+}
+
+function firstValidTimestamp(candidates: Array<unknown>): number | null {
+  for (const candidate of candidates) {
+    const millis = extractMillis(candidate);
+    if (millis !== null && !Number.isNaN(millis)) {
+      return millis;
+    }
+  }
+  return null;
+}
+
+function extractMillis(value: unknown): number | null {
+  if (!value) {
+    return null;
+  }
+  if (value instanceof Timestamp) {
+    return value.toMillis();
+  }
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
 }
 
 async function enforceDailyUserLimit(userId: string, cap: number): Promise<void> {
