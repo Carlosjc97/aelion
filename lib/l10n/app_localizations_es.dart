@@ -201,7 +201,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get assessmentResultStrengthsTitle => 'Fortalezas';
 
   @override
-  String get assessmentResultGapsTitle => 'Ãreas de mejora';
+  String get assessmentResultGapsTitle => 'Áreas de mejora';
 
   @override
   String get assessmentResultPlanTitle => 'Plan sugerido';
