@@ -213,7 +213,7 @@ ListTile(
   subtitle: const Text('Cómo manejamos tus datos'),
   trailing: const Icon(Icons.open_in_new, size: 20),
   onTap: () async {
-    final url = Uri.parse('https://edaptia.io/privacy-policy');
+    final url = Uri.parse('https://www.edaptia.io/privacy-policy.html');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
@@ -232,7 +232,7 @@ ListTile(
   subtitle: const Text('Condiciones de uso de la app'),
   trailing: const Icon(Icons.open_in_new, size: 20),
   onTap: () async {
-    final url = Uri.parse('https://edaptia.io/terms-of-service');
+    final url = Uri.parse('https://www.edaptia.io/terms-of-service.html');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
@@ -577,26 +577,33 @@ flutter test
 
 ## Hosting Privacy Policy
 
-**Option 1: Firebase Hosting (Recommended)**
-```bash
-# In project root
-mkdir -p public
-cp assets/privacy_policy.html public/
-cp assets/privacy_policy_en.html public/
+**HOSTING: Cloudflare Pages (www.edaptia.io)**
 
-# Deploy
-firebase deploy --only hosting
+The user has Cloudflare configured for www.edaptia.io
+
+**Deployment Steps:**
+
+1. **Create a `cloudflare` directory in project root:**
+```bash
+mkdir -p cloudflare
+cp assets/privacy_policy.html cloudflare/privacy-policy.html
+cp assets/privacy_policy_en.html cloudflare/privacy-policy-en.html
 ```
 
-**Option 2: GitHub Pages**
-Create a `gh-pages` branch with the HTML files
+2. **The user will deploy to Cloudflare Pages manually**
+   - Files will be accessible at:
+   - https://www.edaptia.io/privacy-policy.html
+   - https://www.edaptia.io/privacy-policy-en.html
 
-**Option 3: edaptia.io Website**
-Upload to your existing website at:
-- https://edaptia.io/privacy-policy
-- https://edaptia.io/terms-of-service
+3. **URLs to use in app:**
+   - Spanish: `https://www.edaptia.io/privacy-policy.html`
+   - English: `https://www.edaptia.io/privacy-policy-en.html`
+   - Terms: `https://www.edaptia.io/terms-of-service.html` (to be created later)
 
-**Update URLs in settings_view.dart accordingly.**
+**IMPORTANT:** In settings_view.dart, use the .html extension:
+```dart
+final url = Uri.parse('https://www.edaptia.io/privacy-policy.html');
+```
 
 ---
 
