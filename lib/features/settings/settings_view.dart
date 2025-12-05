@@ -19,6 +19,11 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
+  static final Uri _privacyPolicyUri =
+      Uri.parse('https://www.edaptia.io/privacy-policy.html');
+  static final Uri _termsOfServiceUri =
+      Uri.parse('https://www.edaptia.io/terms-of-service.html');
+
   String? _currentLanguage;
   bool _isSavingLanguage = false;
   Future<bool>? _premiumStatusFuture;
@@ -64,6 +69,7 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Future<void> _handleSubscriptionTap() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final hasPremium = await _entitlements.isPremium();
       if (!mounted) return;
@@ -83,7 +89,7 @@ class _SettingsViewState extends State<SettingsView> {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        _showSnackBar('No pudimos abrir Google Play.');
+        _showSnackBar(l10n.helpLaunchError);
       }
     } catch (error) {
       _showSnackBar('Error al verificar tu suscripcion: $error');
@@ -118,6 +124,14 @@ class _SettingsViewState extends State<SettingsView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> _openExternalLink(Uri url, AppLocalizations l10n) async {
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      _showSnackBar(l10n.helpLaunchError);
+    }
   }
 
   @override
@@ -209,6 +223,36 @@ class _SettingsViewState extends State<SettingsView> {
                   title: const Text('Restaurar compras'),
                   subtitle: const Text('Si ya compraste Premium en otro dispositivo'),
                   onTap: _handleRestorePurchases,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: Text(l10n.settingsPrivacyPolicy),
+                  subtitle: Text(
+                    l10n.settingsPrivacyPolicySubtitle,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  trailing: const Icon(Icons.open_in_new, size: 20),
+                  onTap: () => _openExternalLink(_privacyPolicyUri, l10n),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.gavel_outlined),
+                  title: Text(l10n.settingsTermsOfService),
+                  subtitle: Text(
+                    l10n.settingsTermsOfServiceSubtitle,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  trailing: const Icon(Icons.open_in_new, size: 20),
+                  onTap: () => _openExternalLink(_termsOfServiceUri, l10n),
                 ),
               ],
             ),

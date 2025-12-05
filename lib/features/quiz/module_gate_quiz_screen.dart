@@ -641,6 +641,7 @@ class _GatePracticeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final attemptsUsed = practice.attempts.clamp(0, practice.maxAttempts);
     final attemptsLabel = l10n.gatePracticeAttempts(
       attemptsUsed,
@@ -762,6 +763,7 @@ class _GateQuizSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -779,7 +781,7 @@ class _GateQuizSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Esto demorará un poco debido a que el test se está generando en vivo basado en todo lo que aprendiste en este módulo',
+            'Esto demorarA? un poco debido a que el test se estA? generando en vivo basado en todo lo que aprendiste en este mA3dulo',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -787,12 +789,43 @@ class _GateQuizSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Esto tomará unos segundos...',
+            'Esto tomarA? unos segundos...',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
             ),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.amber.shade200),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 18,
+                  color: Colors.amber.shade900,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.aiDisclaimerQuiz,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.amber.shade900,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

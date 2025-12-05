@@ -885,6 +885,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpSupportSubtitle => 'FAQs, contact, and policies';
 
   @override
+  String get settingsPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get settingsPrivacyPolicySubtitle => 'How we handle your data';
+
+  @override
+  String get settingsTermsOfService => 'Terms of Service';
+
+  @override
+  String get settingsTermsOfServiceSubtitle => 'App usage conditions';
+
+  @override
   String helpEmailSubject(String appName, String version, String device) {
     return '$appName support request (v$version Â· $device)';
   }
@@ -1080,4 +1092,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpFaqAnswer12 =>
       'Open Help & Support and tap Email support or Report bug; we attach the module, version, and device info so the team can respond quickly.';
+
+  @override
+  String get aiDisclaimerGenerating =>
+      'AI-generated content. May contain inaccuracies.';
+
+  @override
+  String get aiDisclaimerQuiz =>
+      'Questions are AI-generated based on module content.';
+
+  @override
+  String get aiDisclaimerPowered => 'AI-powered personalized content';
+
+  @override
+  String get aiAboutTitle => 'About AI';
+
+  @override
+  String get aiAboutSubtitle => 'How we use artificial intelligence';
+
+  @override
+  String get aiAboutDialogIntro =>
+      'We use OpenAI GPT-4 to personalize your plans, modules, and quizzes in real time.';
+
+  @override
+  String get aiAboutDialogBulletModules =>
+      '- Modules and lessons adapt to your skill level.';
+
+  @override
+  String get aiAboutDialogBulletQuizzes =>
+      '- Quizzes, checkpoints, and boosters are generated from your progress.';
+
+  @override
+  String get aiAboutDialogBulletRecommendations =>
+      '- Recommendations reflect your goals and recent activity.';
+
+  @override
+  String get aiAboutDialogTransparencyTitle => 'Transparency';
+
+  @override
+  String get aiAboutDialogTransparencyBody =>
+      'AI may still produce mistakes or bias even with guardrails. Double-check important information.';
+
+  @override
+  String get aiAboutDialogPrivacyTitle => 'Privacy';
+
+  @override
+  String get aiAboutDialogPrivacyBody =>
+      'Your prompts are sent securely to OpenAI for processing. We do not sell your data, and you can email privacy@edaptia.io to export or delete your account.';
 }

@@ -14,8 +14,10 @@ class HelpSupportScreen extends StatefulWidget {
       Uri.parse('https://t.me/edaptia_news');
   static final Uri _telegramGroupUri =
       Uri.parse('https://t.me/adaptia_club');
-  static final Uri _privacyUri = Uri.parse('https://adaptia.io/privacy');
-  static final Uri _termsUri = Uri.parse('https://adaptia.io/terms');
+  static final Uri _privacyUri =
+      Uri.parse('https://www.edaptia.io/privacy-policy.html');
+  static final Uri _termsUri =
+      Uri.parse('https://www.edaptia.io/terms-of-service.html');
   static final Future<_SupportContext> _supportContextFuture =
       _loadSupportContext();
 
@@ -209,6 +211,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     ),
                     const Divider(height: 1),
                     ListTile(
+                      leading: const Icon(Icons.auto_awesome),
+                      title: Text(l10n.aiAboutTitle),
+                      subtitle: Text(l10n.aiAboutSubtitle),
+                      onTap: () => _showAiDialog(context, l10n),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
                       leading: const Icon(Icons.privacy_tip_outlined),
                       title: Text(l10n.helpPrivacyPolicy),
                       onTap: () =>
@@ -359,6 +368,62 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       },
     );
   }
+
+  Future<void> _showAiDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(l10n.aiAboutTitle),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.aiAboutDialogIntro,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                Text(l10n.aiAboutDialogBulletModules),
+                Text(l10n.aiAboutDialogBulletQuizzes),
+                Text(l10n.aiAboutDialogBulletRecommendations),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.aiAboutDialogTransparencyTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.aiAboutDialogTransparencyBody),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.aiAboutDialogPrivacyTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.aiAboutDialogPrivacyBody),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonOk),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _SupportContext {
@@ -430,6 +495,7 @@ class _SectionHeader extends StatelessWidget {
       ),
     );
   }
+
 }
 
 

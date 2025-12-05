@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -14,6 +15,8 @@ typedef VerificationRequestFn = Future<VerificationResponse> Function(
   Map<String, dynamic> body,
   Set<int> additionalSuccessCodes,
 );
+
+const bool _isFlutterTest = bool.fromEnvironment('FLUTTER_TEST');
 
 class GooglePlayBillingService {
   GooglePlayBillingService._internal({
@@ -434,17 +437,24 @@ class GooglePlayBillingService {
       {String? reason, Map<String, Object?>? data}) {
     debugPrint(
         '[GooglePlayBillingService] ${reason ?? 'error'}: $error');
+    if (_isFlutterTest || kDebugMode) {
+      return;
+    }
     try {
+      if (Firebase.apps.isEmpty) {
+        return;
+      }
       FirebaseCrashlytics.instance.recordError(
         error,
         stackTrace,
         reason: reason,
         information: (data?.entries
                 .map<Object>((entry) => '${entry.key}: ${entry.value}')
-                .toList()) ?? const <Object>[],
+                .toList()) ??
+            const <Object>[],
       );
     } catch (_) {
-      // ignore
+      // Crashlytics may be disabled during tests; ignore logging failures.
     }
   }
 }

@@ -1628,6 +1628,30 @@ abstract class AppLocalizations {
   /// **'FAQs, contact, and policies'**
   String get settingsHelpSupportSubtitle;
 
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsPrivacyPolicySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How we handle your data'**
+  String get settingsPrivacyPolicySubtitle;
+
+  /// No description provided for @settingsTermsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsTermsOfService;
+
+  /// No description provided for @settingsTermsOfServiceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App usage conditions'**
+  String get settingsTermsOfServiceSubtitle;
+
   /// No description provided for @helpEmailSubject.
   ///
   /// In en, this message translates to:
@@ -1946,6 +1970,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Help & Support and tap Email support or Report bug; we attach the module, version, and device info so the team can respond quickly.'**
   String get helpFaqAnswer12;
+
+  /// No description provided for @aiDisclaimerGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-generated content. May contain inaccuracies.'**
+  String get aiDisclaimerGenerating;
+
+  /// No description provided for @aiDisclaimerQuiz.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions are AI-generated based on module content.'**
+  String get aiDisclaimerQuiz;
+
+  /// No description provided for @aiDisclaimerPowered.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-powered personalized content'**
+  String get aiDisclaimerPowered;
+
+  /// No description provided for @aiAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About AI'**
+  String get aiAboutTitle;
+
+  /// No description provided for @aiAboutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How we use artificial intelligence'**
+  String get aiAboutSubtitle;
+
+  /// No description provided for @aiAboutDialogIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'We use OpenAI GPT-4 to personalize your plans, modules, and quizzes in real time.'**
+  String get aiAboutDialogIntro;
+
+  /// No description provided for @aiAboutDialogBulletModules.
+  ///
+  /// In en, this message translates to:
+  /// **'- Modules and lessons adapt to your skill level.'**
+  String get aiAboutDialogBulletModules;
+
+  /// No description provided for @aiAboutDialogBulletQuizzes.
+  ///
+  /// In en, this message translates to:
+  /// **'- Quizzes, checkpoints, and boosters are generated from your progress.'**
+  String get aiAboutDialogBulletQuizzes;
+
+  /// No description provided for @aiAboutDialogBulletRecommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'- Recommendations reflect your goals and recent activity.'**
+  String get aiAboutDialogBulletRecommendations;
+
+  /// No description provided for @aiAboutDialogTransparencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparency'**
+  String get aiAboutDialogTransparencyTitle;
+
+  /// No description provided for @aiAboutDialogTransparencyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'AI may still produce mistakes or bias even with guardrails. Double-check important information.'**
+  String get aiAboutDialogTransparencyBody;
+
+  /// No description provided for @aiAboutDialogPrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get aiAboutDialogPrivacyTitle;
+
+  /// No description provided for @aiAboutDialogPrivacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your prompts are sent securely to OpenAI for processing. We do not sell your data, and you can email privacy@edaptia.io to export or delete your account.'**
+  String get aiAboutDialogPrivacyBody;
 }
 
 class _AppLocalizationsDelegate

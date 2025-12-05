@@ -891,6 +891,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsHelpSupportSubtitle => 'Preguntas, contacto y políticas';
 
   @override
+  String get settingsPrivacyPolicy => 'Pol?tica de Privacidad';
+
+  @override
+  String get settingsPrivacyPolicySubtitle => 'C?mo manejamos tus datos';
+
+  @override
+  String get settingsTermsOfService => 'T?rminos de Servicio';
+
+  @override
+  String get settingsTermsOfServiceSubtitle => 'Condiciones de uso de la app';
+
+  @override
   String helpEmailSubject(String appName, String version, String device) {
     return 'Solicitud de soporte $appName (v$version Â· $device)';
   }
@@ -1089,4 +1101,51 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get helpFaqAnswer12 =>
       'En Ayuda y soporte toca Enviar correo o Reportar bug; adjuntamos el módulo, la versión y el dispositivo para responder rápido.';
+
+  @override
+  String get aiDisclaimerGenerating =>
+      'Contenido generado con IA. Puede contener imprecisiones.';
+
+  @override
+  String get aiDisclaimerQuiz =>
+      'Las preguntas son generadas con IA basandose en el contenido del modulo.';
+
+  @override
+  String get aiDisclaimerPowered => 'Contenido personalizado con IA';
+
+  @override
+  String get aiAboutTitle => 'Acerca de la IA';
+
+  @override
+  String get aiAboutSubtitle => 'Como usamos inteligencia artificial';
+
+  @override
+  String get aiAboutDialogIntro =>
+      'Usamos modelos de OpenAI (GPT-4) para personalizar tus planes y quizzes en tiempo real.';
+
+  @override
+  String get aiAboutDialogBulletModules =>
+      '- Generamos modulos y lecciones adaptadas a tu nivel.';
+
+  @override
+  String get aiAboutDialogBulletQuizzes =>
+      '- Creamos quizzes, checkpoints y refuerzos basados en tu progreso.';
+
+  @override
+  String get aiAboutDialogBulletRecommendations =>
+      '- Recomendamos contenido segun tus objetivos y uso reciente.';
+
+  @override
+  String get aiAboutDialogTransparencyTitle => 'Transparencia';
+
+  @override
+  String get aiAboutDialogTransparencyBody =>
+      'Aunque revisamos los prompts y resultados, la IA puede equivocarse o mostrar sesgos. Verifica cualquier informacion critica.';
+
+  @override
+  String get aiAboutDialogPrivacyTitle => 'Privacidad';
+
+  @override
+  String get aiAboutDialogPrivacyBody =>
+      'Tus entradas se envian de forma segura a OpenAI para procesarlas. No vendemos tus datos y puedes escribir a privacy@edaptia.io para exportar o eliminar tu cuenta.';
 }

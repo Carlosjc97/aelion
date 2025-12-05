@@ -803,7 +803,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     }
 
     if (_timeline.isEmpty) {
-      return _buildLoadingView();
+      return _buildLoadingView(l10n);
     }
 
     return Stack(
@@ -812,7 +812,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         Positioned.fill(
           child: Container(
             color: Colors.white.withValues(alpha: 0.85),
-            child: _buildLoadingView(),
+            child: _buildLoadingView(l10n),
           ),
         ),
       ],
@@ -847,7 +847,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     );
   }
 
-  Widget _buildLoadingView() {
+  Widget _buildLoadingView(AppLocalizations l10n) {
     String message;
     String? subtitle;
     final topic = widget.topic;
@@ -880,9 +880,43 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-      child: AdaptiveLoadingIndicator(
-        message: message,
-        subtitle: subtitle,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AdaptiveLoadingIndicator(
+            message: message,
+            subtitle: subtitle,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 20,
+                  color: Colors.blue.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.aiDisclaimerGenerating,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

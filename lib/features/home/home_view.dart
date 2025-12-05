@@ -637,6 +637,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   onSubmit: () => _startFlow(),
                   hintText: l10n.homeInputHint,
                   title: l10n.homePromptTitle,
+                  aiDisclaimer: l10n.aiDisclaimerPowered,
                 ),
                 const SizedBox(height: 24),
                 _RecommendationsSection(
@@ -906,6 +907,7 @@ class _PromptCard extends StatelessWidget {
     required this.onSubmit,
     required this.hintText,
     required this.title,
+    required this.aiDisclaimer,
   });
 
   final TextEditingController controller;
@@ -914,6 +916,7 @@ class _PromptCard extends StatelessWidget {
   final VoidCallback onSubmit;
   final String hintText;
   final String title;
+  final String aiDisclaimer;
 
   @override
   Widget build(BuildContext context) {
@@ -951,6 +954,26 @@ class _PromptCard extends StatelessWidget {
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.search),
             ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                size: 16,
+                color: Colors.grey.shade600,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  aiDisclaimer,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           SizedBox(
