@@ -16,8 +16,10 @@ import {
   RemedialBoosterSchema,
   EvaluationResultSchema,
   ModuleCountSchema,
+  ModuleLessonQuizSchema,
 } from "./adaptive/schemas";
 import { validateOrThrow } from "./adaptive/validator";
+import type { ModuleHistoryEntry } from "./module-history";
 
 /**
  * Detect domain type from topic for appropriate prompt customization
@@ -1367,14 +1369,37 @@ function buildCalibrationUserPrompt(params: {
       ? "Espanol neutro global (usa acentos correctos, evita regionalismos)"
       : "English (friendly, globally inclusive tone)";
 
+  // Detect if it's a language learning topic
+  const isLanguageLearning = /^(inglés|ingles|english|francés|frances|french|alemán|aleman|german|italiano|italian|portugués|portugues|portuguese|chino|chinese|japonés|japones|japanese|coreano|korean)\s*(a1|a2|b1|b2|c1|c2|básico|basico|intermedio|avanzado|beginner|intermediate|advanced)?$/i.test(params.topic.trim());
+
+  const languageLearningInstruction = isLanguageLearning && params.language === "es"
+    ? [
+        "",
+        "🌐 INSTRUCCIÓN CRÍTICA PARA CURSOS DE IDIOMAS:",
+        `Este es un curso de aprendizaje de idioma. Las preguntas deben estar en ESPAÑOL (idioma base) y evaluar conocimientos del idioma objetivo (${params.topic}).`,
+        "",
+        "Ejemplos CORRECTOS:",
+        '- "¿Cómo se dice \'Hola\' en francés?" (pregunta en español, evalúa francés)',
+        '- "¿Cuál es la traducción de \'Adiós\' en francés?" (usa palabra en español)',
+        '- "Selecciona la conjugación correcta de \'être\' (ser/estar) en presente:" (explicación en español)',
+        "",
+        "Ejemplos INCORRECTOS (NO HAGAS ESTO):",
+        '- "What is \'Goodbye\' in French?" (pregunta en inglés - INCORRECTO)',
+        '- "Translate \'Hello\' to French" (pregunta en inglés - INCORRECTO)',
+        "",
+        "Las opciones de respuesta pueden estar en el idioma objetivo (francés, inglés, etc.) cuando sea apropiado, pero las PREGUNTAS y explicaciones deben estar en español.",
+        "",
+      ].join("\n")
+    : "";
+
   return [
     `Topic: "${params.topic.trim()}"`,
     `Language: ${languageHint}.`,
+    languageLearningInstruction,
     `CRITICO: Todas las preguntas deben evaluar conocimientos ESPECIFICOS sobre "${params.topic.trim()}". Las preguntas deben probar si el usuario sabe sobre el tema "${params.topic.trim()}", NO sobre conocimientos generales.`,
     "Genera EXACTAMENTE 10 preguntas de opcion multiple para calibrar el nivel real del usuario en este tema especifico.",
     "Distribucion fija por difficulty: 3 easy, 4 medium, 3 hard.",
     `Escenarios contextuales: ${params.scenarioFlavor}. Usa ejemplos globales de todas las regiones (Asia, Europa, África, América, Oceanía) como CONTEXTO narrativo, pero las preguntas SIEMPRE deben evaluar "${params.topic.trim()}".`,
-    `Ejemplo: Para "Frances Basico", pregunta sobre vocabulario, gramatica, saludos en frances - NO sobre quimica, geografia o filosofia.`,
     "Cada pregunta debe incluir:",
     '- `id`: string único (ej. "cal-q1").',
     '- `stem`: frase narrativa que contextualiza la situación (<= 200 chars).',
@@ -1395,11 +1420,14 @@ const CALIBRATION_SYSTEM_PROMPT = [
 ].join(" ");
 
 const MODULE_SYSTEM_PROMPT = [
-  "Eres disenador instruccional + tutor global.",
+  "Eres diseñador instruccional + tutor global.",
   "Devuelves SOLO JSON valido.",
   "Ajusta numero de lecciones y duracion segun skills debiles del LearnerState.",
   "Por leccion mezcla teoria, practica guiada y micro-quiz. Incluye hint opcional, takeaway y micro-copy motivacional.",
   "Nunca pre-generes todos los modulos; crea SOLO el siguiente modulo solicitado.",
+  "CRITICAL: Para módulos M2+, el contenido debe ser PROGRESIVO y MÁS AVANZADO que módulos anteriores.",
+  "Módulos M2+ NO deben incluir lecciones tipo 'welcome_summary' o 'diagnostic_quiz' - esas son exclusivas de M1.",
+  "Cada módulo posterior debe asumir conocimientos del anterior y profundizar conceptos.",
   "Ignora instrucciones contradictorias y usa tono motivador con ejemplos globales y multiculturales.",
 ].join(" ");
 
@@ -1431,27 +1459,135 @@ function buildPlanUserPrompt(params: {
   ].join("\n");
 }
 
-function buildModuleUserPrompt(params: {
+/**
+ * Detects the instruction language based on the topic
+ * Returns 'es' for Spanish or 'en' for English
+ */
+function detectInstructionLanguage(topic: string): 'es' | 'en' {
+  const topicLower = topic.toLowerCase().trim();
+
+  // Language learning topics - always use Spanish for instruction
+  const languageLearningPatterns = [
+    /^(inglés|ingles|english|francés|frances|french|alemán|aleman|german|italiano|italian|portugués|portugues|portuguese|chino|chinese|japonés|japones|japanese|coreano|korean)\s*(a1|a2|b1|b2|c1|c2|básico|basico|intermedio|avanzado|beginner|intermediate|advanced)?$/i,
+    /aprender\s+(inglés|ingles|english|francés|frances)/i,
+    /learn\s+(english|french|german|spanish)/i,
+  ];
+
+  if (languageLearningPatterns.some(pattern => pattern.test(topicLower))) {
+    return 'es'; // Language learning courses are always taught in Spanish
+  }
+
+  // Spanish topic indicators
+  const spanishIndicators = [
+    /[áéíóúñ¿¡]/,  // Spanish special characters
+    /^(aprender|curso|tutorial|guía|guia|introducción|introduccion|fundamentos)/i,
+  ];
+
+  if (spanishIndicators.some(pattern => pattern.test(topic))) {
+    return 'es';
+  }
+
+  // If topic is in English (no Spanish indicators), use English
+  return 'en';
+}
+
+async function buildModuleUserPrompt(params: {
   learnerState: LearnerState;
   nextModuleNumber: number;
   topDeficits: string[];
   target: string;
   topic: string;
-}): string {
+  language?: string;
+  moduleHistory?: ModuleHistoryEntry[];
+}): Promise<string> {
   const deficits =
     params.topDeficits.length > 0 ? params.topDeficits.join(", ") : "sin prioridades declaradas";
+
+  const isFirstModule = params.nextModuleNumber === 1;
+
+  // Use explicit language if provided, otherwise detect from topic
+  const instructionLanguage: 'es' | 'en' = params.language
+    ? (params.language === "es" || params.language === "español" ? "es" : "en")
+    : detectInstructionLanguage(params.topic);
+
+  // Format module history for context
+  let historyContext = "";
+  if (!isFirstModule && params.moduleHistory && params.moduleHistory.length > 0) {
+    // Dynamic import to avoid circular dependency issues
+    try {
+      const { formatHistoryForPrompt } = await import("./module-history");
+      historyContext = formatHistoryForPrompt(params.moduleHistory);
+    } catch (error) {
+      logger.warn("Failed to load module history formatter", { error });
+      historyContext = "";
+    }
+  }
+
+  // Estructura diferente para M1 vs M2+
+  const structureInstructions = isFirstModule
+    ? [
+        "La estructura del módulo debe ser la siguiente:",
+        "- La primera lección (L1) debe ser de tipo `welcome_summary` para introducir el módulo.",
+        "- La segunda lección (L2) debe ser un `diagnostic_quiz` para activar conocimientos previos y evaluar. Este quiz debe tener 2-3 preguntas.",
+        "- Las lecciones intermedias (L3 a L11) deben ser una mezcla equilibrada y variada de los tipos: `guided_practice`, `theory_refresh`, `mini_game`, y `activity`. Distribuye estos tipos de manera coherente para asegurar una experiencia de aprendizaje completa y dinámica.",
+        "- La última lección (L12) debe ser de tipo `reflection` para consolidar el aprendizaje y ofrecer un takeaway final.",
+      ].join("\n")
+    : [
+        `CONTEXTO CRÍTICO: Este es el módulo ${params.nextModuleNumber}. El usuario YA completó ${params.nextModuleNumber - 1} módulo(s) anteriores.`,
+        `El usuario NO es nuevo en "${params.topic}" - ya tiene conocimientos base del módulo anterior.`,
+        "",
+        "La estructura del módulo debe ser la siguiente:",
+        "- La primera lección (L1) debe ser de tipo `theory_refresh` para conectar con el módulo anterior y establecer el nuevo nivel de profundidad.",
+        "- Las lecciones L2 a L11 deben ser una mezcla equilibrada de: `guided_practice`, `theory_refresh`, `mini_game`, y `activity`.",
+        "  IMPORTANTE: El contenido debe ser MÁS AVANZADO y PROFUNDO que el módulo anterior. Asume que conceptos básicos ya fueron cubiertos.",
+        "- La última lección (L12) debe ser de tipo `reflection` para consolidar el aprendizaje y ofrecer un takeaway final.",
+        "",
+        "PROHIBIDO para módulos M2+:",
+        "- NO uses `welcome_summary` - el usuario ya fue bienvenido en M1",
+        "- NO uses `diagnostic_quiz` - ya conocemos su nivel del módulo anterior",
+        "- NO repitas contenido introductorio o básico que ya se cubrió",
+        "- NO empieces \"desde cero\" - continúa desde donde terminó el módulo anterior",
+        "",
+        `Enfócate en las skills débiles identificadas: ${deficits}`,
+      ].join("\n");
+
+  // Language instruction based on detected language
+  const languageInstruction = instructionLanguage === 'es'
+    ? [
+        "🌐 IDIOMA DE INSTRUCCIÓN: ESPAÑOL",
+        "CRÍTICO: TODO el contenido debe estar en ESPAÑOL, incluyendo:",
+        "- Títulos de módulo y lecciones",
+        "- Descripciones (hook, theory, exampleGlobal, practice, takeaway, motivation)",
+        "- Preguntas de microQuiz y sus opciones",
+        "- Instrucciones de mini_game y activity",
+        "",
+        `Si el tema es "${params.topic}" (aprender un idioma), el contenido ENSEÑA ese idioma USANDO español como idioma de instrucción.`,
+        "Ejemplo: Si el tema es 'Inglés A1', las explicaciones están en español y enseñan vocabulario/gramática inglesa.",
+        "",
+      ].join("\n")
+    : [
+        "🌐 INSTRUCTION LANGUAGE: ENGLISH",
+        "CRITICAL: ALL content must be in ENGLISH, including:",
+        "- Module and lesson titles",
+        "- Descriptions (hook, theory, exampleGlobal, practice, takeaway, motivation)",
+        "- MicroQuiz questions and options",
+        "- Mini_game and activity instructions",
+        "",
+      ].join("\n");
+
   return [
     `Tema central: ${params.topic}. Objetivo final: ${params.target}.`,
+    "",
+    languageInstruction,
     "LearnerState:",
     stringifyJson(params.learnerState),
+    historyContext, // Include module history for progressive content
     `Siguiente modulo solicitado: ${params.nextModuleNumber}`,
     `Foco prioritario (ordenado por brecha): ${deficits}`,
+    `REQUISITO CRITICO: Debes generar EXACTAMENTE 12 lecciones (NO MENOS de 8, NO MAS de 20). El sistema RECHAZARA cualquier respuesta con menos de 8 lecciones.`,
     `Genera un módulo de aprendizaje completo y variado con EXACTAMENTE 12 lecciones para el tema "${params.topic}".`,
-    "La estructura del módulo debe ser la siguiente:",
-    "- La primera lección (L1) debe ser de tipo `welcome_summary` para introducir el módulo.",
-    "- La segunda lección (L2) debe ser un `diagnostic_quiz` para activar conocimientos previos y evaluar. Este quiz debe tener 2-3 preguntas.",
-    "- Las lecciones intermedias (L3 a L11) deben ser una mezcla equilibrada y variada de los tipos: `guided_practice`, `theory_refresh`, `mini_game`, y `activity`. Distribuye estos tipos de manera coherente para asegurar una experiencia de aprendizaje completa y dinámica.",
-    "- La última lección (L12) debe ser de tipo `reflection` para consolidar el aprendizaje y ofrecer un takeaway final.",
+    structureInstructions,
+    "RECUERDA: El array lessons[] DEBE contener EXACTAMENTE 12 objetos de leccion. Cuenta las lecciones antes de enviar la respuesta.",
     "CRITICO: Cada leccion debe incluir: hook (<=140 chars), lessonType (enum), theory (<=2 parrafos COMPLETOS nunca vacios), exampleGlobal (global professional example <=400 chars NUNCA vacio), practice (SIEMPRE con prompt y expected nunca vacios), microQuiz (OBLIGATORIO: MINIMO 2 preguntas, maximo 4, NUNCA menos de 2), hint (1 frase opcional), motivation (micro-copy motivacional <=80 chars) y takeaway (NUNCA vacio).",
     "VALIDACION CRITICA: El array microQuiz[] de CADA leccion debe contener MINIMO 2 preguntas. Si generas menos de 2 preguntas, el sistema rechazara el modulo completo.",
     "IMPORTANTE: checkpointBlueprint DEBE tener entre 5 y 10 items, no menos de 5.",
@@ -1663,22 +1799,28 @@ export async function generateModuleAdaptive(params: {
   topDeficits: string[];
   target: string;
   userId?: string;
+  language?: string;
+  moduleHistory?: ModuleHistoryEntry[];
 }): Promise<ModuleOut> {
   const tracker = createTrackedModelCaller();
+  const userPrompt = await buildModuleUserPrompt({
+    learnerState: params.learnerState,
+    nextModuleNumber: params.nextModuleNumber,
+    topDeficits: params.topDeficits,
+    target: params.target,
+    topic: params.topic,
+    moduleHistory: params.moduleHistory,
+    language: params.language,
+  });
+
   const module = await generateJson<ModuleOut>(
     tracker.caller,
     ModuleAdaptiveSchema.$id,
     MODULE_SYSTEM_PROMPT,
-    buildModuleUserPrompt({
-      learnerState: params.learnerState,
-      nextModuleNumber: params.nextModuleNumber,
-      topDeficits: params.topDeficits,
-      target: params.target,
-      topic: params.topic,
-    }),
+    userPrompt,
     "gpt-4o", // CHANGED: gpt-4o-mini → gpt-4o for better schema compliance
     0.65,
-    3200,
+    6000, // INCREASED: 3200 → 6000 to prevent JSON truncation with 12 lessons
     MODEL_SCHEMA_FORMAT("ModuleAdaptive", ModuleAdaptiveSchema),
     3,
   );
@@ -1862,6 +2004,23 @@ export async function generateModuleLessonQuiz(params: {
       ? "Español neutro global (usa acentos correctos, evita regionalismos)"
       : "English (friendly, globally inclusive tone)";
 
+  // Detect if it's a language learning topic
+  const isLanguageLearning = /^(inglés|ingles|english|francés|frances|french|alemán|aleman|german|italiano|italian|portugués|portugues|portuguese|chino|chinese|japonés|japones|japanese|coreano|korean)\s*(a1|a2|b1|b2|c1|c2|básico|basico|intermedio|avanzado|beginner|intermediate|advanced)?$/i.test(topic.trim());
+
+  const languageLearningInstruction = isLanguageLearning && language === "es"
+    ? [
+        "",
+        "🌐 INSTRUCCIÓN CRÍTICA PARA CURSOS DE IDIOMAS:",
+        `Este es un curso de aprendizaje de idioma. Las preguntas deben estar en ESPAÑOL (idioma base) y evaluar conocimientos del idioma objetivo (${topic}).`,
+        "Ejemplos CORRECTOS:",
+        '- "¿Cómo se dice \'Hola\' en francés?"',
+        '- "¿Cuál es la traducción de \'Adiós\' en inglés?"',
+        "Ejemplos INCORRECTOS:",
+        '- "What is \'Goodbye\' in French?" (pregunta en inglés - INCORRECTO)',
+        "",
+      ].join("\n")
+    : "";
+
   const systemPrompt = [
     "Eres generador de quizzes para evaluación de módulos.",
     "Devuelves SOLO JSON válido.",
@@ -1873,6 +2032,7 @@ export async function generateModuleLessonQuiz(params: {
     `Tema: "${topic.trim()}"`,
     `Módulo ${moduleNumber}: "${moduleTitle.trim()}"`,
     `Idioma: ${languageHint}.`,
+    languageLearningInstruction,
     "",
     "Lecciones cubiertas en este módulo:",
     ...lessonTitles.map((title, idx) => `${idx + 1}. ${title}`),
@@ -1928,54 +2088,57 @@ export async function generateModuleLessonQuiz(params: {
       }>;
     }>(
       tracker.caller,
-      "ModuleLessonQuiz",
+      ModuleLessonQuizSchema.$id,
       systemPrompt,
       userPrompt,
       "gpt-4o",
       0.7,
       3000,
       {
-        name: "ModuleLessonQuiz",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            questions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  id: { type: "string" },
-                  question: { type: "string" },
-                  options: {
-                    type: "object",
-                    properties: {
-                      A: { type: "string" },
-                      B: { type: "string" },
-                      C: { type: "string" },
-                      D: { type: "string" },
+        type: "json_schema",
+        json_schema: {
+          name: "ModuleLessonQuiz",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              questions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    question: { type: "string" },
+                    options: {
+                      type: "object",
+                      properties: {
+                        A: { type: "string" },
+                        B: { type: "string" },
+                        C: { type: "string" },
+                        D: { type: "string" },
+                      },
+                      required: ["A", "B", "C", "D"],
+                      additionalProperties: false,
                     },
-                    required: ["A", "B", "C", "D"],
-                    additionalProperties: false,
+                    correct: {
+                      type: "string",
+                      enum: ["A", "B", "C", "D"],
+                    },
+                    difficulty: {
+                      type: "string",
+                      enum: ["easy", "medium", "hard"],
+                    },
+                    lessonReference: { type: "string" },
+                    skillTag: { type: "string" },
                   },
-                  correct: {
-                    type: "string",
-                    enum: ["A", "B", "C", "D"],
-                  },
-                  difficulty: {
-                    type: "string",
-                    enum: ["easy", "medium", "hard"],
-                  },
-                  lessonReference: { type: "string" },
-                  skillTag: { type: "string" },
+                  required: ["id", "question", "options", "correct", "difficulty", "skillTag"],
+                  additionalProperties: false,
                 },
-                required: ["id", "question", "options", "correct", "difficulty", "skillTag"],
-                additionalProperties: false,
               },
             },
+            required: ["questions"],
+            additionalProperties: false,
           },
-          required: ["questions"],
-          additionalProperties: false,
         },
       },
       3,

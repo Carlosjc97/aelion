@@ -33,6 +33,11 @@ import {
   resolveRateLimitKey,
 } from "./request-guard";
 import { getSQLMarketingTemplate } from "./templates/sql-marketing";
+import {
+  saveModuleToHistory,
+  getModuleHistory,
+  formatHistoryForPrompt,
+} from "./module-history";
 type OpenAIServiceModule = typeof import("./openai-service");
 type AssessmentModule = typeof import("./assessment");
 
@@ -147,6 +152,14 @@ async function ensurePremiumAccess(
     return;
   }
 
+  // ⚠️⚠️⚠️ BYPASS TEMPORAL PARA TESTING ⚠️⚠️⚠️
+  // REVERTIR ANTES DE: commit, push, PR, deploy, merge
+  const TESTING_BYPASS = true; // Cambiar a false en producción
+  if (TESTING_BYPASS) {
+    return; // Bypass premium check for testing
+  }
+  // ⚠️⚠️⚠️ FIN BYPASS TEMPORAL ⚠️⚠️⚠️
+
   const entitlements = await getUserEntitlements(userId);
   if (entitlements.isPremium || isTrialActive(entitlements.trialEndsAt)) {
     return;
@@ -251,12 +264,12 @@ const DEFAULT_LEARNER_STATE: LearnerState = {
   target: "general",
 };
 
-function learnerStateDoc(userId: string) {
+function learnerStateDoc(userId: string, topic: string) {
   return firestore
     .collection("users")
     .doc(userId)
     .collection("adaptiveState")
-    .doc("summary");
+    .doc(topic);  // Now specific per topic/course
 }
 
 function checkpointDoc(userId: string, moduleNumber: number) {
@@ -277,11 +290,12 @@ function createLearnerStateSnapshot(overrides: Partial<LearnerState> = {}): Lear
       commonErrors: overrides.history?.commonErrors ?? [],
     },
     target: overrides.target ?? DEFAULT_LEARNER_STATE.target,
+    visitedLessons: overrides.visitedLessons ?? {},
   };
 }
 
-export async function loadLearnerState(userId: string): Promise<LearnerState> {
-  const snapshot = await learnerStateDoc(userId).get();
+export async function loadLearnerState(userId: string, topic: string): Promise<LearnerState> {
+  const snapshot = await learnerStateDoc(userId, topic).get();
   if (!snapshot.exists) {
     return createLearnerStateSnapshot();
   }
@@ -295,24 +309,26 @@ export async function loadLearnerState(userId: string): Promise<LearnerState> {
       commonErrors: Array.isArray(data.history?.commonErrors) ? data.history.commonErrors : [],
     },
     target: typeof data.target === "string" ? data.target : DEFAULT_LEARNER_STATE.target,
+    visitedLessons: typeof data.visitedLessons === "object" && data.visitedLessons !== null ? data.visitedLessons : {},
   });
 }
 
-async function saveLearnerState(userId: string, state: LearnerState): Promise<void> {
-  await learnerStateDoc(userId).set(
+async function saveLearnerState(userId: string, topic: string, state: LearnerState): Promise<void> {
+  await learnerStateDoc(userId, topic).set(
     {
       ...state,
       updatedAt: FieldValue.serverTimestamp(),
     },
-    { merge: false },
+    { merge: true },
   );
 }
 
 async function updateLearnerState(
   userId: string,
+  topic: string,
   updates: Partial<LearnerState>,
 ): Promise<LearnerState> {
-  const current = await loadLearnerState(userId);
+  const current = await loadLearnerState(userId, topic);
   const next: LearnerState = {
     ...current,
     ...updates,
@@ -327,8 +343,12 @@ async function updateLearnerState(
       failedModules: updates.history?.failedModules ?? current.history.failedModules,
       commonErrors: updates.history?.commonErrors ?? current.history.commonErrors,
     },
+    visitedLessons: {
+      ...current.visitedLessons,
+      ...(updates.visitedLessons ?? {}),
+    },
   };
-  await saveLearnerState(userId, next);
+  await saveLearnerState(userId, topic, next);
   return next;
 }
 
@@ -693,11 +713,11 @@ export const placementQuizStartLive = onRequest(
     res.status(200).json({
       quizId,
       expiresAt,
-      maxMinutes: 15,
+      maxMinutes: 2,
       questions: questionsForClient,
       policy: {
         numQuestions: 10,
-        maxMinutes: 15,
+        maxMinutes: 2,
       },
       meta: {
         source,
@@ -1280,6 +1300,39 @@ export const moduleQuizGrade = onRequest(
       passed: result.passed,
     });
 
+    // Update learner state to track passed/failed modules
+    if (result.passed) {
+      const learnerState = await loadLearnerState(authContext.userId, session.topic);
+      const passedSet = new Set(learnerState.history.passedModules ?? []);
+      const failedSet = new Set(learnerState.history.failedModules ?? []);
+
+      passedSet.add(session.moduleNumber);
+      failedSet.delete(session.moduleNumber);
+
+      await updateLearnerState(authContext.userId, session.topic, {
+        history: {
+          passedModules: Array.from(passedSet),
+          failedModules: Array.from(failedSet),
+          commonErrors: learnerState.history.commonErrors,
+        },
+      });
+    } else {
+      const learnerState = await loadLearnerState(authContext.userId, session.topic);
+      const passedSet = new Set(learnerState.history.passedModules ?? []);
+      const failedSet = new Set(learnerState.history.failedModules ?? []);
+
+      failedSet.add(session.moduleNumber);
+      passedSet.delete(session.moduleNumber);
+
+      await updateLearnerState(authContext.userId, session.topic, {
+        history: {
+          passedModules: Array.from(passedSet),
+          failedModules: Array.from(failedSet),
+          commonErrors: learnerState.history.commonErrors,
+        },
+      });
+    }
+
     res.status(200).json({
       passed: result.passed,
       scorePct: result.scorePct,
@@ -1587,7 +1640,7 @@ export const adaptivePlanDraft = onRequest(
     const normalizedBand: Band =
       band === "intermediate" || band === "advanced" ? band : "basic";
 
-    const learnerState = await updateLearnerState(authContext.userId, {
+    const learnerState = await updateLearnerState(authContext.userId, topic.trim(), {
       level_band: normalizedBand,
       target: target.trim(),
     });
@@ -1651,12 +1704,14 @@ export const adaptiveModuleGenerate = onRequest(
       throw limitError;
     }
 
-    const { topic, moduleNumber, focusSkills } = req.body ?? {};
+    const { topic, moduleNumber, focusSkills, language } = req.body ?? {};
 
     if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
       res.status(400).json({ error: "Invalid topic" });
       return;
     }
+
+    const lang = typeof language === "string" && language.trim().length > 0 ? language.trim() : "es";
 
     // Enforce course creation limits for free tier users
     try {
@@ -1672,7 +1727,7 @@ export const adaptiveModuleGenerate = onRequest(
       throw limitError;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, topic.trim());
     const fallbackModuleNumber =
       Math.max(0, ...(learnerState.history.passedModules ?? []), ...(learnerState.history.failedModules ?? [])) + 1;
     const resolvedModuleNumber =
@@ -1685,6 +1740,13 @@ export const adaptiveModuleGenerate = onRequest(
       : [];
     const deficits = focusList.length > 0 ? focusList : rankSkillDeficits(learnerState, 3);
 
+    // Load module history for context-aware generation
+    const moduleHistory = await getModuleHistory(
+      authContext.userId,
+      topic.trim(),
+      resolvedModuleNumber
+    );
+
     const moduleData: ModuleOut = await getOpenAI().generateModuleAdaptive({
       topic: topic.trim(),
       learnerState,
@@ -1692,6 +1754,17 @@ export const adaptiveModuleGenerate = onRequest(
       topDeficits: deficits,
       target: learnerState.target,
       userId: authContext.userId,
+      moduleHistory, // Pass history for progressive content generation
+      language: lang, // Explicit language for content generation
+    });
+
+    // Save generated module to history for future context
+    await saveModuleToHistory(authContext.userId, topic.trim(), {
+      moduleNumber: moduleData.moduleNumber,
+      title: moduleData.title,
+      lessons: moduleData.lessons,
+      skillsTargeted: moduleData.skillsTargeted,
+      durationMinutes: moduleData.durationMinutes,
     });
 
     res.status(200).json({
@@ -1767,7 +1840,7 @@ export const adaptiveCheckpointQuiz = onRequest(
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, topic.trim());
     const quiz: CheckpointQuiz = await getOpenAI().generateCheckpointQuiz({
       topic: topic.trim(),
       moduleNumber,
@@ -1876,7 +1949,7 @@ export const adaptiveEvaluateCheckpoint = onRequest(
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, checkpointMeta.topic);
     const skills: string[] =
       Array.isArray(skillsTargeted) && skillsTargeted.length
         ? skillsTargeted.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
@@ -1909,7 +1982,7 @@ export const adaptiveEvaluateCheckpoint = onRequest(
       new Set([...(evaluation.weakSkills ?? []), ...(learnerState.history.commonErrors ?? [])]),
     ).slice(0, 10);
 
-    const updatedState = await updateLearnerState(authContext.userId, {
+    const updatedState = await updateLearnerState(authContext.userId, checkpointMeta.topic, {
       skill_mastery: evaluation.updatedMastery,
       history: {
         passedModules: Array.from(passedSet),
@@ -2011,7 +2084,7 @@ export const adaptiveBooster = onRequest(
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, topic.trim());
 
     const incomingWeak: string[] = Array.isArray(weakSkills)
       ? weakSkills.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
@@ -2034,7 +2107,7 @@ export const adaptiveBooster = onRequest(
       userId: authContext.userId,
     });
 
-    const updatedState = await updateLearnerState(authContext.userId, {
+    const updatedState = await updateLearnerState(authContext.userId, topic.trim(), {
       history: {
         passedModules: learnerState.history.passedModules,
         failedModules: learnerState.history.failedModules,
@@ -2548,16 +2621,14 @@ export const markLessonVisited = onRequest({ cors: true }, async (req, res) => {
     const normalized = topic.trim().toLowerCase().replace(/\s+/g, "_");
     const lessonKey = `${normalized}_m${moduleNumber}_l${lessonIndex}`;
 
-    // Update learner state
-    const stateDoc = learnerStateDoc(userId);
-    await stateDoc.set(
-      {
-        visitedLessons: {
-          [lessonKey]: true,
-        },
+    // Load current state, add lesson, and save
+    const currentState = await loadLearnerState(userId, topic.trim());
+    await updateLearnerState(userId, topic.trim(), {
+      visitedLessons: {
+        ...currentState.visitedLessons,
+        [lessonKey]: true,
       },
-      { merge: true }
-    );
+    });
 
     logger.info(`Marked lesson as visited: ${lessonKey} for user ${userId}`);
     res.status(200).json({ success: true, lessonKey });

@@ -8,6 +8,10 @@ import 'package:edaptia/services/api_config.dart';
 import 'package:edaptia/services/course/course_api_client.dart';
 import 'package:edaptia/services/google_play_billing_service.dart';
 
+// ⚠️ BETA MODE: Todos los usuarios tienen acceso premium gratis
+// TODO: Cambiar a false antes de lanzar en producción
+const bool _isBetaMode = true;
+
 class EntitlementsService {
   EntitlementsService._internal() {
     _billingService.premiumStatusStream.listen((isPremium) {
@@ -29,7 +33,11 @@ class EntitlementsService {
   DateTime? _subscriptionExpiresAt;
   final GooglePlayBillingService _billingService = GooglePlayBillingService();
 
-  bool get hasPremiumAccess => _isPremium || isInTrial;
+  bool get hasPremiumAccess {
+    // Durante beta, todos tienen acceso premium gratis
+    if (_isBetaMode) return true;
+    return _isPremium || isInTrial;
+  }
 
   Future<bool> isPremium() async {
     final firestoreStatus = await _checkFirestorePremium();

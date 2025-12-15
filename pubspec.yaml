@@ -2,7 +2,7 @@ name: edaptia
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+4
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -44,11 +44,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:
-    sdk:  flutter  
+    sdk:  flutter
   firebase_auth_mocks: ^0.15.1
   firebase_core_platform_interface: ^6.0.1
   flutter_lints: ^6.0.0
   mocktail: ^1.0.3
+  flutter_launcher_icons: ^0.13.1
 flutter:
   uses-material-design: true
   generate: true
@@ -58,5 +59,16 @@ flutter:
     - assets/home/course.png
     - assets/home/language.png
     - assets/home/problem.png
+    - assets/privacy-policy.html
+    - assets/privacy-policy-en.html
+    - assets/terms-of-service.html
+    - assets/logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/logo.png"
+  adaptive_icon_background: "#1e293b"
+  adaptive_icon_foreground: "assets/logo.png"
 
 runs-on: [self-hosted, windows]

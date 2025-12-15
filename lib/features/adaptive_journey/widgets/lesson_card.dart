@@ -72,6 +72,7 @@ class LessonCard extends StatelessWidget {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (isLocked) ...[
                     Icon(
@@ -96,6 +97,37 @@ class LessonCard extends StatelessWidget {
                             ? theme.colorScheme.outline
                             : theme.textTheme.titleSmall?.color,
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Duration indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _estimateDuration(lesson),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -150,5 +182,37 @@ class LessonCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Estimates lesson duration based on content
+  String _estimateDuration(AdaptiveLesson lesson) {
+    // Base duration: 1 minute
+    int totalMinutes = 1;
+
+    // Add time for theory (reading)
+    if (lesson.theory.isNotEmpty) {
+      final wordCount = lesson.theory.split(' ').length;
+      totalMinutes += (wordCount / 200).ceil(); // ~200 words per minute
+    }
+
+    // Add time for examples
+    if (lesson.exampleGlobal.isNotEmpty) {
+      totalMinutes += 1;
+    }
+
+    // Add time for practice
+    if (lesson.practice.prompt.isNotEmpty) {
+      totalMinutes += 1;
+    }
+
+    // Add time for micro quiz
+    if (lesson.microQuiz.isNotEmpty) {
+      totalMinutes += 1;
+    }
+
+    // Cap at reasonable range (1-8 minutes)
+    totalMinutes = totalMinutes.clamp(1, 8);
+
+    return '${totalMinutes}min';
   }
 }

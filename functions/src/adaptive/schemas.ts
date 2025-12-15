@@ -432,6 +432,44 @@ export const ModuleCountSchema = {
   },
 } as const;
 
+export const ModuleLessonQuizSchema = {
+  $id: "https://aelion.ai/schemas/ModuleLessonQuiz.json",
+  type: "object",
+  additionalProperties: false,
+  required: ["questions"],
+  properties: {
+    questions: {
+      type: "array",
+      minItems: 7,
+      maxItems: 10,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "question", "options", "correct", "difficulty", "skillTag"],
+        properties: {
+          id: { type: "string", minLength: 1, maxLength: 32 },
+          question: { type: "string", minLength: 1, maxLength: 320 },
+          options: {
+            type: "object",
+            additionalProperties: false,
+            required: ["A", "B", "C", "D"],
+            properties: {
+              A: { type: "string", minLength: 1, maxLength: 240 },
+              B: { type: "string", minLength: 1, maxLength: 240 },
+              C: { type: "string", minLength: 1, maxLength: 240 },
+              D: { type: "string", minLength: 1, maxLength: 240 },
+            },
+          },
+          correct: { type: "string", enum: ["A", "B", "C", "D"] },
+          difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+          lessonReference: { type: "string", minLength: 1, maxLength: 200 },
+          skillTag: { type: "string", minLength: 1, maxLength: 80 },
+        },
+      },
+    },
+  },
+} as const;
+
 export const ALL_SCHEMAS = [
   CalibrationQuizSchema,
   AdaptivePlanDraftSchema,
@@ -440,4 +478,5 @@ export const ALL_SCHEMAS = [
   EvaluationResultSchema,
   RemedialBoosterSchema,
   ModuleCountSchema,
+  ModuleLessonQuizSchema,
 ];

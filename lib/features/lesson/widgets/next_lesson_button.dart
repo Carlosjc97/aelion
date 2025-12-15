@@ -1,10 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:edaptia/features/lesson/lesson_router.dart';
 import 'package:edaptia/features/lesson/models/lesson_view_config.dart';
 import 'package:edaptia/features/quiz/module_gate_quiz_screen.dart';
+import 'package:edaptia/providers/streak_provider.dart';
 
-class NextLessonButton extends StatelessWidget {
+class NextLessonButton extends ConsumerWidget {
   const NextLessonButton({
     super.key,
     required this.config,
@@ -13,11 +16,17 @@ class NextLessonButton extends StatelessWidget {
   final LessonViewConfig config;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasNext = config.hasNextLesson;
     final nextLesson = config.nextLesson;
     return FilledButton.icon(
       onPressed: () {
+        // Increment daily streak when completing a lesson
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+        if (userId != null) {
+          ref.read(streakProvider.notifier).checkIn(userId, silent: true);
+        }
+
         if (hasNext && nextLesson != null) {
           // Pop current lesson first, then navigate to next
           Navigator.of(context).pop();

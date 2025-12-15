@@ -216,6 +216,8 @@ class AppRouter {
             moduleNumber: gateArgs.moduleNumber,
             topic: gateArgs.topic,
             language: gateArgs.language,
+            moduleTitle: gateArgs.moduleTitle,
+            lessonTitles: gateArgs.lessonTitles,
           ),
           RouteSettings(
             name: ModuleGateQuizScreen.routeName,

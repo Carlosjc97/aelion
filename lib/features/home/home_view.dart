@@ -34,8 +34,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
   final TextEditingController _searchController = TextEditingController();
   late final HomeController _controller;
   final LearnerStateService _learnerService = LearnerStateService.instance;
-  AdaptiveLearnerState? _learnerState;
-  StreamSubscription<AdaptiveLearnerState?>? _learnerSubscription;
   bool _loading = false;
   bool _initializedRecommendations = false;
   bool _englishWaitlistCompleted = false;
@@ -55,9 +53,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
     super.initState();
     _controller = HomeController();
     _controller.addListener(_onControllerChanged);
-    unawaited(_controller.loadRecents());
+    final userId = _safeAuth()?.currentUser?.uid ?? 'anonymous';
+    unawaited(_controller.loadRecents(userId));
     _hydrateStreak();
-    _startLearnerStateListener();
   }
 
   void _onControllerChanged() {
@@ -75,23 +73,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     });
   }
 
-  void _startLearnerStateListener() {
-    _learnerSubscription?.cancel();
-    final userId = _safeAuth()?.currentUser?.uid;
-    if (userId == null) {
-      setState(() => _learnerState = null);
-      return;
-    }
-    _learnerSubscription = _learnerService.watchLearnerState().listen(
-      (state) {
-        if (!mounted) return;
-        setState(() => _learnerState = state);
-      },
-      onError: (error) {
-        debugPrint('[HomeView] learner state stream error: $error');
-      },
-    );
-  }
 
   @override
   void didChangeDependencies() {
@@ -128,7 +109,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
     _searchController.dispose();
-    _learnerSubscription?.cancel();
     super.dispose();
   }
 
@@ -205,7 +185,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         ),
       );
 
-      await _controller.loadRecents();
+      await _controller.loadRecents(userId);
       await _controller.loadRecommendations(
         languageCode: languageCode,
         userId: userId,
@@ -625,9 +605,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
       body: SafeArea(
         child: Stack(
           children: [
-            ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
+            RefreshIndicator(
+              onRefresh: () async {
+                final userId = _safeAuth()?.currentUser?.uid ?? 'anonymous';
+                await _controller.loadRecents(userId);
+                _hydrateStreak();
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
                 topSection,
                 const SizedBox(height: 16),
                 _PromptCard(
@@ -637,7 +623,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   onSubmit: () => _startFlow(),
                   hintText: l10n.homeInputHint,
                   title: l10n.homePromptTitle,
-                  aiDisclaimer: l10n.aiDisclaimerPowered,
                 ),
                 const SizedBox(height: 24),
                 _RecommendationsSection(
@@ -664,7 +649,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         key: ValueKey('recent-${entry.key}'),
                         item: entry.value,
                         l10n: l10n,
-                        learnerState: _learnerState,
                         learnerService: _learnerService,
                         onContinue: () => _openCachedOutline(entry.value),
                       ),
@@ -672,6 +656,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ] else
                   _RecentEmptyCard(message: l10n.homeRecentEmpty),
               ],
+              ),
             ),
             if (_loading) const _HomeLoadingOverlay(),
           ],
@@ -707,7 +692,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
         ),
       );
     }
-    await _controller.loadRecents();
+    final userId = _safeAuth()?.currentUser?.uid ?? 'anonymous';
+    await _controller.loadRecents(userId);
   }
 }
 
@@ -907,7 +893,6 @@ class _PromptCard extends StatelessWidget {
     required this.onSubmit,
     required this.hintText,
     required this.title,
-    required this.aiDisclaimer,
   });
 
   final TextEditingController controller;
@@ -916,7 +901,6 @@ class _PromptCard extends StatelessWidget {
   final VoidCallback onSubmit;
   final String hintText;
   final String title;
-  final String aiDisclaimer;
 
   @override
   Widget build(BuildContext context) {
@@ -955,26 +939,6 @@ class _PromptCard extends StatelessWidget {
               prefixIcon: const Icon(Icons.search),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                Icons.auto_awesome,
-                size: 16,
-                color: Colors.grey.shade600,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  aiDisclaimer,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -996,32 +960,60 @@ class _PromptCard extends StatelessWidget {
   }
 }
 
-class _AdaptivePlanCard extends StatelessWidget {
+class _AdaptivePlanCard extends StatefulWidget {
   const _AdaptivePlanCard({
     super.key,
     required this.item,
     required this.l10n,
-    required this.learnerState,
     required this.learnerService,
     required this.onContinue,
   });
 
   final HomeRecentOutline item;
   final AppLocalizations l10n;
-  final AdaptiveLearnerState? learnerState;
   final LearnerStateService learnerService;
   final VoidCallback onContinue;
 
   @override
+  State<_AdaptivePlanCard> createState() => _AdaptivePlanCardState();
+}
+
+class _AdaptivePlanCardState extends State<_AdaptivePlanCard> {
+  AdaptiveLearnerState? _learnerState;
+  StreamSubscription<AdaptiveLearnerState?>? _stateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _startStateListener();
+  }
+
+  @override
+  void dispose() {
+    _stateSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _startStateListener() {
+    _stateSubscription?.cancel();
+    _stateSubscription = widget.learnerService
+        .watchLearnerState(widget.item.metadata.topic)
+        .listen((state) {
+      if (!mounted) return;
+      setState(() => _learnerState = state);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metadata = item.metadata;
-    final outline = item.cached?.outline ?? const <Map<String, dynamic>>[];
+    final metadata = widget.item.metadata;
+    final outline = widget.item.cached?.outline ?? const <Map<String, dynamic>>[];
     final modules = outline.isEmpty
         ? [
             <String, dynamic>{
               'moduleNumber': 1,
-              'title': l10n.outlineModuleFallback(1),
+              'title': widget.l10n.outlineModuleFallback(1),
               'lessons': const <Map<String, dynamic>>[],
             }
           ]
@@ -1035,7 +1027,7 @@ class _AdaptivePlanCard extends StatelessWidget {
       final moduleTitle = (moduleMap['title']?.toString().trim().isNotEmpty ??
               false)
           ? moduleMap['title'].toString()
-          : l10n.outlineModuleFallback(moduleNumber);
+          : widget.l10n.outlineModuleFallback(moduleNumber);
       final lessonsRaw = moduleMap['lessons'];
       final lessonsList = lessonsRaw is List ? lessonsRaw : const [];
       final lessons = lessonsList.asMap().entries.map((lessonEntry) {
@@ -1046,8 +1038,8 @@ class _AdaptivePlanCard extends StatelessWidget {
             (raw['title']?.toString().trim().isNotEmpty ?? false)
                 ? raw['title'].toString()
                 : 'Lección ${lessonEntry.key + 1}';
-        final visited = learnerService.isLessonVisited(
-          state: learnerState,
+        final visited = widget.learnerService.isLessonVisited(
+          state: _learnerState,
           topic: metadata.topic,
           moduleNumber: moduleNumber,
           lessonIndex: lessonEntry.key,
@@ -1110,7 +1102,7 @@ class _AdaptivePlanCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            _formatUpdatedLabel(l10n, metadata.savedAt),
+            _formatUpdatedLabel(widget.l10n, metadata.savedAt),
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
@@ -1121,7 +1113,7 @@ class _AdaptivePlanCard extends StatelessWidget {
               if (bandEnum != null)
                 _MiniTag(
                   icon: Icons.school_outlined,
-                  label: _bandLabel(l10n, bandEnum),
+                  label: _bandLabel(widget.l10n, bandEnum),
                 ),
               _MiniTag(
                 icon: Icons.language,
@@ -1160,10 +1152,10 @@ class _AdaptivePlanCard extends StatelessWidget {
             ),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: onContinue,
+            onPressed: widget.onContinue,
             icon: const Icon(Icons.play_circle_outline),
             label: Text(activeModule.completed
-                ? l10n.homeRecentView
+                ? widget.l10n.homeRecentView
                 : 'Continuar módulo ${activeModule.number}'),
           ),
         ],

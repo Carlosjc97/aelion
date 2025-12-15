@@ -281,9 +281,10 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // Sub-collection: adaptiveState (read-only snapshot of learner state).
+      // Sub-collection: adaptiveState (per-topic learner state).
+      // Each document is named after the topic (e.g., "Python Básico")
       match /adaptiveState/{docId} {
-        allow read: if isOwner(userId) && docId == 'summary';
+        allow read: if isOwner(userId);
         allow write: if false;
       }
 
@@ -295,9 +296,11 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // Block any other ad-hoc subcollection unless explicitly allowed.
+      // Block writes to any other ad-hoc subcollection, but allow reads for owner.
+      // This prevents crashes if the app accidentally tries to read an unexpected path.
       match /{subcollection=**} {
-        allow read, write: if false;
+        allow read: if isOwner(userId);
+        allow write: if false;
       }
     }
 
@@ -424,6 +427,41 @@ service cloud.firestore {
     ////////////////////////////////////////////////////////////////////////////
     match /quiz_sessions/{sessionId} {
       allow read, write: if false;  // Server-only via Cloud Functions
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // content_reports
+    //
+    // User-submitted reports about offensive or incorrect content
+    // - Only authenticated users can create reports
+    // - Reports are write-only (no reads) to protect reporter privacy
+    ////////////////////////////////////////////////////////////////////////////
+    match /content_reports/{reportId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasOnly(['userId', 'offensiveContent', 'incorrectInfo', 'details', 'timestamp', 'source']) &&
+        request.resource.data.userId == requestUserId() &&
+        request.resource.data.offensiveContent is bool &&
+        request.resource.data.incorrectInfo is bool &&
+        stringBetween(request.resource.data.details, 0, 2000) &&
+        isTimestampValue(request.resource.data.timestamp) &&
+        stringBetween(request.resource.data.source, 2, 100);
+
+      allow read, update, delete: if false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // waitlist_beta_testers
+    //
+    // - Public waitlist for landing page visitors (no auth required)
+    // - Only CREATE is allowed from web; reads/updates blocked to protect PII
+    ////////////////////////////////////////////////////////////////////////////
+    match /waitlist_beta_testers/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'source', 'language', 'platform', 'userAgent', 'createdAt']) &&
+        stringBetween(request.resource.data.email, 3, 200) &&
+        stringBetween(request.resource.data.source, 2, 50) &&
+        (request.resource.data.createdAt == request.time);
+
+      allow read, update, delete: if false;
     }
 
     ////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/features/adaptive_journey/adaptive_journey_screen.dart';
+import 'package:edaptia/features/adaptive_journey/widgets/adaptive_loading_indicator.dart';
 import 'package:edaptia/features/assessment/assessment_results_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/course_api_service.dart';
@@ -11,7 +12,6 @@ import 'package:edaptia/services/course/models.dart';
 import 'package:edaptia/services/local_quiz_cache.dart';
 import 'package:edaptia/services/quiz_attempt_storage.dart';
 import 'package:edaptia/services/topic_band_cache.dart';
-import 'package:edaptia/widgets/skeleton.dart';
 
 typedef PlacementQuizLoader = Future<PlacementQuizStartResponse> Function({
   required String topic,
@@ -413,23 +413,92 @@ class _QuizScreenState extends State<QuizScreen> {
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 20),
+            // Topic and Icon
+            Icon(
+              Icons.quiz_outlined,
+              size: 64,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 24),
             Text(
               l10n.quizHeaderTitle(widget.topic),
-              style: theme.textTheme.headlineSmall,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               l10n.quizIntroDescription,
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // Live generation info card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    color: Colors.blue.shade700,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Contenido generado en vivo',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: Colors.blue.shade900,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Creamos este quiz específicamente para ti. Puede tomar unos segundos.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
-            FilledButton(
-              key: const Key('quiz-start'),
-              onPressed: _beginQuiz,
-              child: Text(l10n.startQuiz),
+            // Large, centered button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton(
+                key: const Key('quiz-start'),
+                onPressed: _beginQuiz,
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  l10n.startQuiz,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -813,37 +882,16 @@ class _QuizSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Column(
-        children: [
-          LinearProgressIndicator(
-            value: null,
-            color: colorScheme.primary,
-            backgroundColor: colorScheme.surfaceContainerHighest,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AdaptiveLoadingIndicator(
+            message: 'Estamos generando esto en vivo',
+            subtitle: 'Por eso puede tardar unos segundos...',
           ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Skeleton(height: 24, width: 220),
-                  SizedBox(height: 16),
-                  Skeleton(height: 18, width: double.infinity),
-                  SizedBox(height: 8),
-                  Skeleton(height: 18, width: double.infinity),
-                  SizedBox(height: 8),
-                  Skeleton(height: 18, width: double.infinity),
-                  Spacer(),
-                  Skeleton(height: 48, width: double.infinity),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

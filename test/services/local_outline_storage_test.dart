@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  const testUserId = 'test-user';
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -21,8 +23,8 @@ void main() {
       'cacheExpiresAt': DateTime.now().millisecondsSinceEpoch,
     };
 
-    await storage.save(topic: 'Dart', payload: payload);
-    final stored = await storage.read();
+    await storage.save(userId: testUserId, topic: 'Dart', payload: payload);
+    final stored = await storage.read(testUserId);
 
     expect(stored, isNotNull);
     expect(stored!.topic, 'Dart');
@@ -33,8 +35,8 @@ void main() {
 
   test('ignores invalid payloads without outline list', () async {
     final storage = LocalOutlineStorage.instance;
-    await storage.save(topic: 'Invalid', payload: {'source': 'fresh'});
-    final stored = await storage.read();
+    await storage.save(userId: testUserId, topic: 'Invalid', payload: {'source': 'fresh'});
+    final stored = await storage.read(testUserId);
     expect(stored, isNull);
   });
 
@@ -49,10 +51,10 @@ void main() {
         'band': i == 0 ? 'beginner' : 'intermediate',
         'cacheExpiresAt': DateTime.now().millisecondsSinceEpoch,
       };
-      await storage.save(topic: 'Topic $i', payload: payload);
+      await storage.save(userId: testUserId, topic: 'Topic $i', payload: payload);
     }
 
-    final all = await storage.readAll();
+    final all = await storage.readAll(testUserId);
     expect(all, hasLength(3));
     expect(all.first.topic, 'Topic 2');
     expect(all.last.topic, 'Topic 0');
@@ -74,15 +76,15 @@ void main() {
       'rawOutline': largeText,
     };
 
-    await storage.save(topic: 'Heavy', payload: payload);
+    await storage.save(userId: testUserId, topic: 'Heavy', payload: payload);
 
     final prefs = await SharedPreferences.getInstance();
-    final historyString = prefs.getString('outlineHistory.v1');
+    final historyString = prefs.getString('outlineHistory.v2_$testUserId');
 
     expect(historyString, isNotNull);
     expect(historyString!.startsWith('gz:'), isTrue);
 
-    final stored = await storage.read();
+    final stored = await storage.read(testUserId);
     expect(stored, isNotNull);
     expect(stored!.rawResponse.containsKey('rawOutline'), isFalse);
   });
@@ -106,9 +108,10 @@ void main() {
       'payload': oldPayload,
     };
 
-    prefs.setString('outlineHistory.v1', jsonEncode([oldEntry]));
+    prefs.setString('outlineHistory.v2_$testUserId', jsonEncode([oldEntry]));
 
     await storage.save(
+      userId: testUserId,
       topic: 'Fresh',
       payload: <String, dynamic>{
         'outline': [
@@ -118,7 +121,7 @@ void main() {
       },
     );
 
-    final all = await storage.readAll();
+    final all = await storage.readAll(testUserId);
     expect(all.any((outline) => outline.topic == 'Legacy'), isFalse);
   });
 
@@ -132,10 +135,10 @@ void main() {
       'band': 'beginner',
     };
 
-    await storage.save(topic: 'Dart', payload: payload);
-    await storage.save(topic: 'Dart', payload: payload);
+    await storage.save(userId: testUserId, topic: 'Dart', payload: payload);
+    await storage.save(userId: testUserId, topic: 'Dart', payload: payload);
 
-    final all = await storage.readAll();
+    final all = await storage.readAll(testUserId);
     expect(all, hasLength(1));
   });
 }

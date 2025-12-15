@@ -83,7 +83,10 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   final Map<int, ModuleTileState> _timeline = <int, ModuleTileState>{};
 
   int _activeModuleNumber = 1;
-  bool _hasPremium = false;
+
+  // ✅ ESTRATEGIA SEGURA: Por defecto es false. Solo es true si pasas --dart-define=TEST_PREMIUM=true
+  // Ejemplo: flutter run --dart-define=TEST_PREMIUM=true
+  bool _hasPremium = const bool.fromEnvironment('TEST_PREMIUM', defaultValue: false);
 
   // Expansion state for timeline modules
   final Set<int> _expandedModules = <int>{};
@@ -176,7 +179,14 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             ..addAll(seeds);
           _activeModuleNumber = 1;
           _module = cachedM1;
-          _hasPremium = _entitlements.hasPremiumAccess;
+
+          // Si no estamos en modo test forzado, usamos el valor real
+          if (!_hasPremium) _hasPremium = _entitlements.hasPremiumAccess;
+
+          // Sync with learnerState to restore completed modules
+          _syncTimelineWithHistory(_learnerState?.history);
+          _checkModuleUnlocks();
+
           _loadingState = AdaptiveLoadingState.none;
         });
 
@@ -190,9 +200,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
 
       // Si M1 no está en caché, usamos el recuento ya obtenido para construir el esqueleto
       final seeds = <int, ModuleTileState>{};
-      for (int i = 1;
-          i <= moduleCount && i <= _maxTimelineModules;
-          i++) {
+      for (int i = 1; i <= moduleCount && i <= _maxTimelineModules; i++) {
         seeds[i] = ModuleTileState(
           number: i,
           title:
@@ -209,7 +217,10 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
           ..clear()
           ..addAll(seeds);
         _activeModuleNumber = 1;
-        _hasPremium = _entitlements.hasPremiumAccess;
+
+        // Si no estamos en modo test forzado, usamos el valor real
+        if (!_hasPremium) _hasPremium = _entitlements.hasPremiumAccess;
+
         _loadingState =
             AdaptiveLoadingState.none; // ✅ UI visible inmediatamente
       });
@@ -230,7 +241,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     debugPrint(
         '[AdaptiveJourney] Starting real-time state listener for $userId');
     await _stateSubscription?.cancel();
-    _stateSubscription = _learnerService.watchLearnerState().listen(
+    _stateSubscription = _learnerService.watchLearnerState(widget.topic).listen(
       (newState) {
         if (!mounted) return;
         debugPrint(
@@ -251,31 +262,22 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   void _syncTimelineWithHistory(AdaptiveLearnerHistory? history) {
     if (history == null) return;
 
-    for (final moduleNumber in history.passedModules) {
-      _ensureTile(moduleNumber);
-      final tile = _timeline[moduleNumber]!;
-      tile.completed = true;
-      tile.unlocked = true;
-    }
-
-    for (final moduleNumber in history.failedModules) {
-      _ensureTile(moduleNumber);
-      final tile = _timeline[moduleNumber]!;
-      tile.completed = false;
-      tile.unlocked = true;
-    }
-
-    final highestPassed =
-        history.passedModules.isEmpty ? 1 : history.passedModules.reduce(math.max) + 1;
-    _ensureTile(highestPassed);
-    final nextTile = _timeline[highestPassed];
-    if (nextTile != null) {
-      nextTile.unlocked = true;
-    }
-
+    // M1 is always unlocked
     final firstTile = _timeline[1];
     if (firstTile != null) {
       firstTile.unlocked = true;
+    }
+
+    // Unlock next module after the highest passed module
+    // passedModules contains quiz completions, not full module completions
+    if (history.passedModules.isNotEmpty) {
+      final highestPassed = history.passedModules.reduce(math.max);
+      final nextModuleNumber = highestPassed + 1;
+      _ensureTile(nextModuleNumber);
+      final nextTile = _timeline[nextModuleNumber];
+      if (nextTile != null) {
+        nextTile.unlocked = true;
+      }
     }
   }
 
@@ -290,13 +292,18 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       final cachedModule = _cachedModules[moduleNumber];
       final totalLessons = cachedModule?.lessons.length ?? 0;
       if (cachedModule != null && totalLessons > 0) {
-        final isComplete = _learnerService.isModuleComplete(
+        final allLessonsVisited = _learnerService.isModuleComplete(
           state: state,
           topic: widget.topic,
           moduleNumber: moduleNumber,
           totalLessons: totalLessons,
         );
+        final quizPassed = state.history.passedModules.contains(moduleNumber);
+
+        // Module is only complete if ALL lessons are visited AND quiz is passed
+        final isComplete = allLessonsVisited && quizPassed;
         tile.completed = isComplete;
+
         if (isComplete) {
           _ensureTile(moduleNumber + 1);
           final nextTile = _timeline[moduleNumber + 1];
@@ -314,13 +321,17 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       final previousModule = _cachedModules[moduleNumber - 1];
       final previousLessons = previousModule?.lessons.length ?? 0;
       if (previousModule != null && previousLessons > 0) {
-        final previousComplete = _learnerService.isModuleComplete(
+        final previousAllLessonsVisited = _learnerService.isModuleComplete(
           state: state,
           topic: widget.topic,
           moduleNumber: moduleNumber - 1,
           totalLessons: previousLessons,
         );
-        if (previousComplete) {
+        final previousQuizPassed =
+            state.history.passedModules.contains(moduleNumber - 1);
+
+        // Previous module must have all lessons visited AND quiz passed to unlock next
+        if (previousAllLessonsVisited && previousQuizPassed) {
           tile.unlocked = true;
         }
       }
@@ -354,7 +365,9 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
         };
       }).toList(growable: false);
 
+      final userId = _auth.currentUser?.uid ?? 'anonymous';
       await LocalOutlineStorage.instance.save(
+        userId: userId,
         topic: widget.topic,
         payload: <String, dynamic>{
           'outline': outline,
@@ -421,9 +434,11 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       if (focus.isEmpty) {
         focus = _topDeficits();
       }
+      final language = Localizations.localeOf(context).languageCode;
       final response = await CourseApiService.generateAdaptiveModule(
         topic: widget.topic,
         moduleNumber: moduleNumber,
+        language: language,
         focusSkills: focus,
       );
 
@@ -433,7 +448,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
       _cachedModules[moduleNumber] = response.module;
       unawaited(AdaptiveModuleCache.instance.saveModule(
         topic: widget.topic,
-        language: 'es',
+        language: language,
         band: widget.initialBand.name,
         module: response.module,
       ));
@@ -675,7 +690,7 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     AdaptiveModuleOut module,
   ) async {
     final language = Localizations.localeOf(context).languageCode;
-    await Navigator.of(context).pushNamed(
+    final result = await Navigator.of(context).pushNamed(
       ModuleGateQuizScreen.routeName,
       arguments: ModuleGateQuizArgs(
         moduleNumber: moduleNumber,
@@ -687,6 +702,13 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
             .toList(growable: false),
       ),
     );
+
+    // Refresh state after quiz completion to show updated progress
+    if (result != null && mounted) {
+      setState(() {
+        _checkModuleUnlocks();
+      });
+    }
   }
 
   Future<void> _handleModuleTileTap(int moduleNumber) async {
@@ -753,7 +775,10 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     } catch (_) {}
     if (!mounted) return;
     setState(() {
-      _hasPremium = _entitlements.hasPremiumAccess;
+      // Actualizar estado real si no estamos forzando el test
+      if (!const bool.fromEnvironment('TEST_PREMIUM', defaultValue: false)) {
+        _hasPremium = _entitlements.hasPremiumAccess;
+      }
     });
   }
 
@@ -850,13 +875,11 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
   Widget _buildLoadingView(AppLocalizations l10n) {
     String message;
     String? subtitle;
-    final topic = widget.topic;
 
     switch (_loadingState) {
       case AdaptiveLoadingState.plan:
-        message = 'Generando tu plan personalizado';
-        subtitle =
-            'Estamos analizando "$topic" para crear el mejor recorrido para ti';
+        message = 'Estamos trayendo tu avance para que sigas donde te quedaste';
+        subtitle = null;
         break;
       case AdaptiveLoadingState.moduleFirst:
         message = 'Creando tu primer módulo';
@@ -879,43 +902,17 @@ class _AdaptiveJourneyScreenState extends State<AdaptiveJourneyScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          const Spacer(),
+          // Centered loading card
           AdaptiveLoadingIndicator(
             message: message,
             subtitle: subtitle,
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.auto_awesome,
-                  size: 20,
-                  color: Colors.blue.shade700,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.aiDisclaimerGenerating,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue.shade700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const Spacer(),
         ],
       ),
     );

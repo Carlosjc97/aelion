@@ -66,7 +66,7 @@ class HomeController extends ChangeNotifier {
   List<TrendingTopic> get trendingTopics => _trendingTopics;
   List<RecentSearchEntry> get recentSearches => _recentSearches;
 
-  Future<void> loadRecents() async {
+  Future<void> loadRecents(String userId) async {
     final metadata = await _outlinesStorage.readAll();
     if (metadata.isEmpty) {
       _recentOutlines = const [];
@@ -94,7 +94,7 @@ class HomeController extends ChangeNotifier {
     final items = await Future.wait(
       limited.map(
         (entry) async {
-          final cached = await _outlineCache.findById(entry.id);
+          final cached = await _outlineCache.findById(userId, entry.id);
           return HomeRecentOutline(metadata: entry, cached: cached);
         },
       ),

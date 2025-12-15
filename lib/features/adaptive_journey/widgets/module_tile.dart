@@ -100,10 +100,12 @@ class ModuleTile extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  'M${tile.number}',
-                                  style: EdaptiaTypography.title3
-                                      .copyWith(color: foreground),
+                                Expanded(
+                                  child: Text(
+                                    moduleTitle,
+                                    style: EdaptiaTypography.title3
+                                        .copyWith(color: foreground),
+                                  ),
                                 ),
                                 if (isActive && !tile.completed) ...[
                                   const SizedBox(width: 8),
@@ -129,13 +131,6 @@ class ModuleTile extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              moduleTitle,
-                              style: EdaptiaTypography.body.copyWith(
-                                color: EdaptiaColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
                               skills.isEmpty
                                   ? emptySkillsLabel
                                   : skills.take(2).join(', '),
@@ -153,13 +148,18 @@ class ModuleTile extends StatelessWidget {
                         color: foreground,
                       ),
                     ],
-                  ),
-                ),
               ),
-              if (isExpanded) ...[
-                Divider(
-                  height: 1,
-                  color: EdaptiaColors.border.withValues(alpha: 0.2),
+            ),
+          ),
+          if (onQuizPressed != null && !isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _buildQuizButton(context),
+            ),
+          if (isExpanded) ...[
+            Divider(
+              height: 1,
+              color: EdaptiaColors.border.withValues(alpha: 0.2),
                 ),
                 if (isGenerating)
                   Padding(
@@ -280,6 +280,91 @@ class ModuleTile extends StatelessWidget {
     if (onQuizPressed == null) {
       return const SizedBox.shrink();
     }
+
+    // Check if this module's quiz has been passed
+    final moduleNumber = tile.number;
+    final passedModules = learnerState?.history.passedModules ?? [];
+    final isPassed = passedModules.contains(moduleNumber);
+
+    if (isPassed) {
+      // Show completed state - not clickable
+      return SizedBox(
+        width: double.infinity,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: EdaptiaColors.success.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: EdaptiaColors.success.withValues(alpha: 0.3),
+              width: 2,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: EdaptiaColors.success,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Quiz aprobado',
+                style: EdaptiaTypography.bodyBold.copyWith(
+                  color: EdaptiaColors.success,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Check if all lessons are complete
+    final isComplete = LearnerStateService.instance.isModuleComplete(
+      state: learnerState,
+      topic: topic,
+      moduleNumber: moduleNumber,
+      totalLessons: totalLessons,
+    );
+
+    if (!isComplete) {
+      // Show locked state - not clickable
+      return SizedBox(
+        width: double.infinity,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: EdaptiaColors.textSecondary.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: EdaptiaColors.textSecondary.withValues(alpha: 0.2),
+              width: 2,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                color: EdaptiaColors.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Completa todas las lecciones',
+                style: EdaptiaTypography.bodyBold.copyWith(
+                  color: EdaptiaColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Show active quiz button
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(

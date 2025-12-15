@@ -50,7 +50,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authRetry => 'Reintentar';
 
   @override
-  String get homeGreeting => 'Que quieres aprender hoy?';
+  String get homeGreeting => 'Qué quieres aprender hoy?';
 
   @override
   String homeGreetingNamedShort(String name) {
@@ -67,7 +67,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeMotivation => 'Sigue con tu impulso de aprendizaje hoy.';
 
   @override
-  String get homePromptTitle => 'Que plan generamos hoy?';
+  String get homePromptTitle => 'Qué plan generamos hoy?';
 
   @override
   String get homeInputHint =>
@@ -291,13 +291,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingSelectLabel => 'Selecciona una opcion';
 
   @override
-  String get onboardingQuestionAge => 'Cual es tu rango de edad?';
+  String get onboardingQuestionAge => 'Cuál es tu rango de edad?';
 
   @override
-  String get onboardingQuestionInterests => 'Que temas te interesan?';
+  String get onboardingQuestionInterests => 'Qué temas te interesan?';
 
   @override
-  String get onboardingQuestionEducation => 'Cual es tu nivel educativo?';
+  String get onboardingQuestionEducation => 'Cuál es tu nivel educativo?';
 
   @override
   String get onboardingQuestionFirstSql => 'Es tu primera vez con SQL?';
@@ -767,7 +767,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lessonQuizCheck => 'Comprobar respuesta';
 
   @override
-  String get lessonQuizCorrect => 'âœ… ¡Correcto!';
+  String get lessonQuizCorrect => '✅ ¡Correcto!';
 
   @override
   String lessonQuizIncorrect(String answer) {
@@ -891,13 +891,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsHelpSupportSubtitle => 'Preguntas, contacto y políticas';
 
   @override
-  String get settingsPrivacyPolicy => 'Pol?tica de Privacidad';
+  String get settingsPrivacyPolicy => 'Política de Privacidad';
 
   @override
-  String get settingsPrivacyPolicySubtitle => 'C?mo manejamos tus datos';
+  String get settingsPrivacyPolicySubtitle => 'Cómo manejamos tus datos';
 
   @override
-  String get settingsTermsOfService => 'T?rminos de Servicio';
+  String get settingsTermsOfService => 'Términos de Servicio';
 
   @override
   String get settingsTermsOfServiceSubtitle => 'Condiciones de uso de la app';

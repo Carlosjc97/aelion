@@ -192,13 +192,17 @@ class LocalOutlineStorage {
   static const _topicKey = 'lastOutlineTopic';
   static const _jsonKey = 'lastOutlineJson';
   static const _savedAtKey = 'lastOutlineSavedAt';
-  static const _historyKey = 'outlineHistory.v1';
+  static const _historyKeyPrefix = 'outlineHistory.v2'; // v2 to scope by user
   static const _maxHistory = 5;
   static const _encodedHistoryPrefix = 'gz:';
+
+  // Helper to create user-scoped key
+  String _userHistoryKey(String userId) => '${_historyKeyPrefix}_$userId';
   static const _compressionMinBytes = 512;
   static const Duration _retentionWindow = Duration(days: 14);
 
   Future<void> save({
+    required String userId,
     required String topic,
     required Map<String, dynamic> payload,
   }) async {
@@ -211,7 +215,7 @@ class LocalOutlineStorage {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    await _migrateLegacyIfNeeded(prefs);
+    await _migrateLegacyIfNeeded(prefs, userId);
 
     final normalizedTopic = topic.trim();
     final now = DateTime.now();
@@ -221,7 +225,7 @@ class LocalOutlineStorage {
       payload: payload,
     );
 
-    final history = await _readHistory(prefs);
+    final history = await _readHistory(prefs, userId);
     final retentionCutoff = now.subtract(_retentionWindow);
     final updated = <StoredOutline>[
       entry,
@@ -235,18 +239,18 @@ class LocalOutlineStorage {
     updated.sort((a, b) => b.savedAt.compareTo(a.savedAt));
     final trimmed = updated.take(_maxHistory).toList(growable: false);
 
-    await _writeHistory(prefs, trimmed);
+    await _writeHistory(prefs, userId, trimmed);
     await _persistLegacyLatest(prefs, entry);
   }
 
-  Future<StoredOutline?> findById(String id) async {
+  Future<StoredOutline?> findById(String userId, String id) async {
     if (id.trim().isEmpty) {
       return null;
     }
 
     final prefs = await SharedPreferences.getInstance();
-    await _migrateLegacyIfNeeded(prefs);
-    final history = await _readHistory(prefs);
+    await _migrateLegacyIfNeeded(prefs, userId);
+    final history = await _readHistory(prefs, userId);
     for (final outline in history) {
       if (outline.dedupeKey == id) {
         return outline;
@@ -255,26 +259,26 @@ class LocalOutlineStorage {
     return null;
   }
 
-  Future<List<StoredOutline>> readAll() async {
+  Future<List<StoredOutline>> readAll(String userId) async {
     final prefs = await SharedPreferences.getInstance();
-    await _migrateLegacyIfNeeded(prefs);
-    return _readHistory(prefs);
+    await _migrateLegacyIfNeeded(prefs, userId);
+    return _readHistory(prefs, userId);
   }
 
-  Future<StoredOutline?> read() async {
-    final history = await readAll();
+  Future<StoredOutline?> read(String userId) async {
+    final history = await readAll(userId);
     if (history.isEmpty) {
       return null;
     }
     return history.first;
   }
 
-  Future<void> remove(String dedupeKey) async {
+  Future<void> remove(String userId, String dedupeKey) async {
     final prefs = await SharedPreferences.getInstance();
-    final history = await _readHistory(prefs);
+    final history = await _readHistory(prefs, userId);
     final filtered =
         history.where((outline) => outline.dedupeKey != dedupeKey).toList();
-    await _writeHistory(prefs, filtered);
+    await _writeHistory(prefs, userId, filtered);
     if (filtered.isEmpty) {
       await _clearLegacy(prefs);
     } else {
@@ -282,21 +286,21 @@ class LocalOutlineStorage {
     }
   }
 
-  Future<void> clear() async {
+  Future<void> clear(String userId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_historyKey);
+    await prefs.remove(_userHistoryKey(userId));
     await _clearLegacy(prefs);
   }
 
-  Future<void> _migrateLegacyIfNeeded(SharedPreferences prefs) async {
-    if (prefs.containsKey(_historyKey)) {
+  Future<void> _migrateLegacyIfNeeded(SharedPreferences prefs, String userId) async {
+    if (prefs.containsKey(_userHistoryKey(userId))) {
       return;
     }
     final legacy = await _readLegacy(prefs);
     if (legacy == null) {
       return;
     }
-    await _writeHistory(prefs, [legacy]);
+    await _writeHistory(prefs, userId, [legacy]);
   }
 
   Future<StoredOutline?> _readLegacy(SharedPreferences prefs) async {
@@ -332,8 +336,8 @@ class LocalOutlineStorage {
     }
   }
 
-  Future<List<StoredOutline>> _readHistory(SharedPreferences prefs) async {
-    final raw = prefs.getString(_historyKey);
+  Future<List<StoredOutline>> _readHistory(SharedPreferences prefs, String userId) async {
+    final raw = prefs.getString(_userHistoryKey(userId));
     if (raw == null || raw.isEmpty) {
       return <StoredOutline>[];
     }
@@ -381,17 +385,18 @@ class LocalOutlineStorage {
 
   Future<void> _writeHistory(
     SharedPreferences prefs,
+    String userId,
     List<StoredOutline> history,
   ) async {
     if (history.isEmpty) {
-      await prefs.remove(_historyKey);
+      await prefs.remove(_userHistoryKey(userId));
       return;
     }
 
     final serialized =
         history.map((outline) => outline.toJson()).toList(growable: false);
     final encoded = _encodeHistory(serialized);
-    await prefs.setString(_historyKey, encoded);
+    await prefs.setString(_userHistoryKey(userId), encoded);
   }
 
   static String _encodeHistory(List<Map<String, dynamic>> history) {

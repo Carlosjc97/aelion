@@ -13,8 +13,8 @@ class LearnerStateService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Subscribe to real-time learner state updates.
-  Stream<AdaptiveLearnerState?> watchLearnerState() {
+  /// Subscribe to real-time learner state updates for a specific topic/course.
+  Stream<AdaptiveLearnerState?> watchLearnerState(String topic) {
     final userId = _auth.currentUser?.uid;
     if (userId == null) {
       debugPrint('[LearnerStateService] No authenticated user for watch');
@@ -25,9 +25,17 @@ class LearnerStateService {
         .collection('users')
         .doc(userId)
         .collection('adaptiveState')
-        .doc('summary');
+        .doc(topic);
 
-    return docRef.snapshots().map((snapshot) {
+    return docRef.snapshots().handleError((error) {
+      // Handle permission errors gracefully (e.g., when user logs out or token expires)
+      if (error.toString().contains('permission-denied')) {
+        debugPrint('[LearnerStateService] Permission denied - user may have logged out');
+        return null;
+      }
+      debugPrint('[LearnerStateService] Snapshot listener error: $error');
+      throw error;
+    }).map((snapshot) {
       final data = snapshot.data();
       if (!snapshot.exists || data == null) {
         return null;

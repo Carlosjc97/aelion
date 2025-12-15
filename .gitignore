@@ -106,7 +106,6 @@ results.sarif
 *.tar.gz
 *.zip
 android/app/google-services.json
-.gitignore
 PROMPT_*.md
 BUGFIX*.md
 FIX_*.md

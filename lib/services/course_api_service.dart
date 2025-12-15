@@ -311,6 +311,7 @@ class CourseApiService {
   static Future<AdaptiveModuleResponse> generateAdaptiveModule({
     required String topic,
     required int moduleNumber,
+    required String language,
     List<String> focusSkills = const <String>[],
     Duration timeout = _timeout,
     int maxRetries = 1,
@@ -318,6 +319,7 @@ class CourseApiService {
     return adaptive_service.AdaptiveService.generateModule(
       topic: topic,
       moduleNumber: moduleNumber,
+      language: language,
       focusSkills: focusSkills,
       timeout: timeout,
       maxRetries: maxRetries,
