@@ -20,19 +20,20 @@ void main() {
     await service.ensureLoaded();
 
     // Note: During beta mode (_isBetaMode = true), all modules are unlocked
-    // This test will fail during beta. Once beta ends, modules will be locked by default.
-    // For now, we expect modules to be unlocked during beta testing.
-    const isBetaMode = true; // TODO: sync with _isBetaMode in entitlements_service.dart
+    // This test validates beta behavior. When beta ends, change expectations below.
+    // TODO: When _isBetaMode = false in entitlements_service.dart, expect false instead of true
+    const isBetaMode = true;
 
     if (isBetaMode) {
+      // Beta mode: all modules are unlocked for testers
       expect(service.isModuleUnlocked('M2'), true, reason: 'Beta mode: all modules unlocked');
       expect(service.isModuleUnlocked('M3'), true, reason: 'Beta mode: all modules unlocked');
       expect(service.isModuleUnlocked('M6'), true, reason: 'Beta mode: all modules unlocked');
-    } else {
-      expect(service.isModuleUnlocked('M2'), false);
-      expect(service.isModuleUnlocked('M3'), false);
-      expect(service.isModuleUnlocked('M6'), false);
     }
+    // Production behavior (when isBetaMode = false):
+    // expect(service.isModuleUnlocked('M2'), false);
+    // expect(service.isModuleUnlocked('M3'), false);
+    // expect(service.isModuleUnlocked('M6'), false);
   });
 
   test('EntitlementsService - Trial unlocks everything', () async {
