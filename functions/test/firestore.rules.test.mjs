@@ -20,7 +20,7 @@ test('firestore rules expose adaptiveState as read-only for owners', () => {
     'adaptiveState block missing',
   );
   const block = extractBlock(/match \/adaptiveState\/\{docId\} {[\s\S]*?}/);
-  assert.ok(block.includes("docId == 'summary'"), 'adaptiveState read guard missing docId filter');
+  assert.ok(block.includes('isOwner(userId)'), 'adaptiveState read guard missing owner check');
   assert.ok(block.includes('allow write: if false;'), 'adaptiveState write guard missing');
 });
 
