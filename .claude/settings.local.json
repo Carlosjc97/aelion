@@ -11,7 +11,17 @@
       "Bash(flutter pub upgrade:*)",
       "Bash(flutter pub get:*)",
       "Bash(flutter test:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:console.firebase.google.com)",
+      "Bash(flutter analyze:*)",
+      "Bash(git rm:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
