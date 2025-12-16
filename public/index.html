@@ -285,21 +285,6 @@
     </div>
 
     <div class="form-container">
-      <!-- Beta Buttons -->
-      <div class="beta-buttons">
-        <a href="https://play.google.com/apps/testing/com.aelion.learning"
-           target="_blank"
-           class="beta-button primary">
-          📱 Únete al Beta en Android
-        </a>
-        <p class="beta-note">Acceso completo gratis durante beta • Android 8.0+</p>
-      </div>
-
-      <!-- Divider -->
-      <div class="divider">
-        <span>o recibe actualizaciones por email</span>
-      </div>
-
       <!-- Email Form -->
       <form id="waitlistForm">
         <div class="input-group">
@@ -311,13 +296,13 @@
             autocomplete="email"
           >
           <button type="submit" id="submitBtn">
-            Recibir actualizaciones
+            Unirme al Beta
           </button>
         </div>
       </form>
 
       <div class="success-message" id="successMessage">
-        ✅ ¡Gracias! Te avisaremos cuando haya novedades.
+        ✅ ¡Gracias! Te enviaremos el link de acceso al beta pronto.
       </div>
 
       <div class="error-message" id="errorMessage">
@@ -333,7 +318,7 @@
         <a href="terms-of-service.html" target="_blank">Términos de Servicio</a>
       </p>
       <p style="margin-top: 12px;">
-        © 2024 Edaptia. Todos los derechos reservados.
+        © 2025 Edaptia. Todos los derechos reservados.
       </p>
     </div>
   </div>
@@ -390,7 +375,7 @@
         // Re-enable after delay
         setTimeout(() => {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Unirme a la lista';
+          submitBtn.textContent = 'Unirme al Beta';
         }, 3000);
 
       } catch (error) {
@@ -398,7 +383,7 @@
         errorMessage.classList.add('show');
 
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Unirme a la lista';
+        submitBtn.textContent = 'Unirme al Beta';
       }
     });
   </script>
