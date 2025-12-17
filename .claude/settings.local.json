@@ -21,7 +21,9 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(git push:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(timeout 60 flutter analyze:*)",
+      "Bash(dart analyze:*)"
     ],
     "deny": [],
     "ask": []

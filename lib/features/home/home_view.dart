@@ -6,9 +6,11 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:edaptia/config/beta_config.dart';
 import 'package:edaptia/core/app_colors.dart';
 import 'package:edaptia/features/adaptive_journey/adaptive_journey_screen.dart';
 import 'package:edaptia/features/home/home_controller.dart';
+import 'package:edaptia/features/onboarding/micro_lesson_intro_screen.dart';
 import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/features/settings/settings_view.dart';
 import 'package:edaptia/features/support/help_support_screen.dart';
@@ -57,6 +59,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final userId = _safeAuth()?.currentUser?.uid ?? 'anonymous';
     unawaited(_controller.loadRecents(userId));
     _hydrateStreak();
+
+    // Beta: Pre-fill SQL as default topic if topic selection is disabled
+    if (!BetaConfig.allowTopicSelection) {
+      _searchController.text = BetaConfig.defaultTopic;
+    }
   }
 
   void _onControllerChanged() {
@@ -162,36 +169,47 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
       if (!mounted) return;
 
-      // ALWAYS go to adaptive journey flow (QuizScreen)
-      // If cachedBand exists, QuizScreen will skip directly to AdaptiveJourneyScreen
-      // This ensures we NEVER go to legacy ModuleOutlineView
+      // Beta simplified flow: Show micro-lesson BEFORE quiz
+      if (BetaConfig.simplifiedFlow) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MicroLessonIntroScreen(
+              topic: rawTopic,
+              language: languageCode,
+            ),
+          ),
+        );
+      } else {
+        // Standard flow: Go directly to quiz
+        // If cachedBand exists, QuizScreen will skip directly to AdaptiveJourneyScreen
 
-      if (cachedBand == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.calibratingPlan)),
+        if (cachedBand == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.calibratingPlan)),
+          );
+        }
+
+        unawaited(
+          _controller.trackQuizOpen(
+            topic: rawTopic,
+            language: languageCode,
+          ),
+        );
+
+        if (!mounted) return;
+
+        assert(() {
+          debugPrint('[HomeView] navigating to QuizScreen (adaptive flow)');
+          return true;
+        }());
+        await Navigator.of(context).pushNamed(
+          QuizScreen.routeName,
+          arguments: QuizScreenArgs(
+            topic: rawTopic,
+            language: languageCode,
+          ),
         );
       }
-
-      unawaited(
-        _controller.trackQuizOpen(
-          topic: rawTopic,
-          language: languageCode,
-        ),
-      );
-
-      if (!mounted) return;
-
-      assert(() {
-        debugPrint('[HomeView] navigating to QuizScreen (adaptive flow)');
-        return true;
-      }());
-      await Navigator.of(context).pushNamed(
-        QuizScreen.routeName,
-        arguments: QuizScreenArgs(
-          topic: rawTopic,
-          language: languageCode,
-        ),
-      );
 
       await _controller.loadRecents(userId);
       await _controller.loadRecommendations(
@@ -631,6 +649,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   onSubmit: () => _startFlow(),
                   hintText: l10n.homeInputHint,
                   title: l10n.homePromptTitle,
+                  readonly: !BetaConfig.allowTopicSelection,
                 ),
                 const SizedBox(height: 24),
                 _RecommendationsSection(
@@ -901,6 +920,7 @@ class _PromptCard extends StatelessWidget {
     required this.onSubmit,
     required this.hintText,
     required this.title,
+    this.readonly = false,
   });
 
   final TextEditingController controller;
@@ -909,6 +929,7 @@ class _PromptCard extends StatelessWidget {
   final VoidCallback onSubmit;
   final String hintText;
   final String title;
+  final bool readonly;
 
   @override
   Widget build(BuildContext context) {
@@ -937,14 +958,35 @@ class _PromptCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (readonly) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '🎯 Beta: Enfocado en ${BetaConfig.defaultTopic}',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           TextField(
             controller: controller,
+            readOnly: readonly,
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => onSubmit(),
             decoration: InputDecoration(
               hintText: hintText,
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.search),
+              filled: readonly,
+              fillColor: readonly
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : null,
             ),
           ),
           const SizedBox(height: 16),
