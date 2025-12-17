@@ -102,16 +102,42 @@ class BetaConfig {
 }
 ```
 
-#### 2. Re-enable Premium Paywall
+#### 2. Re-enable Premium Paywall (Revert Beta Bypass)
+
+**IMPORTANT:** During beta, premium features are bypassed - ALL users have free access to M2-M6.
+
 **File:** `lib/services/entitlements_service.dart`
 
+Find the beta bypass flag around line 29:
+
 ```dart
-// Find this line (around line 29):
+// ⚠️ BETA MODE: Todos los usuarios tienen acceso premium gratis
+// TODO: Cambiar a false antes de lanzar en producción
 const bool _isBetaMode = true;
 
-// Change to:
-const bool _isBetaMode = false;
+bool get hasPremiumAccess {
+  // Durante beta, todos tienen acceso premium gratis
+  if (_isBetaMode) return true;  // ← THIS BYPASSES THE PAYWALL
+  return _isPremium || isInTrial;
+}
 ```
+
+**Change to:**
+
+```dart
+// Production mode - paywall enabled
+const bool _isBetaMode = false;
+
+bool get hasPremiumAccess {
+  // Production: require premium or active trial
+  if (_isBetaMode) return true;
+  return _isPremium || isInTrial;  // ← NOW PAYWALL IS ENFORCED
+}
+```
+
+**What this does:**
+- `_isBetaMode = true` → ALL users bypass paywall (beta behavior)
+- `_isBetaMode = false` → Paywall enforced, only premium/trial users access M2+
 
 #### 3. Verification Checklist
 
@@ -145,16 +171,41 @@ git checkout -b hotfix/rollback-beta-config
 # Make necessary fixes, then deploy
 ```
 
-### Beta Mode Features
+### Beta Mode Features & Premium Bypass
 
-When `isBetaMode = true`:
+#### Current Beta Bypass (Active)
 
-**Unlocked for all users:**
-- ✅ All modules (M1-M6) accessible without premium
-- ✅ No trial limitations
-- ✅ No purchase prompts
+When `isBetaMode = true` in `lib/services/entitlements_service.dart`:
 
-**Simplified onboarding (if `BetaConfig.simplifiedFlow = true`):**
+**Premium Bypass Active:**
+- ✅ **M1 (Module 1):** Always free (normal behavior)
+- ✅ **M2-M6 (Modules 2-6):** FREE for ALL users (normally requires premium)
+- ✅ No 7-day trial restrictions
+- ✅ No purchase prompts or paywall modals
+- ✅ `hasPremiumAccess` always returns `true`
+- ✅ `isModuleUnlocked()` returns `true` for ALL modules
+
+**What Gets Bypassed:**
+```dart
+// In production: M2+ requires premium or trial
+bool isModuleUnlocked(String moduleId) {
+  if (_isBetaMode) return true;  // ← BYPASS: Always unlocked
+
+  // Normal logic (only runs when _isBetaMode = false):
+  if (moduleId == 'M1') return true;
+  return hasPremiumAccess;  // Would check subscription status
+}
+```
+
+**Beta Testing Benefits:**
+- Testers can access full curriculum without payment
+- Test complete learning journey (M1 → M6)
+- Validate premium content quality before monetization
+- Gather feedback on all features
+
+#### Simplified Onboarding (Optional)
+
+If `BetaConfig.simplifiedFlow = true`:
 - Topic selection defaults to "SQL" for focused testing
 - Enhanced analytics tracking for Google Play metrics
 - Optional quiz flow (can skip directly to lessons)
