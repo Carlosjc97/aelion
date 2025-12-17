@@ -2,6 +2,7 @@
 
 **Tu tutor personal impulsado por IA.** Genera cursos personalizados en tiempo real sobre cualquier tema que quieras aprender: desde SQL y Python hasta Marketing y Excel. Contenido adaptado a tu nivel, a tu ritmo.
 
+ agent/audit-remediation
 Built with Flutter, Firebase, and OpenAI GPT-4o with intelligent caching, defensive parsing, and real-time adaptive content generation.
 
 ## Production Status (Dec 14, 2024)
@@ -9,6 +10,17 @@ Built with Flutter, Firebase, and OpenAI GPT-4o with intelligent caching, defens
 - **Play Store Beta**: 🚀 **LIVE** - https://play.google.com/apps/testing/com.aelion.learning
 - **Landing Page**: ✅ https://www.edaptia.io
 - **GitHub CI**: ✅ CONFIGURED
+
+agent/audit-remediation
+## Production Status (Nov 28, 2025)
+
+
+
+## What's New (November 2025)
+ main
+
+- **GitHub CI**: ✅ PASSING (flutter + functions)
+ main
 - **Firebase Functions**: ✅ DEPLOYED
 - **Backend Server**: https://aelion-110324120650.us-east4.run.app
 - **Beta Mode**: ✅ ALL USERS HAVE PREMIUM ACCESS (during beta)
