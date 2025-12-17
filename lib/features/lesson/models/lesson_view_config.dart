@@ -12,6 +12,8 @@ class LessonViewConfig {
   const LessonViewConfig({
     required this.courseId,
     required this.moduleTitle,
+    required this.moduleNumber,
+    required this.lessonIndex,
     required this.lessonTitle,
     required this.hook,
     required this.theory,
@@ -22,10 +24,13 @@ class LessonViewConfig {
     this.microQuiz = const <AdaptiveMcq>[],
     this.practice,
     this.hint,
+    this.allModuleLessons = const <AdaptiveLesson>[],
   });
 
   final String courseId;
   final String moduleTitle;
+  final int moduleNumber;
+  final int lessonIndex;
   final String lessonTitle;
   final String hook;
   final String theory;
@@ -36,18 +41,27 @@ class LessonViewConfig {
   final List<AdaptiveMcq> microQuiz;
   final AdaptiveLessonPractice? practice;
   final String? hint;
+  final List<AdaptiveLesson> allModuleLessons;
 
   bool get hasMicroQuiz => microQuiz.isNotEmpty;
   bool get hasPractice => practice != null;
+  bool get hasNextLesson => lessonIndex < allModuleLessons.length - 1;
+  AdaptiveLesson? get nextLesson =>
+      hasNextLesson ? allModuleLessons[lessonIndex + 1] : null;
 
   factory LessonViewConfig.fromAdaptiveLesson(
     AdaptiveLesson lesson, {
     required String moduleTitle,
+    required int moduleNumber,
+    required int lessonIndex,
     required String courseId,
+    List<AdaptiveLesson> allModuleLessons = const <AdaptiveLesson>[],
   }) {
     return LessonViewConfig(
       courseId: courseId,
       moduleTitle: moduleTitle,
+      moduleNumber: moduleNumber,
+      lessonIndex: lessonIndex,
       lessonTitle: lesson.title,
       hook: lesson.hook,
       theory: lesson.theory,
@@ -58,6 +72,7 @@ class LessonViewConfig {
       microQuiz: lesson.microQuiz,
       practice: lesson.practice,
       hint: lesson.hint,
+      allModuleLessons: allModuleLessons,
     );
   }
 }

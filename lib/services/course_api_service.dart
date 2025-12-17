@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 
 import 'package:edaptia/services/api_config.dart';
@@ -310,6 +311,7 @@ class CourseApiService {
   static Future<AdaptiveModuleResponse> generateAdaptiveModule({
     required String topic,
     required int moduleNumber,
+    required String language,
     List<String> focusSkills = const <String>[],
     Duration timeout = _timeout,
     int maxRetries = 1,
@@ -317,6 +319,7 @@ class CourseApiService {
     return adaptive_service.AdaptiveService.generateModule(
       topic: topic,
       moduleNumber: moduleNumber,
+      language: language,
       focusSkills: focusSkills,
       timeout: timeout,
       maxRetries: maxRetries,
@@ -384,5 +387,34 @@ class CourseApiService {
       throw const FormatException('Invalid usage metrics payload.');
     }
     return UsageMetrics.fromJson(Map<String, dynamic>.from(decoded));
+  }
+
+  /// Mark a lesson as visited in Firestore
+  /// This will sync across all devices for the user
+  static Future<void> markLessonVisited({
+    required String topic,
+    required int moduleNumber,
+    required int lessonIndex,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    try {
+      debugPrint('[CourseApiService] Marking lesson as visited: $topic M$moduleNumber L$lessonIndex');
+      final response = await CourseApiClient.postJson(
+        uri: Uri.parse(ApiConfig.markLessonVisited()),
+        body: {
+          'topic': topic,
+          'moduleNumber': moduleNumber,
+          'lessonIndex': lessonIndex,
+        },
+        timeout: timeout,
+        maxRetries: 2, // Increased retries
+      );
+      debugPrint('[CourseApiService] Lesson marked successfully: ${response.body}');
+    } catch (error, stackTrace) {
+      // Log detailed error for debugging
+      debugPrint('[CourseApiService] ERROR marking lesson as visited: $error');
+      debugPrint('[CourseApiService] Stack trace: $stackTrace');
+      // Don't throw - tracking should not block user experience
+    }
   }
 }

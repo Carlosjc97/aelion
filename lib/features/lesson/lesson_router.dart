@@ -20,12 +20,18 @@ class LessonRouter {
     required BuildContext context,
     required AdaptiveLesson lesson,
     required String moduleTitle,
+    required int moduleNumber,
+    required int lessonIndex,
     required String courseId,
+    List<AdaptiveLesson> allModuleLessons = const <AdaptiveLesson>[],
   }) async {
     final config = LessonViewConfig.fromAdaptiveLesson(
       lesson,
       moduleTitle: moduleTitle,
+      moduleNumber: moduleNumber,
+      lessonIndex: lessonIndex,
       courseId: courseId,
+      allModuleLessons: allModuleLessons,
     );
     final routeName = _getRouteForLessonType(config.lessonType);
     await Navigator.pushNamed(

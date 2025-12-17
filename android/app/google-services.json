@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "110324120650",
+    "project_id": "aelion-c90d2",
+    "storage_bucket": "aelion-c90d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110324120650:android:e8270ded9aa5697538bab3",
+        "android_client_info": {
+          "package_name": "com.aelion.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEOIHK23OqLJqCQ_K4NDYmLvRL3P3vxr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "110324120650-cldb8hbjpu5m00jb1q9rc6734b3cepk3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.learningIa"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110324120650:android:78a85543b987287f38bab3",
+        "android_client_info": {
+          "package_name": "com.aelion.learning"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "110324120650-lm4qnqha2b9an9nn6glpmof4r3bfpqr2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aelion.learning",
+            "certificate_hash": "689d188140dd86fd5e3944ebc33a3a8b42e59325"
+          }
+        },
+        {
+          "client_id": "110324120650-n5v6435nrpi2isa3cme085d5iq2541kp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aelion.learning",
+            "certificate_hash": "6749688e96185421a0e7fd640dbc51045604f18e"
+          }
+        },
+        {
+          "client_id": "110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEOIHK23OqLJqCQ_K4NDYmLvRL3P3vxr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "110324120650-b4ud5rpj6ckbh7ja0repab951mi45h8m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "110324120650-cldb8hbjpu5m00jb1q9rc6734b3cepk3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.learningIa"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

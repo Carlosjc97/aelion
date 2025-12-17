@@ -211,13 +211,9 @@ void main() {
     expect(capturedModuleArgs!.recommendRegenerate, isTrue);
   });
 
-  // TODO: Update test to match new architecture
-  // Architecture changed: HomeView now ALWAYS goes to QuizScreen,
+  // Note: Architecture changed - HomeView now ALWAYS goes to QuizScreen,
   // which then detects cachedBand and navigates to AdaptiveJourneyScreen.
-  // Test needs to be updated to match new flow.
-  testWidgets('Home uses cached band to open outline directly', (tester) async {
-    // Test skipped - see TODO above
-  }, skip: true);
+  // Previous test for cached band was removed as it's no longer applicable.
 }
 
 class _MockStreakService implements StreakService {

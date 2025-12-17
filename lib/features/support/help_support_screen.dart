@@ -14,8 +14,10 @@ class HelpSupportScreen extends StatefulWidget {
       Uri.parse('https://t.me/edaptia_news');
   static final Uri _telegramGroupUri =
       Uri.parse('https://t.me/adaptia_club');
-  static final Uri _privacyUri = Uri.parse('https://adaptia.io/privacy');
-  static final Uri _termsUri = Uri.parse('https://adaptia.io/terms');
+  static final Uri _privacyUri =
+      Uri.parse('https://aelion-c90d2.web.app/privacy-policy.html');
+  static final Uri _termsUri =
+      Uri.parse('https://aelion-c90d2.web.app/terms-of-service.html');
   static final Future<_SupportContext> _supportContextFuture =
       _loadSupportContext();
 
@@ -209,6 +211,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     ),
                     const Divider(height: 1),
                     ListTile(
+                      leading: const Icon(Icons.auto_awesome),
+                      title: Text(l10n.aiAboutTitle),
+                      subtitle: Text(l10n.aiAboutSubtitle),
+                      onTap: () => _showAiDialog(context, l10n),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
                       leading: const Icon(Icons.privacy_tip_outlined),
                       title: Text(l10n.helpPrivacyPolicy),
                       onTap: () =>
@@ -290,98 +299,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         question: l10n.helpFaqQuestion12,
         answer: l10n.helpFaqAnswer12,
       ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion13,
-        answer: l10n.helpFaqAnswer13,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion14,
-        answer: l10n.helpFaqAnswer14,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion15,
-        answer: l10n.helpFaqAnswer15,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion16,
-        answer: l10n.helpFaqAnswer16,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion17,
-        answer: l10n.helpFaqAnswer17,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion18,
-        answer: l10n.helpFaqAnswer18,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion19,
-        answer: l10n.helpFaqAnswer19,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion20,
-        answer: l10n.helpFaqAnswer20,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion21,
-        answer: l10n.helpFaqAnswer21,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion22,
-        answer: l10n.helpFaqAnswer22,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion23,
-        answer: l10n.helpFaqAnswer23,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion24,
-        answer: l10n.helpFaqAnswer24,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion25,
-        answer: l10n.helpFaqAnswer25,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion26,
-        answer: l10n.helpFaqAnswer26,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion27,
-        answer: l10n.helpFaqAnswer27,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion28,
-        answer: l10n.helpFaqAnswer28,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion29,
-        answer: l10n.helpFaqAnswer29,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion30,
-        answer: l10n.helpFaqAnswer30,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion31,
-        answer: l10n.helpFaqAnswer31,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion32,
-        answer: l10n.helpFaqAnswer32,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion33,
-        answer: l10n.helpFaqAnswer33,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion34,
-        answer: l10n.helpFaqAnswer34,
-      ),
-      _FaqItem(
-        question: l10n.helpFaqQuestion35,
-        answer: l10n.helpFaqAnswer35,
-      ),
     ];
   }
 
@@ -447,6 +364,62 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showAiDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(l10n.aiAboutTitle),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.aiAboutDialogIntro,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                Text(l10n.aiAboutDialogBulletModules),
+                Text(l10n.aiAboutDialogBulletQuizzes),
+                Text(l10n.aiAboutDialogBulletRecommendations),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.aiAboutDialogTransparencyTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.aiAboutDialogTransparencyBody),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.aiAboutDialogPrivacyTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(l10n.aiAboutDialogPrivacyBody),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonOk),
+            ),
+          ],
         );
       },
     );
@@ -522,6 +495,7 @@ class _SectionHeader extends StatelessWidget {
       ),
     );
   }
+
 }
 
 

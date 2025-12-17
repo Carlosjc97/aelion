@@ -28,6 +28,7 @@ class ApiConfig {
   static String fetchNextModule() => '$apiBaseUrl/fetchNextModule';
   static String moduleQuizStart() => '$apiBaseUrl/moduleQuizStart';
   static String moduleQuizGrade() => '$apiBaseUrl/moduleQuizGrade';
+  static String moduleQuizGenerate() => '$apiBaseUrl/moduleQuizGenerate';
   static String validateChallenge() => '$apiBaseUrl/validateChallenge';
   static String trackSearch() => '$apiBaseUrl/trackSearch';
   static String trending(String lang) => '$apiBaseUrl/trending?lang=$lang';
@@ -40,4 +41,7 @@ class ApiConfig {
   static String adaptiveEvaluateCheckpoint() =>
       '$apiBaseUrl/adaptiveEvaluateCheckpoint';
   static String adaptiveBooster() => '$apiBaseUrl/adaptiveBooster';
+  static String markLessonVisited() => '$apiBaseUrl/markLessonVisited';
+  static String startTrial() => '$apiBaseUrl/startTrial';
+  static String verifyGooglePlayPurchase() => '$apiBaseUrl/verifyGooglePlayPurchase';
 }

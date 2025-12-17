@@ -8,6 +8,8 @@ import { defineSecret } from "firebase-functions/params";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
+import { androidpublisher } from "@googleapis/androidpublisher";
+import { GoogleAuth } from "google-auth-library";
 import * as logger from "firebase-functions/logger";
 import type {
   LearnerState,
@@ -31,6 +33,11 @@ import {
   resolveRateLimitKey,
 } from "./request-guard";
 import { getSQLMarketingTemplate } from "./templates/sql-marketing";
+import {
+  saveModuleToHistory,
+  getModuleHistory,
+  formatHistoryForPrompt,
+} from "./module-history";
 type OpenAIServiceModule = typeof import("./openai-service");
 type AssessmentModule = typeof import("./assessment");
 
@@ -72,11 +79,24 @@ export const OPENAI_SECRETS = [
 
 const firestore = getFirestore();
 const authClient = getAuth();
-const DAILY_AI_CAP = 20;
+const DAILY_AI_CAP = 30; // Daily AI operations limit for free users
+const FREE_TIER_COURSE_LIMIT = 3; // Maximum active courses for free users
+
+const GOOGLE_PLAY_SCOPE = "https://www.googleapis.com/auth/androidpublisher";
+const googlePlayAuthClient = new GoogleAuth({
+  scopes: [GOOGLE_PLAY_SCOPE],
+});
+const androidPublisherClient = androidpublisher({
+  version: "v3",
+  auth: googlePlayAuthClient,
+});
 
 interface UserEntitlements {
   isPremium: boolean;
   trialEndsAt?: Timestamp | Date;
+  subscriptionExpiresAt?: Timestamp | Date;
+  googlePlayPurchaseToken?: string;
+  googlePlayProductId?: string;
 }
 
 interface GateResult {
@@ -108,10 +128,19 @@ async function getUserEntitlements(userId: string): Promise<UserEntitlements> {
   const data = userDoc.data() ?? {};
   const entitlements = data.entitlements ?? {};
   const trial = entitlements.trialEndsAt ?? data.trialEndsAt;
+  const subscriptionExpiresAt =
+    entitlements.subscriptionExpiresAt ?? data.subscriptionExpiresAt;
+  const googlePlayPurchaseToken =
+    entitlements.googlePlayPurchaseToken ?? data.googlePlayPurchaseToken;
+  const googlePlayProductId =
+    entitlements.googlePlayProductId ?? data.googlePlayProductId;
 
   return {
     isPremium: Boolean(entitlements.isPremium ?? data.isPremium ?? false),
     trialEndsAt: trial,
+    subscriptionExpiresAt,
+    googlePlayPurchaseToken: typeof googlePlayPurchaseToken === 'string' ? googlePlayPurchaseToken : undefined,
+    googlePlayProductId: typeof googlePlayProductId === 'string' ? googlePlayProductId : undefined,
   };
 }
 
@@ -123,12 +152,62 @@ async function ensurePremiumAccess(
     return;
   }
 
+  // ⚠️⚠️⚠️ BYPASS TEMPORAL PARA TESTING ⚠️⚠️⚠️
+  // REVERTIR ANTES DE: commit, push, PR, deploy, merge
+  const TESTING_BYPASS = true; // Cambiar a false en producción
+  if (TESTING_BYPASS) {
+    return; // Bypass premium check for testing
+  }
+  // ⚠️⚠️⚠️ FIN BYPASS TEMPORAL ⚠️⚠️⚠️
+
   const entitlements = await getUserEntitlements(userId);
   if (entitlements.isPremium || isTrialActive(entitlements.trialEndsAt)) {
     return;
   }
 
   throw new Error("PREMIUM_REQUIRED");
+}
+
+/**
+ * Enforces course creation limits for free tier users.
+ * Premium users can create unlimited courses.
+ * Free users are limited to FREE_TIER_COURSE_LIMIT active courses.
+ */
+async function enforceCourseLimits(
+  userId: string,
+  topic: string,
+): Promise<void> {
+  const entitlements = await getUserEntitlements(userId);
+
+  // Premium users have no limits
+  if (entitlements.isPremium || isTrialActive(entitlements.trialEndsAt)) {
+    return;
+  }
+
+  // Get user's active courses from learner_state collection
+  const userCoursesSnapshot = await firestore
+    .collection("learner_state")
+    .where("userId", "==", userId)
+    .get();
+
+  const activeCourses = new Set<string>();
+
+  userCoursesSnapshot.forEach((doc) => {
+    const data = doc.data();
+    const courseTopic = data.topic?.toString().trim().toLowerCase();
+    if (courseTopic) {
+      activeCourses.add(courseTopic);
+    }
+  });
+
+  const normalizedTopic = topic.trim().toLowerCase();
+
+  // If this is a new course (not already in active courses)
+  if (!activeCourses.has(normalizedTopic)) {
+    if (activeCourses.size >= FREE_TIER_COURSE_LIMIT) {
+      throw new Error("COURSE_LIMIT_REACHED");
+    }
+  }
 }
 
 function gateDocRef(userId: string, moduleNumber: number) {
@@ -185,12 +264,12 @@ const DEFAULT_LEARNER_STATE: LearnerState = {
   target: "general",
 };
 
-function learnerStateDoc(userId: string) {
+function learnerStateDoc(userId: string, topic: string) {
   return firestore
     .collection("users")
     .doc(userId)
     .collection("adaptiveState")
-    .doc("summary");
+    .doc(topic);  // Now specific per topic/course
 }
 
 function checkpointDoc(userId: string, moduleNumber: number) {
@@ -211,11 +290,12 @@ function createLearnerStateSnapshot(overrides: Partial<LearnerState> = {}): Lear
       commonErrors: overrides.history?.commonErrors ?? [],
     },
     target: overrides.target ?? DEFAULT_LEARNER_STATE.target,
+    visitedLessons: overrides.visitedLessons ?? {},
   };
 }
 
-export async function loadLearnerState(userId: string): Promise<LearnerState> {
-  const snapshot = await learnerStateDoc(userId).get();
+export async function loadLearnerState(userId: string, topic: string): Promise<LearnerState> {
+  const snapshot = await learnerStateDoc(userId, topic).get();
   if (!snapshot.exists) {
     return createLearnerStateSnapshot();
   }
@@ -229,24 +309,26 @@ export async function loadLearnerState(userId: string): Promise<LearnerState> {
       commonErrors: Array.isArray(data.history?.commonErrors) ? data.history.commonErrors : [],
     },
     target: typeof data.target === "string" ? data.target : DEFAULT_LEARNER_STATE.target,
+    visitedLessons: typeof data.visitedLessons === "object" && data.visitedLessons !== null ? data.visitedLessons : {},
   });
 }
 
-async function saveLearnerState(userId: string, state: LearnerState): Promise<void> {
-  await learnerStateDoc(userId).set(
+async function saveLearnerState(userId: string, topic: string, state: LearnerState): Promise<void> {
+  await learnerStateDoc(userId, topic).set(
     {
       ...state,
       updatedAt: FieldValue.serverTimestamp(),
     },
-    { merge: false },
+    { merge: true },
   );
 }
 
 async function updateLearnerState(
   userId: string,
+  topic: string,
   updates: Partial<LearnerState>,
 ): Promise<LearnerState> {
-  const current = await loadLearnerState(userId);
+  const current = await loadLearnerState(userId, topic);
   const next: LearnerState = {
     ...current,
     ...updates,
@@ -261,8 +343,12 @@ async function updateLearnerState(
       failedModules: updates.history?.failedModules ?? current.history.failedModules,
       commonErrors: updates.history?.commonErrors ?? current.history.commonErrors,
     },
+    visitedLessons: {
+      ...current.visitedLessons,
+      ...(updates.visitedLessons ?? {}),
+    },
   };
-  await saveLearnerState(userId, next);
+  await saveLearnerState(userId, topic, next);
   return next;
 }
 
@@ -467,8 +553,8 @@ export const placementQuizStartLive = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased from 5 for testing
-        windowSeconds: 300, // 5 minutes instead of 1 minute
+        limit: 30, // Increased for development/testing
+        windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
       });
@@ -627,11 +713,11 @@ export const placementQuizStartLive = onRequest(
     res.status(200).json({
       quizId,
       expiresAt,
-      maxMinutes: 15,
+      maxMinutes: 2,
       questions: questionsForClient,
       policy: {
         numQuestions: 10,
-        maxMinutes: 15,
+        maxMinutes: 2,
       },
       meta: {
         source,
@@ -673,7 +759,7 @@ export const outlineGenerative = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased for testing
+        limit: 30, // Increased for development/testing
         windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -825,7 +911,7 @@ export const fetchNextModule = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10, // Increased for testing
+        limit: 50, // Increased for development/testing
         windowSeconds: 300, // 5 minutes
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1006,7 +1092,7 @@ export const moduleQuizStart = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 10,
+        limit: 30, // Increased for development/testing
         windowSeconds: 300,
       });
     } catch (limitError) {
@@ -1214,6 +1300,39 @@ export const moduleQuizGrade = onRequest(
       passed: result.passed,
     });
 
+    // Update learner state to track passed/failed modules
+    if (result.passed) {
+      const learnerState = await loadLearnerState(authContext.userId, session.topic);
+      const passedSet = new Set(learnerState.history.passedModules ?? []);
+      const failedSet = new Set(learnerState.history.failedModules ?? []);
+
+      passedSet.add(session.moduleNumber);
+      failedSet.delete(session.moduleNumber);
+
+      await updateLearnerState(authContext.userId, session.topic, {
+        history: {
+          passedModules: Array.from(passedSet),
+          failedModules: Array.from(failedSet),
+          commonErrors: learnerState.history.commonErrors,
+        },
+      });
+    } else {
+      const learnerState = await loadLearnerState(authContext.userId, session.topic);
+      const passedSet = new Set(learnerState.history.passedModules ?? []);
+      const failedSet = new Set(learnerState.history.failedModules ?? []);
+
+      failedSet.add(session.moduleNumber);
+      passedSet.delete(session.moduleNumber);
+
+      await updateLearnerState(authContext.userId, session.topic, {
+        history: {
+          passedModules: Array.from(passedSet),
+          failedModules: Array.from(failedSet),
+          commonErrors: learnerState.history.commonErrors,
+        },
+      });
+    }
+
     res.status(200).json({
       passed: result.passed,
       scorePct: result.scorePct,
@@ -1346,7 +1465,7 @@ export const outlineTweak = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1521,7 +1640,7 @@ export const adaptivePlanDraft = onRequest(
     const normalizedBand: Band =
       band === "intermediate" || band === "advanced" ? band : "basic";
 
-    const learnerState = await updateLearnerState(authContext.userId, {
+    const learnerState = await updateLearnerState(authContext.userId, topic.trim(), {
       level_band: normalizedBand,
       target: target.trim(),
     });
@@ -1566,7 +1685,7 @@ export const adaptiveModuleGenerate = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 8,
+        limit: 40, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1585,14 +1704,30 @@ export const adaptiveModuleGenerate = onRequest(
       throw limitError;
     }
 
-    const { topic, moduleNumber, focusSkills } = req.body ?? {};
+    const { topic, moduleNumber, focusSkills, language } = req.body ?? {};
 
     if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
       res.status(400).json({ error: "Invalid topic" });
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const lang = typeof language === "string" && language.trim().length > 0 ? language.trim() : "es";
+
+    // Enforce course creation limits for free tier users
+    try {
+      await enforceCourseLimits(authContext.userId, topic);
+    } catch (limitError) {
+      if (limitError instanceof Error && limitError.message === "COURSE_LIMIT_REACHED") {
+        res.status(403).json({
+          error: "COURSE_LIMIT_REACHED",
+          message: "Has alcanzado el límite de cursos gratuitos. Actualiza a premium para acceso ilimitado."
+        });
+        return;
+      }
+      throw limitError;
+    }
+
+    const learnerState = await loadLearnerState(authContext.userId, topic.trim());
     const fallbackModuleNumber =
       Math.max(0, ...(learnerState.history.passedModules ?? []), ...(learnerState.history.failedModules ?? [])) + 1;
     const resolvedModuleNumber =
@@ -1605,6 +1740,13 @@ export const adaptiveModuleGenerate = onRequest(
       : [];
     const deficits = focusList.length > 0 ? focusList : rankSkillDeficits(learnerState, 3);
 
+    // Load module history for context-aware generation
+    const moduleHistory = await getModuleHistory(
+      authContext.userId,
+      topic.trim(),
+      resolvedModuleNumber
+    );
+
     const moduleData: ModuleOut = await getOpenAI().generateModuleAdaptive({
       topic: topic.trim(),
       learnerState,
@@ -1612,6 +1754,17 @@ export const adaptiveModuleGenerate = onRequest(
       topDeficits: deficits,
       target: learnerState.target,
       userId: authContext.userId,
+      moduleHistory, // Pass history for progressive content generation
+      language: lang, // Explicit language for content generation
+    });
+
+    // Save generated module to history for future context
+    await saveModuleToHistory(authContext.userId, topic.trim(), {
+      moduleNumber: moduleData.moduleNumber,
+      title: moduleData.title,
+      lessons: moduleData.lessons,
+      skillsTargeted: moduleData.skillsTargeted,
+      durationMinutes: moduleData.durationMinutes,
     });
 
     res.status(200).json({
@@ -1647,7 +1800,7 @@ export const adaptiveCheckpointQuiz = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1687,7 +1840,7 @@ export const adaptiveCheckpointQuiz = onRequest(
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, topic.trim());
     const quiz: CheckpointQuiz = await getOpenAI().generateCheckpointQuiz({
       topic: topic.trim(),
       moduleNumber,
@@ -1796,7 +1949,7 @@ export const adaptiveEvaluateCheckpoint = onRequest(
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, checkpointMeta.topic);
     const skills: string[] =
       Array.isArray(skillsTargeted) && skillsTargeted.length
         ? skillsTargeted.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
@@ -1829,7 +1982,7 @@ export const adaptiveEvaluateCheckpoint = onRequest(
       new Set([...(evaluation.weakSkills ?? []), ...(learnerState.history.commonErrors ?? [])]),
     ).slice(0, 10);
 
-    const updatedState = await updateLearnerState(authContext.userId, {
+    const updatedState = await updateLearnerState(authContext.userId, checkpointMeta.topic, {
       skill_mastery: evaluation.updatedMastery,
       history: {
         passedModules: Array.from(passedSet),
@@ -1890,7 +2043,7 @@ export const adaptiveBooster = onRequest(
     try {
       await enforceRateLimit({
         key: rateKey,
-        limit: 6,
+        limit: 20, // Increased for development/testing
         windowSeconds: 600,
         userId: authContext.userId,
         userDailyCap: DAILY_AI_CAP,
@@ -1931,7 +2084,7 @@ export const adaptiveBooster = onRequest(
       return;
     }
 
-    const learnerState = await loadLearnerState(authContext.userId);
+    const learnerState = await loadLearnerState(authContext.userId, topic.trim());
 
     const incomingWeak: string[] = Array.isArray(weakSkills)
       ? weakSkills.map((skill: unknown) => skill?.toString() ?? "").filter((skill: string) => skill.length > 0)
@@ -1954,7 +2107,7 @@ export const adaptiveBooster = onRequest(
       userId: authContext.userId,
     });
 
-    const updatedState = await updateLearnerState(authContext.userId, {
+    const updatedState = await updateLearnerState(authContext.userId, topic.trim(), {
       history: {
         passedModules: learnerState.history.passedModules,
         failedModules: learnerState.history.failedModules,
@@ -1975,6 +2128,252 @@ export const adaptiveBooster = onRequest(
       error: error instanceof Error ? error.message : "Internal server error",
     });
   }
+  },
+);
+
+export const startTrial = onRequest(
+  { cors: true, timeoutSeconds: 60, memory: "256MiB" },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    try {
+      const authContext = await authenticateRequest(req, authClient);
+      if (!authContext.userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      const userId = authContext.userId;
+      const entitlements = await getUserEntitlements(userId);
+      if (entitlements.isPremium || isTrialActive(entitlements.trialEndsAt)) {
+        res.status(200).json({ trialEndsAt: entitlements.trialEndsAt });
+        return;
+      }
+
+      const trialEndsAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      await firestore.collection("users").doc(userId).set(
+        {
+          entitlements: {
+            trialEndsAt: Timestamp.fromMillis(trialEndsAt),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+        },
+        { merge: true },
+      );
+
+      res.status(200).json({ trialEndsAt });
+    } catch (error) {
+      logger.error("startTrial error:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  },
+);
+
+
+export const verifyGooglePlayPurchase = onRequest(
+  { cors: true, timeoutSeconds: 30, memory: "256MiB" },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    try {
+      const authContext = await authenticateRequest(req, authClient);
+      if (!authContext.userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:verify_google_play_purchase`;
+      try {
+        await enforceRateLimit({
+          key: rateKey,
+          limit: 20,
+          windowSeconds: 300,
+          userId: authContext.userId,
+        });
+      } catch (limitError) {
+        if (limitError instanceof Error) {
+          if (limitError.message === "RATE_LIMIT_EXCEEDED") {
+            res.status(429).json({ error: "Too many verification attempts" });
+            return;
+          }
+          if (limitError.message === "DAILY_LIMIT_EXCEEDED") {
+            res.status(429).json({ error: "Daily verification limit reached" });
+            return;
+          }
+        }
+        throw limitError;
+      }
+
+      const { purchaseToken, productId, packageName } = req.body ?? {};
+      if (
+        typeof purchaseToken !== "string" ||
+        typeof productId !== "string" ||
+        typeof packageName !== "string"
+      ) {
+        res.status(400).json({ error: "Invalid purchase payload" });
+        return;
+      }
+
+      const trimmedToken = purchaseToken.trim();
+      const trimmedProductId = productId.trim();
+      const trimmedPackageName = packageName.trim();
+
+      if (!trimmedToken || !trimmedProductId || !trimmedPackageName) {
+        res.status(400).json({ error: "Missing purchase attributes" });
+        return;
+      }
+
+      const logRef = firestore.collection("purchase_verifications").doc();
+      await logRef.set({
+        userId: authContext.userId,
+        packageName: trimmedPackageName,
+        productId: trimmedProductId,
+        purchaseTokenSuffix: trimmedToken.slice(-8),
+        createdAt: FieldValue.serverTimestamp(),
+        status: "pending",
+      });
+
+      try {
+        const response = await androidPublisherClient.purchases.subscriptions.get({
+          packageName: trimmedPackageName,
+          subscriptionId: trimmedProductId,
+          token: trimmedToken,
+        });
+
+        const subscription = response.data;
+        const expiryTimeMillis = Number(subscription.expiryTimeMillis ?? 0);
+        const paymentState =
+          typeof subscription.paymentState === "number" ? subscription.paymentState : -1;
+        const autoRenewing = subscription.autoRenewing ?? false;
+
+        if (!expiryTimeMillis) {
+          await logRef.set(
+            {
+              status: "invalid",
+              reason: "MISSING_EXPIRY",
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          res.status(400).json({ error: "Unable to determine subscription expiry" });
+          return;
+        }
+
+        if (paymentState !== 1) {
+          const pending = paymentState === 0 || paymentState === 3;
+          await logRef.set(
+            {
+              status: pending ? "pending" : "unpaid",
+              paymentState,
+              expiresAt: Timestamp.fromMillis(expiryTimeMillis),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          res.status(pending ? 202 : 403).json({
+            error: pending ? "PURCHASE_PENDING" : "PURCHASE_NOT_CHARGED",
+            paymentState,
+          });
+          return;
+        }
+
+        if (expiryTimeMillis <= Date.now()) {
+          await logRef.set(
+            {
+              status: "expired",
+              paymentState,
+              expiresAt: Timestamp.fromMillis(expiryTimeMillis),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+          res.status(403).json({ error: "SUBSCRIPTION_EXPIRED" });
+          return;
+        }
+
+        await firestore
+          .collection("users")
+          .doc(authContext.userId)
+          .set(
+            {
+              entitlements: {
+                isPremium: true,
+                googlePlayPurchaseToken: trimmedToken,
+                googlePlayProductId: trimmedProductId,
+                subscriptionExpiresAt: Timestamp.fromMillis(expiryTimeMillis),
+                autoRenewing,
+                verifiedAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
+              },
+            },
+            { merge: true },
+          );
+
+        await logRef.set(
+          {
+            status: "verified",
+            paymentState,
+            autoRenewing,
+            expiresAt: Timestamp.fromMillis(expiryTimeMillis),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+
+        res.status(200).json({
+          verified: true,
+          expiresAt: expiryTimeMillis,
+          autoRenewing,
+        });
+      } catch (apiError) {
+        const statusCode = (apiError as { code?: number }).code ?? 502;
+        const errorMessage =
+          apiError instanceof Error ? apiError.message : "Google Play verification failed";
+
+        await logRef.set(
+          {
+            status: "error",
+            errorCode: statusCode,
+            errorMessage,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+
+        logger.error("verifyGooglePlayPurchase: Google API error", {
+          userId: authContext.userId,
+          productId: trimmedProductId,
+          packageName: trimmedPackageName,
+          statusCode,
+          error: errorMessage,
+        });
+
+        if (statusCode === 404 || statusCode === 410) {
+          res.status(400).json({ error: "INVALID_TOKEN" });
+          return;
+        }
+
+        if (statusCode === 401) {
+          res.status(502).json({ error: "GOOGLE_AUTH_ERROR" });
+          return;
+        }
+
+        res.status(502).json({ error: "GOOGLE_VERIFICATION_FAILED" });
+      }
+    } catch (error) {
+      logger.error("verifyGooglePlayPurchase error", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
   },
 );
 
@@ -2049,6 +2448,192 @@ export const openaiUsageMetrics = onRequest({ cors: true }, async (req, res) => 
     });
   } catch (error) {
     logger.error("openaiUsageMetrics error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+});
+
+/**
+ * POST /moduleQuizGenerate
+ * Generate quiz based on module lessons (on-demand, live generation)
+ * Body: { topic: string, moduleNumber: number, moduleTitle: string, lessonTitles: string[], lang: string }
+ * Returns: { quizId, questions: [...], expiresAt, policy }
+ */
+export const moduleQuizGenerate = onRequest(
+  { cors: true, timeoutSeconds: 300, memory: "512MiB", secrets: OPENAI_SECRETS },
+  async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const rateKey = `${resolveRateLimitKey(req, authContext.userId)}:module_quiz_generate`;
+    try {
+      await enforceRateLimit({
+        key: rateKey,
+        limit: 30,
+        windowSeconds: 300,
+        userId: authContext.userId,
+        userDailyCap: DAILY_AI_CAP,
+      });
+    } catch (limitError) {
+      if (limitError instanceof Error && limitError.message === "RATE_LIMIT_EXCEEDED") {
+        res.status(429).json({ error: "Too many quiz generation requests" });
+        return;
+      }
+      throw limitError;
+    }
+
+    const { topic, moduleNumber, moduleTitle, lessonTitles, lang } = req.body;
+
+    // Validation
+    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
+      res.status(400).json({ error: "Invalid topic" });
+      return;
+    }
+
+    if (!moduleNumber || typeof moduleNumber !== "number" || moduleNumber < 1) {
+      res.status(400).json({ error: "Invalid moduleNumber" });
+      return;
+    }
+
+    if (!moduleTitle || typeof moduleTitle !== "string") {
+      res.status(400).json({ error: "moduleTitle is required" });
+      return;
+    }
+
+    if (!Array.isArray(lessonTitles) || lessonTitles.length === 0) {
+      res.status(400).json({ error: "lessonTitles array is required" });
+      return;
+    }
+
+    const language = lang === "es" ? "es" : "en";
+
+    // Generate quiz with OpenAI based on module content
+    const questions = await getOpenAI().generateModuleLessonQuiz({
+      topic: topic.trim(),
+      moduleNumber,
+      moduleTitle: moduleTitle.trim(),
+      lessonTitles: lessonTitles.map((title) => String(title).trim()),
+      lang: language,
+      userId: authContext.userId,
+    });
+
+    const quizId = getAssessment().generateQuizId();
+    const createdAt = Date.now();
+    const expiresAt = createdAt + 30 * 60 * 1000; // 30 minutes
+
+    // Store session for grading
+    await saveModuleSession({
+      quizId,
+      moduleId: `module-${moduleNumber}`,
+      moduleNumber,
+      topic: topic.trim(),
+      language,
+      createdAt,
+      expiresAt,
+      userId: authContext.userId,
+      questions: questions.map((q, idx) => ({
+        id: q.id || `gen-${Date.now()}-${idx}`,
+        question: q.question,
+        options: q.options,
+        correct_answer: q.correct_answer,
+        tags: q.tags || [],
+      })),
+    });
+
+    // Get attempt state for practice mode
+    const attemptState = await getGateAttemptState(authContext.userId, moduleNumber);
+
+    // Return questions without correct answers
+    const questionsForClient = questions.map((q) => ({
+      id: q.id,
+      text: q.question,
+      choices: q.options,
+    }));
+
+    res.status(200).json({
+      quizId,
+      moduleNumber,
+      expiresAt,
+      questions: questionsForClient,
+      policy: {
+        passingScore: 70,
+        numQuestions: questions.length,
+        practiceMode: attemptState.practiceUnlocked,
+        attempts: attemptState.attempts,
+        maxAttempts: 3,
+      },
+      practice: {
+        enabled: attemptState.practiceUnlocked,
+        attempts: attemptState.attempts,
+        maxAttempts: 3,
+      },
+    });
+
+    logger.info(`moduleQuizGenerate: quiz ${quizId} for module ${moduleNumber} by ${authContext.userId}`);
+  } catch (error) {
+    logger.error("moduleQuizGenerate error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+  },
+);
+
+/**
+ * Mark a lesson as visited
+ * POST /markLessonVisited
+ * Body: { topic: string, moduleNumber: number, lessonIndex: number }
+ */
+export const markLessonVisited = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    // Accept both X-User-Id (from client) and x-user-id (legacy)
+    const userId = req.get("X-User-Id") || req.get("x-user-id");
+    if (!userId) {
+      logger.error("markLessonVisited: No user ID in headers", {
+        headers: req.headers,
+      });
+      res.status(401).json({ error: "User ID required" });
+      return;
+    }
+
+    const { topic, moduleNumber, lessonIndex } = req.body;
+    if (!topic || moduleNumber === undefined || lessonIndex === undefined) {
+      res.status(400).json({ error: "Missing required fields: topic, moduleNumber, lessonIndex" });
+      return;
+    }
+
+    // Create lesson key: "topic_m1_l0"
+    const normalized = topic.trim().toLowerCase().replace(/\s+/g, "_");
+    const lessonKey = `${normalized}_m${moduleNumber}_l${lessonIndex}`;
+
+    // Load current state, add lesson, and save
+    const currentState = await loadLearnerState(userId, topic.trim());
+    await updateLearnerState(userId, topic.trim(), {
+      visitedLessons: {
+        ...currentState.visitedLessons,
+        [lessonKey]: true,
+      },
+    });
+
+    logger.info(`Marked lesson as visited: ${lessonKey} for user ${userId}`);
+    res.status(200).json({ success: true, lessonKey });
+  } catch (error) {
+    logger.error("markLessonVisited error:", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : "Internal server error",
     });

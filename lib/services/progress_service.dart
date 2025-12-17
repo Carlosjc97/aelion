@@ -90,6 +90,8 @@ class ProgressService {
       iso == null ? null : DateTime.tryParse(iso);
 
   int get streakCount => _prefs?.getInt(_kStreakCount) ?? 0;
+  DateTime? get lastStreakCheckIn =>
+      _parseDate(_prefs?.getString(_kStreakStart));
 
   Future<StreakUpdate> tickDailyStreak() async {
     final today = DateTime.now();

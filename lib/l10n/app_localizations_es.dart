@@ -50,7 +50,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authRetry => 'Reintentar';
 
   @override
-  String get homeGreeting => 'Que quieres aprender hoy?';
+  String get homeGreeting => 'Qué quieres aprender hoy?';
 
   @override
   String homeGreetingNamedShort(String name) {
@@ -67,7 +67,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeMotivation => 'Sigue con tu impulso de aprendizaje hoy.';
 
   @override
-  String get homePromptTitle => 'Que plan generamos hoy?';
+  String get homePromptTitle => 'Qué plan generamos hoy?';
 
   @override
   String get homeInputHint =>
@@ -189,7 +189,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String assessmentResultLevelLabel(String level) {
-    return 'Nivel detectado: $level';
+    return 'Tu nivel: $level';
   }
 
   @override
@@ -201,7 +201,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get assessmentResultStrengthsTitle => 'Fortalezas';
 
   @override
-  String get assessmentResultGapsTitle => 'Ãreas de mejora';
+  String get assessmentResultGapsTitle => 'Áreas de mejora';
 
   @override
   String get assessmentResultPlanTitle => 'Plan sugerido';
@@ -291,13 +291,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingSelectLabel => 'Selecciona una opcion';
 
   @override
-  String get onboardingQuestionAge => 'Cual es tu rango de edad?';
+  String get onboardingQuestionAge => 'Cuál es tu rango de edad?';
 
   @override
-  String get onboardingQuestionInterests => 'Que temas te interesan?';
+  String get onboardingQuestionInterests => 'Qué temas te interesan?';
 
   @override
-  String get onboardingQuestionEducation => 'Cual es tu nivel educativo?';
+  String get onboardingQuestionEducation => 'Cuál es tu nivel educativo?';
 
   @override
   String get onboardingQuestionFirstSql => 'Es tu primera vez con SQL?';
@@ -767,7 +767,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lessonQuizCheck => 'Comprobar respuesta';
 
   @override
-  String get lessonQuizCorrect => 'âœ… ¡Correcto!';
+  String get lessonQuizCorrect => '✅ ¡Correcto!';
 
   @override
   String lessonQuizIncorrect(String answer) {
@@ -864,7 +864,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get helpAboutDescription =>
-      'Creada con Flutter y Firebase; todo el contenido se genera mediante Cloud Functions seguras.';
+      'Creada con Flutter, Firebase Cloud Functions y OpenAI; el contenido adaptativo se genera de forma segura bajo demanda.';
 
   @override
   String get helpPrivacyPolicy => 'Política de privacidad';
@@ -891,6 +891,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsHelpSupportSubtitle => 'Preguntas, contacto y políticas';
 
   @override
+  String get settingsPrivacyPolicy => 'Política de Privacidad';
+
+  @override
+  String get settingsPrivacyPolicySubtitle => 'Cómo manejamos tus datos';
+
+  @override
+  String get settingsTermsOfService => 'Términos de Servicio';
+
+  @override
+  String get settingsTermsOfServiceSubtitle => 'Condiciones de uso de la app';
+
+  @override
   String helpEmailSubject(String appName, String version, String device) {
     return 'Solicitud de soporte $appName (v$version Â· $device)';
   }
@@ -910,256 +922,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String helpAboutVersion(String version) {
     return 'Versión $version';
   }
-
-  @override
-  String get helpFaqQuestion1 => '¿Cómo genero mi primer plan de aprendizaje?';
-
-  @override
-  String get helpFaqAnswer1 =>
-      'En la pantalla Inicio, escribe un tema y toca Generar plan con IA.';
-
-  @override
-  String get helpFaqQuestion2 => '¿Dónde encuentro mis planes recientes?';
-
-  @override
-  String get helpFaqAnswer2 =>
-      'Desplázate a Recientes en Inicio; cada tarjeta abre el plan guardado.';
-
-  @override
-  String get helpFaqQuestion3 => '¿Cómo se eligen los temas en tendencia?';
-
-  @override
-  String get helpFaqAnswer3 =>
-      'Combinamos tus últimas búsquedas con solicitudes populares en tu idioma.';
-
-  @override
-  String get helpFaqQuestion4 => '¿Qué es un quiz de colocación?';
-
-  @override
-  String get helpFaqAnswer4 =>
-      'Es una calibración de 10 preguntas que define el nivel adecuado antes del plan.';
-
-  @override
-  String get helpFaqQuestion5 =>
-      '¿Puedo cambiar la profundidad del plan después?';
-
-  @override
-  String get helpFaqAnswer5 =>
-      'Abre el plan, toca Refinar plan y elige la profundidad que se ajuste a tu meta.';
-
-  @override
-  String get helpFaqQuestion6 => '¿Cómo cambio el idioma del plan?';
-
-  @override
-  String get helpFaqAnswer6 =>
-      'Genera nuevamente tras elegir tu idioma preferido en el quiz o en el prompt.';
-
-  @override
-  String get helpFaqQuestion7 => '¿Qué sucede si pierdo la conexión?';
-
-  @override
-  String get helpFaqAnswer7 =>
-      'Los planes y recientes en caché siguen disponibles; las nuevas generaciones esperan a que vuelvas a estar en línea.';
-
-  @override
-  String get helpFaqQuestion8 => '¿Cómo se guarda mi progreso?';
-
-  @override
-  String get helpFaqAnswer8 =>
-      'Guardamos metadatos y planes en caché de forma segura en tu dispositivo con SharedPreferences.';
-
-  @override
-  String get helpFaqQuestion9 => '¿Cómo cierro sesión de forma segura?';
-
-  @override
-  String get helpFaqAnswer9 =>
-      'Usa el icono de salida en la barra superior; cierra sesión en Firebase y en Google en móviles.';
-
-  @override
-  String get helpFaqQuestion10 => '¿Cómo cambio de cuenta de Google?';
-
-  @override
-  String get helpFaqAnswer10 =>
-      'Cierra sesión y elige la otra cuenta cuando aparezca la hoja de inicio de sesión de Google.';
-
-  @override
-  String get helpFaqQuestion11 => '¿Cómo borro mis búsquedas recientes?';
-
-  @override
-  String get helpFaqAnswer11 =>
-      'El historial se limita a las últimas entradas por cuenta y se limpia automáticamente al cerrar sesión.';
-
-  @override
-  String get helpFaqQuestion12 => '¿Qué datos guardan en Firestore?';
-
-  @override
-  String get helpFaqAnswer12 =>
-      'Solo registros anonimizados de planes en caché y métricas de observabilidad creadas por Functions.';
-
-  @override
-  String get helpFaqQuestion13 => '¿Cómo reporto contenido incorrecto?';
-
-  @override
-  String get helpFaqAnswer13 =>
-      'Usa el botón Reportar un error y describe lo que debemos corregir.';
-
-  @override
-  String get helpFaqQuestion14 => '¿De dónde salen las recomendaciones?';
-
-  @override
-  String get helpFaqAnswer14 =>
-      'Mezclan demanda agregada con tu actividad reciente para mostrar temas relevantes.';
-
-  @override
-  String get helpFaqQuestion15 => '¿Puedo regenerar un plan después del quiz?';
-
-  @override
-  String get helpFaqAnswer15 =>
-      'Sí. Al aplicar los resultados se reconstruye el plan con el nuevo nivel.';
-
-  @override
-  String get helpFaqQuestion16 =>
-      '¿Cuánto tiempo se conservan los planes en caché?';
-
-  @override
-  String get helpFaqAnswer16 =>
-      'Permanecen hasta que los reemplazas o borras la memoria; la etiqueta Caducado aparece tras 24 horas.';
-
-  @override
-  String get helpFaqQuestion17 => '¿Por qué me piden rehacer el quiz?';
-
-  @override
-  String get helpFaqAnswer17 =>
-      'Lo sugerimos cuando tu nivel parece desactualizado o la caché supera su ventana de vigencia.';
-
-  @override
-  String get helpFaqQuestion18 => '¿Puedo usar la app en varios dispositivos?';
-
-  @override
-  String get helpFaqAnswer18 =>
-      'Sí. Inicia sesión con la misma cuenta de Google en web o Android para mantener la sincronización.';
-
-  @override
-  String get helpFaqQuestion19 => '¿La app soporta modo oscuro?';
-
-  @override
-  String get helpFaqAnswer19 =>
-      'Seguimos el tema del sistema y mantenemos el contraste dentro de las guías de accesibilidad.';
-
-  @override
-  String get helpFaqQuestion20 => '¿Cómo reinicio mi racha de aprendizaje?';
-
-  @override
-  String get helpFaqAnswer20 =>
-      'Borra los datos locales desde los ajustes del sistema o inicia sesión con una cuenta nueva.';
-
-  @override
-  String get helpFaqQuestion21 => '¿Cómo solicito una nueva función?';
-
-  @override
-  String get helpFaqAnswer21 =>
-      'Envía tu idea por el correo de soporte en inglés y añade \'Feature idea\' en el mensaje.';
-
-  @override
-  String get helpFaqQuestion22 => '¿Necesito una cuenta para usar la app?';
-
-  @override
-  String get helpFaqAnswer22 =>
-      'Sí, usamos autenticación de Google para proteger tu contenido y personalización.';
-
-  @override
-  String get helpFaqQuestion23 => '¿Qué pasa si cierro la app durante un quiz?';
-
-  @override
-  String get helpFaqAnswer23 =>
-      'Puedes reiniciar el quiz cuando quieras; el progreso se reinicia para calibrar correctamente.';
-
-  @override
-  String get helpFaqQuestion24 => '¿Cómo elimino los planes en caché?';
-
-  @override
-  String get helpFaqAnswer24 =>
-      'Los planes en caché viven en tu dispositivo; desinstala o borra los datos de la app para quitarlos.';
-
-  @override
-  String get helpFaqQuestion25 =>
-      '¿Comparten mis datos personales con terceros?';
-
-  @override
-  String get helpFaqAnswer25 =>
-      'No. Solo usamos telemetría agregada para confiabilidad y nunca vendemos información personal.';
-
-  @override
-  String get helpFaqQuestion26 => '¿Puedo usar la app sin Firebase Functions?';
-
-  @override
-  String get helpFaqAnswer26 =>
-      'No. El acceso directo a Firestore está bloqueado; todas las solicitudes pasan por Functions seguras.';
-
-  @override
-  String get helpFaqQuestion27 => '¿Por qué veo la etiqueta Caducado?';
-
-  @override
-  String get helpFaqAnswer27 =>
-      'Indica que el plan en caché pasó el umbral de frescura y conviene regenerarlo.';
-
-  @override
-  String get helpFaqQuestion28 => '¿Cómo me uno a la comunidad?';
-
-  @override
-  String get helpFaqAnswer28 =>
-      'Toca Unirte a la comunidad para abrir el canal o el chat en Telegram.';
-
-  @override
-  String get helpFaqQuestion29 => '¿Cómo reviso la versión de la app?';
-
-  @override
-  String get helpFaqAnswer29 =>
-      'Abre Ayuda y soporte y desplázate a Acerca de; ahí verás el número de versión.';
-
-  @override
-  String get helpFaqQuestion30 =>
-      '¿Puedo ejecutar la app con emuladores locales?';
-
-  @override
-  String get helpFaqAnswer30 =>
-      'Sí. Ajusta USE_FUNCTIONS_EMULATOR=true en env.public y arranca los emuladores de Firebase.';
-
-  @override
-  String get helpFaqQuestion31 => '¿Cómo contacto soporte en español?';
-
-  @override
-  String get helpFaqAnswer31 =>
-      'Usa el botón de correo en español; llega directo a nuestro equipo hispanohablante.';
-
-  @override
-  String get helpFaqQuestion32 => '¿Cuánto tardan en responder?';
-
-  @override
-  String get helpFaqAnswer32 =>
-      'Buscamos responder en un día hábil y normalmente lo hacemos antes.';
-
-  @override
-  String get helpFaqQuestion33 => '¿Qué datos ayudan en un reporte de errores?';
-
-  @override
-  String get helpFaqAnswer33 =>
-      'Incluye la marca de tiempo, tu localidad, versión de la app, dispositivo y pasos para reproducir.';
-
-  @override
-  String get helpFaqQuestion34 => '¿Cómo obtengo la versión más reciente?';
-
-  @override
-  String get helpFaqAnswer34 =>
-      'Actualiza desde tu tienda de apps o haz pull de la rama main si contribuyes al proyecto.';
-
-  @override
-  String get helpFaqQuestion35 =>
-      '¿Dónde leo la política de privacidad y los términos?';
-
-  @override
-  String get helpFaqAnswer35 =>
-      'Sigue los enlaces de Política de privacidad y Términos de servicio en la sección Acerca de.';
 
   @override
   String get adaptiveFlowCta => 'Flujo adaptativo';
@@ -1252,4 +1014,138 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get adaptiveFlowLockedPremium =>
       'Activa Premium para seguir avanzando.';
+
+  @override
+  String get helpFaqQuestion1 => '¿Cómo inicio mi primer recorrido adaptativo?';
+
+  @override
+  String get helpFaqAnswer1 =>
+      'En Inicio escribe un tema, toca Generar plan, completa el placement quiz y abrimos tu recorrido adaptativo con el primer módulo al instante.';
+
+  @override
+  String get helpFaqQuestion2 => '¿Qué calibra el placement quiz?';
+
+  @override
+  String get helpFaqAnswer2 =>
+      'El cuestionario de 10 preguntas define tu nivel (básico, intermedio o avanzado) e identifica tus skills débiles para enfocar cada módulo.';
+
+  @override
+  String get helpFaqQuestion3 => '¿Cuándo se desbloquea el siguiente módulo?';
+
+  @override
+  String get helpFaqAnswer3 =>
+      'Cuando visitas todas las lecciones y apruebas el quiz del módulo, el siguiente se desbloquea automáticamente y el timeline se actualiza en tiempo real.';
+
+  @override
+  String get helpFaqQuestion4 => '¿Cómo se generan los módulos?';
+
+  @override
+  String get helpFaqAnswer4 =>
+      'Cada módulo se produce mediante nuestras Cloud Functions con OpenAI; imponemos una estructura de 12 lecciones y validamos el esquema antes de guardarlo.';
+
+  @override
+  String get helpFaqQuestion5 => '¿Cómo funcionan los checkpoints y boosters?';
+
+  @override
+  String get helpFaqAnswer5 =>
+      'Al terminar un módulo puedes generar un checkpoint o un booster; ambos reutilizan tus skills débiles para darte ejercicios frescos antes de avanzar.';
+
+  @override
+  String get helpFaqQuestion6 =>
+      '¿Puedo regenerar un módulo o el plan completo?';
+
+  @override
+  String get helpFaqAnswer6 =>
+      'Sí. Usa \"Regenerar módulo\" dentro del módulo o \"Reconstruir plan\" en la tarjeta principal para pedir una versión nueva con tu estado más reciente.';
+
+  @override
+  String get helpFaqQuestion7 => '¿Puedo escuchar las lecciones?';
+
+  @override
+  String get helpFaqAnswer7 =>
+      'Sí. Cada lección incluye un ícono de audio con texto a voz para escuchar el contenido mientras conduces, cocinas o entrenas.';
+
+  @override
+  String get helpFaqQuestion8 => '¿Cómo mantengo viva la racha diaria?';
+
+  @override
+  String get helpFaqAnswer8 =>
+      'Completa al menos una lección o quiz por día; registramos la racha automáticamente cuando marcas una lección como completada.';
+
+  @override
+  String get helpFaqQuestion9 => '¿Qué ocurre si me quedo sin conexión?';
+
+  @override
+  String get helpFaqAnswer9 =>
+      'Los módulos generados se guardan en caché local, así puedes reabrirlos sin conexión; al reconectarte sincronizamos el progreso pendiente.';
+
+  @override
+  String get helpFaqQuestion10 =>
+      '¿Cómo se sincroniza mi progreso entre dispositivos?';
+
+  @override
+  String get helpFaqAnswer10 =>
+      'Tu LearnerState vive en Firestore y lo escuchamos en tiempo real, por lo que visitas, desbloqueos y rachas se mantienen entre móvil, tablet o escritorio.';
+
+  @override
+  String get helpFaqQuestion11 => '¿De dónde salen las recomendaciones?';
+
+  @override
+  String get helpFaqAnswer11 =>
+      'Combinamos tus búsquedas recientes con temas en tendencia en tu idioma; no existe contenido patrocinado.';
+
+  @override
+  String get helpFaqQuestion12 =>
+      '¿Cómo reporto contenido incorrecto o pido ayuda?';
+
+  @override
+  String get helpFaqAnswer12 =>
+      'En Ayuda y soporte toca Enviar correo o Reportar bug; adjuntamos el módulo, la versión y el dispositivo para responder rápido.';
+
+  @override
+  String get aiDisclaimerGenerating =>
+      'Contenido generado con IA. Puede contener imprecisiones.';
+
+  @override
+  String get aiDisclaimerQuiz =>
+      'Las preguntas son generadas con IA basandose en el contenido del modulo.';
+
+  @override
+  String get aiDisclaimerPowered => 'Contenido personalizado con IA';
+
+  @override
+  String get aiAboutTitle => 'Acerca de la IA';
+
+  @override
+  String get aiAboutSubtitle => 'Como usamos inteligencia artificial';
+
+  @override
+  String get aiAboutDialogIntro =>
+      'Usamos modelos de OpenAI (GPT-4) para personalizar tus planes y quizzes en tiempo real.';
+
+  @override
+  String get aiAboutDialogBulletModules =>
+      '- Generamos modulos y lecciones adaptadas a tu nivel.';
+
+  @override
+  String get aiAboutDialogBulletQuizzes =>
+      '- Creamos quizzes, checkpoints y refuerzos basados en tu progreso.';
+
+  @override
+  String get aiAboutDialogBulletRecommendations =>
+      '- Recomendamos contenido segun tus objetivos y uso reciente.';
+
+  @override
+  String get aiAboutDialogTransparencyTitle => 'Transparencia';
+
+  @override
+  String get aiAboutDialogTransparencyBody =>
+      'Aunque revisamos los prompts y resultados, la IA puede equivocarse o mostrar sesgos. Verifica cualquier informacion critica.';
+
+  @override
+  String get aiAboutDialogPrivacyTitle => 'Privacidad';
+
+  @override
+  String get aiAboutDialogPrivacyBody =>
+      'Tus entradas se envian de forma segura a OpenAI para procesarlas. No vendemos tus datos y puedes escribir a privacy@edaptia.io para exportar o eliminar tu cuenta.';
 }

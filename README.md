@@ -1,33 +1,91 @@
-# Edaptia [![CI](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlosjc97/aelion/actions/workflows/ci.yml)
+# Edaptia [![CI](https://github.com/Edaptia/Edaptia/actions/workflows/ci.yml/badge.svg)](https://github.com/Edaptia/Edaptia/actions/workflows/ci.yml)
 
-Modern adaptive learning companion built with Flutter and Firebase. Intelligent course generation powered by GPT-4o with Firestore-backed caching, defensive JSON parsing, and observability telemetry.
+**Tu tutor personal impulsado por IA.** Genera cursos personalizados en tiempo real sobre cualquier tema que quieras aprender: desde SQL y Python hasta Marketing y Excel. Contenido adaptado a tu nivel, a tu ritmo.
+
+ agent/audit-remediation
+Built with Flutter, Firebase, and OpenAI GPT-4o with intelligent caching, defensive parsing, and real-time adaptive content generation.
+
+## Production Status (Dec 14, 2024)
+
+- **Play Store Beta**: 🚀 **LIVE** - https://play.google.com/apps/testing/com.aelion.learning
+- **Landing Page**: ✅ https://www.edaptia.io
+- **GitHub CI**: ✅ CONFIGURED
 
 agent/audit-remediation
 ## Production Status (Nov 28, 2025)
 
-=======
+
 
 ## What's New (November 2025)
  main
 
 - **GitHub CI**: ✅ PASSING (flutter + functions)
+ main
 - **Firebase Functions**: ✅ DEPLOYED
-- **App Hosting**: ✅ ACTIVE
 - **Backend Server**: https://aelion-110324120650.us-east4.run.app
-- **Assessment API**: https://assessment-api-110324120650.us-central1.run.app
+- **Beta Mode**: ✅ ALL USERS HAVE PREMIUM ACCESS (during beta)
 
-## What's New (Nov 2025)
+## What is Edaptia?
 
-- **Critical Bug Fixes** - Fixed 3 production blockers:
-  - Quiz placement topic validation (backend)
-  - UTF-8 encoding issues (mojibake)
-  - Duplicate module rendering
+Edaptia is your **AI-powered personal tutor** that generates educational content adapted to your level in real-time. Instead of generic eternal courses, you get a **dynamic 4-12 module plan** with 3-7 minute lessons that adjust based on your performance.
+
+### Key Features
+
+- 🎯 **Choose ANY topic** - SQL, Python, Marketing, Excel, or anything you want to learn
+- 🤖 **AI generates your course** - Personalized content created in real-time
+- 📊 **Adaptive learning** - Difficulty adjusts based on your progress
+- 🎮 **Smart quizzes** - Assessments that evolve with you
+- 📈 **Progress tracking** - See your advancement in real-time
+- 🌍 **Bilingual** - Available in Spanish and English
+
+### For Whom
+
+Professionals and teams who need fast results in:
+- **Technology** (SQL, Python, .NET, JavaScript, etc.)
+- **Business/Marketing** (Analytics, Growth, SEO)
+- **Professional Languages** (English B1-B2)
+- **Creative Skills** (Design, Writing, Video)
+
+## What's New (Dec 2024)
+
+- **🚀 Play Store Beta Launch** - Live on Google Play Closed Testing track
+- **🎯 Beta Mode Active** - All users have premium access during beta testing
+- **🎨 Logo Refresh** - New brain icon configured across app and web
+- **📱 Signed App Bundle** - Production-ready v1.0.0+4 with proper signing
+- **🌐 Landing Page Live** - Beta signup at https://www.edaptia.io
+- **📝 Play Store Optimized** - SEO-optimized listings emphasizing multi-topic capability
+- **🔒 Critical Security Fix** - Fixed cross-account data sharing bug (userId scoping)
+- **📊 Lesson Progress Tracking** - Completely overhauled to persist correctly
+- **✅ Module Unlock Logic** - Now requires both lesson completion AND quiz passage
+- **🐛 Critical Bug Fixes** - Fixed 6 production blockers:
+  - Cross-account data isolation (CRITICAL)
+  - Lesson progress not persisting
+  - Quiz failure wiping all progress
+  - Module unlock requiring only quiz OR lessons (now AND)
+  - UTF-8 encoding issues (mojibake) in Spanish
+  - Crashlytics permission-denied errors
 - **App Hosting Deployment** - Backend server now running on Cloud Run via Firebase App Hosting
 - **Performance Boost** - Migrated from GPT-4o to GPT-4o-mini for most endpoints. 3x faster, 16x cost reduction
 - **Timeout Fix** - Extended Functions timeout from 60s to 300s
 - **Adaptive Lessons** - 8 specialized lesson types (quizzes, practice, games, projects)
 - **Interactive UI** - Timeline-based adaptive journey with expandable modules
 - **Daily Streaks** - Gamification with Firestore-backed streak tracking
+
+## 🧪 Beta Testing Program
+
+Join the beta testing program to be among the first to try Edaptia:
+
+1. **Visit**: https://aelion-c90d2.web.app
+2. **Sign up** with your email
+3. **Receive** invitation email from `privacy@edaptia.io`
+4. **Download** from Play Store (link in email) or Firebase App Distribution
+
+### For Beta Testers
+Once invited, you'll get:
+- Early access to new features
+- Direct feedback channel
+- Special beta tester recognition
+- Opportunity to shape the product
 
 ## Backend Services
 

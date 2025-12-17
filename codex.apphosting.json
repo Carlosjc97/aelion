@@ -1,8 +1,0 @@
-{
-  "apphosting": {
-    "repoSource": {
-      "dir": ".",
-      "branch": "main"
-    }
-  }
-}

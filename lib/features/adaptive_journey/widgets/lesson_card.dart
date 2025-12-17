@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+
+import 'package:edaptia/core/design_system/colors.dart';
+import 'package:edaptia/features/lesson/lesson_router.dart';
+import 'package:edaptia/services/course/models.dart';
+
+class LessonCard extends StatelessWidget {
+  const LessonCard({
+    super.key,
+    required this.index,
+    required this.lesson,
+    required this.moduleTitle,
+    required this.moduleNumber,
+    required this.courseId,
+    this.isVisited = false,
+    this.isLocked = false,
+    this.allModuleLessons = const <AdaptiveLesson>[],
+  });
+
+  final int index;
+  final AdaptiveLesson lesson;
+  final String moduleTitle;
+  final int moduleNumber;
+  final String courseId;
+  final bool isVisited;
+  final bool isLocked;
+  final List<AdaptiveLesson> allModuleLessons;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final backgroundColor = isLocked
+        ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+        : isVisited
+            ? EdaptiaColors.success.withValues(alpha: 0.03)
+            : theme.colorScheme.surfaceContainerHighest;
+    final borderColor = isLocked
+        ? theme.colorScheme.outline.withValues(alpha: 0.2)
+        : isVisited
+            ? EdaptiaColors.success.withValues(alpha: 0.3)
+            : theme.colorScheme.outline.withValues(alpha: 0.3);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: isLocked
+            ? null
+            : () {
+                LessonRouter.navigateToLesson(
+                  context: context,
+                  lesson: lesson,
+                  moduleTitle: moduleTitle,
+                  moduleNumber: moduleNumber,
+                  lessonIndex: index,
+                  courseId: courseId,
+                  allModuleLessons: allModuleLessons,
+                );
+              },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: backgroundColor,
+            border: Border.all(
+              color: borderColor,
+              width: isVisited ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isLocked) ...[
+                    Icon(
+                      Icons.lock,
+                      color: theme.colorScheme.outline,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                  ] else if (isVisited) ...[
+                    Icon(
+                      Icons.check_circle,
+                      color: EdaptiaColors.success,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      'L${index + 1} - ${lesson.title}',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: isLocked
+                            ? theme.colorScheme.outline
+                            : theme.textTheme.titleSmall?.color,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Duration indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _estimateDuration(lesson),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                lesson.hook,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    isLocked
+                        ? Icons.lock_outline
+                        : isVisited
+                            ? Icons.check
+                            : Icons.arrow_forward,
+                    size: 16,
+                    color: isLocked
+                        ? theme.colorScheme.outline
+                        : isVisited
+                            ? EdaptiaColors.success
+                            : theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      isLocked
+                          ? 'Bloqueada - completa la lección anterior'
+                          : isVisited
+                              ? 'Completada'
+                              : 'Abrir lección',
+                      maxLines: 2,
+                      softWrap: true,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isLocked
+                            ? theme.colorScheme.outline
+                            : isVisited
+                                ? EdaptiaColors.success
+                                : theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Estimates lesson duration based on content
+  String _estimateDuration(AdaptiveLesson lesson) {
+    // Base duration: 1 minute
+    int totalMinutes = 1;
+
+    // Add time for theory (reading)
+    if (lesson.theory.isNotEmpty) {
+      final wordCount = lesson.theory.split(' ').length;
+      totalMinutes += (wordCount / 200).ceil(); // ~200 words per minute
+    }
+
+    // Add time for examples
+    if (lesson.exampleGlobal.isNotEmpty) {
+      totalMinutes += 1;
+    }
+
+    // Add time for practice
+    if (lesson.practice.prompt.isNotEmpty) {
+      totalMinutes += 1;
+    }
+
+    // Add time for micro quiz
+    if (lesson.microQuiz.isNotEmpty) {
+      totalMinutes += 1;
+    }
+
+    // Cap at reasonable range (1-8 minutes)
+    totalMinutes = totalMinutes.clamp(1, 8);
+
+    return '${totalMinutes}min';
+  }
+}

@@ -798,7 +798,7 @@ export const adaptiveSessionStart = onRequest(
       });
 
       // 3. Trigger M1 generation in the background (don't await)
-      const initialLearnerState = await loadLearnerState(authContext.userId);
+      const initialLearnerState = await loadLearnerState(authContext.userId, topic.trim());
       getOpenAI()
         .generateModuleAdaptive({
           topic: topic.trim(),
@@ -1107,11 +1107,11 @@ export const placementQuizStart = onRequest({ cors: true }, async (req, res) => 
     res.status(200).json({
       quizId,
       expiresAt,
-      maxMinutes: 15,
+      maxMinutes: 2,
       questions: questionsForClient,
       policy: {
         numQuestions: 10,
-        maxMinutes: 15,
+        maxMinutes: 2,
       },
     });
 
@@ -1218,6 +1218,7 @@ export {
   fetchNextModule,
   moduleQuizStart,
   moduleQuizGrade,
+  moduleQuizGenerate,
   validateChallenge,
   outlineTweak,
   openaiUsageMetrics,
@@ -1227,5 +1228,8 @@ export {
   adaptiveCheckpointQuiz,
   adaptiveEvaluateCheckpoint,
   adaptiveBooster,
+  markLessonVisited,
+  startTrial,
+  verifyGooglePlayPurchase,
 } from "./generative-endpoints";
 export { cleanupAiCache } from "./maintenance";

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/core/design_system/typography.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_header_widget.dart';
 import '../widgets/lesson_takeaway_card.dart';
+import '../widgets/next_lesson_button.dart';
 
 class ReflectionScreen extends StatefulWidget {
   const ReflectionScreen({super.key, required this.config});
@@ -29,6 +31,16 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
         '¿Qué dato te sorprendió?',
         '¿Qué necesitas investigar más?',
       ];
+
+  @override
+  void initState() {
+    super.initState();
+    CourseApiService.markLessonVisited(
+      topic: widget.config.courseId,
+      moduleNumber: widget.config.moduleNumber,
+      lessonIndex: widget.config.lessonIndex,
+    );
+  }
 
   @override
   void dispose() {
@@ -94,6 +106,8 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
           if (_submitted) ...[
             const SizedBox(height: 16),
             LessonTakeawayCard(takeaway: widget.config.takeaway),
+            const SizedBox(height: 12),
+            NextLessonButton(config: widget.config),
           ],
         ],
       ),

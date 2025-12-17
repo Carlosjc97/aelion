@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:edaptia/core/design_system/typography.dart';
+import 'package:edaptia/services/course_api_service.dart';
 
 import '../models/lesson_view_config.dart';
 import '../widgets/lesson_header_widget.dart';
 import '../widgets/lesson_takeaway_card.dart';
+import '../widgets/next_lesson_button.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key, required this.config});
@@ -29,6 +31,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final TextEditingController _notesController = TextEditingController();
 
   bool _finished = false;
+
+  @override
+  void initState() {
+    super.initState();
+    CourseApiService.markLessonVisited(
+      topic: widget.config.courseId,
+      moduleNumber: widget.config.moduleNumber,
+      lessonIndex: widget.config.lessonIndex,
+    );
+  }
 
   @override
   void dispose() {
@@ -82,7 +94,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 _finished ? 'Actividad completada' : 'Marcar como completada'),
           ),
           const SizedBox(height: 16),
-          if (_finished) LessonTakeawayCard(takeaway: widget.config.takeaway),
+          if (_finished) ...[
+            LessonTakeawayCard(takeaway: widget.config.takeaway),
+            const SizedBox(height: 12),
+            NextLessonButton(config: widget.config),
+          ],
         ],
       ),
     );

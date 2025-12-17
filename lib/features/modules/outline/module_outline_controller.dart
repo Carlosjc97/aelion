@@ -158,6 +158,7 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     DateTime requestStartedAt = DateTime.now();
 
     try {
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
       final localeLanguage = Localizations.localeOf(context).languageCode;
 
       final preferredLanguage = (widget.language?.trim().isNotEmpty ?? false)
@@ -190,7 +191,7 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
       );
 
       if (!forceRefresh && preferCache) {
-        final cached = await LocalOutlineStorage.instance.findById(cacheId);
+        final cached = await LocalOutlineStorage.instance.findById(userId, cacheId);
 
         if (cached != null) {
           if (!mounted) return;
@@ -237,6 +238,7 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
       );
 
       await LocalOutlineStorage.instance.save(
+        userId: userId,
         topic: _courseId,
         payload: response,
       );
@@ -394,7 +396,7 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     final entitlements = EntitlementsService();
     try {
       await entitlements.ensureLoaded();
-      if (entitlements.isPremium) {
+      if (entitlements.hasPremiumAccess) {
         return true;
       }
     } catch (error, stackTrace) {
@@ -558,7 +560,9 @@ mixin ModuleOutlineController on State<ModuleOutlineView> {
     }
 
     try {
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
       await LocalOutlineStorage.instance.save(
+        userId: userId,
         topic: _courseId,
         payload: Map<String, dynamic>.from(response),
       );

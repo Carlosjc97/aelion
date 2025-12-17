@@ -66,6 +66,7 @@ class AdaptiveService {
   static Future<AdaptiveModuleResponse> generateModule({
     required String topic,
     required int moduleNumber,
+    required String language,
     List<String> focusSkills = const <String>[],
     Duration timeout = CourseApiClient.defaultTimeout,
     int maxRetries = 1,
@@ -75,6 +76,7 @@ class AdaptiveService {
       body: <String, dynamic>{
         'topic': topic.trim(),
         'moduleNumber': moduleNumber,
+        'language': language,
         if (focusSkills.isNotEmpty) 'focusSkills': focusSkills,
       },
       timeout: timeout,

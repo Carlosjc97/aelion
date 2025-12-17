@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:edaptia/services/progress_service.dart';
 import 'package:edaptia/services/streak_service.dart';
 
 class StreakState {
@@ -34,11 +35,44 @@ class StreakNotifier extends StateNotifier<StreakState> {
   StreakNotifier(this._service) : super(const StreakState());
 
   final StreakService _service;
+  final ProgressService _progress = ProgressService();
+
+  Future<StreakSnapshot?> _localSnapshot({required bool increment}) async {
+    await _progress.init();
+    if (increment) {
+      final update = await _progress.tickDailyStreak();
+      final now = DateTime.now();
+      return StreakSnapshot(
+        streakDays: update.streakLength,
+        lastCheckIn: now,
+        incremented: update.incremented,
+      );
+    }
+    final localDays = _progress.streakCount;
+    if (localDays <= 0) return null;
+    return StreakSnapshot(
+      streakDays: localDays,
+      lastCheckIn: _progress.lastStreakCheckIn,
+      incremented: false,
+    );
+  }
 
   Future<void> refresh(String userId) async {
     state = state.copyWith(loading: true, error: null);
     try {
       final snapshot = await _service.fetch(userId);
+      if (snapshot.streakDays == 0 && snapshot.lastCheckIn == null) {
+        final fallback = await _localSnapshot(increment: false);
+        if (fallback != null) {
+          state = state.copyWith(
+            loading: false,
+            days: fallback.streakDays,
+            lastCheckIn: fallback.lastCheckIn,
+            error: null,
+          );
+          return;
+        }
+      }
       state = state.copyWith(
         loading: false,
         days: snapshot.streakDays,
@@ -46,10 +80,20 @@ class StreakNotifier extends StateNotifier<StreakState> {
         error: null,
       );
     } catch (error) {
-      state = state.copyWith(
-        loading: false,
-        error: error.toString(),
-      );
+      final fallback = await _localSnapshot(increment: false);
+      if (fallback != null) {
+        state = state.copyWith(
+          loading: false,
+          days: fallback.streakDays,
+          lastCheckIn: fallback.lastCheckIn,
+          error: null,
+        );
+      } else {
+        state = state.copyWith(
+          loading: false,
+          error: error.toString(),
+        );
+      }
     }
   }
 
@@ -72,6 +116,16 @@ class StreakNotifier extends StateNotifier<StreakState> {
       );
       return snapshot;
     } catch (error) {
+      final fallback = await _localSnapshot(increment: true);
+      if (fallback != null) {
+        state = state.copyWith(
+          loading: false,
+          days: fallback.streakDays,
+          lastCheckIn: fallback.lastCheckIn,
+          error: null,
+        );
+        return fallback;
+      }
       state = state.copyWith(
         loading: false,
         error: error.toString(),
