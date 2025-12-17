@@ -75,6 +75,98 @@ Once invited, you'll get:
 - Special beta tester recognition
 - Opportunity to shape the product
 
+## 🔧 Beta Mode Configuration
+
+### Disabling Beta Mode for Production
+
+When you're ready to launch to production and re-enable premium features, follow these steps:
+
+#### 1. Update Beta Configuration
+**File:** `lib/config/beta_config.dart`
+
+```dart
+// Change from:
+const bool isBetaMode = true;
+
+// To:
+const bool isBetaMode = false;
+```
+
+Also update feature flags:
+```dart
+class BetaConfig {
+  static const bool simplifiedFlow = false;      // Disable simplified onboarding
+  static const bool allowTopicSelection = true;  // Enable free topic selection
+  static const bool optionalQuiz = false;        // Make quiz required
+  static const bool enhancedAnalytics = true;    // Keep analytics enabled
+}
+```
+
+#### 2. Re-enable Premium Paywall
+**File:** `lib/services/entitlements_service.dart`
+
+```dart
+// Find this line (around line 29):
+const bool _isBetaMode = true;
+
+// Change to:
+const bool _isBetaMode = false;
+```
+
+#### 3. Verification Checklist
+
+Before deploying to production:
+
+- [ ] `lib/config/beta_config.dart` - Set `isBetaMode = false`
+- [ ] `lib/services/entitlements_service.dart` - Set `_isBetaMode = false`
+- [ ] Run `flutter analyze` - No warnings
+- [ ] Run `flutter test` - All tests pass
+- [ ] Test premium paywall appears for M2+ modules
+- [ ] Test trial activation flow works
+- [ ] Test purchase flow completes successfully
+- [ ] Update version in `pubspec.yaml` (e.g., `1.0.0+6`)
+- [ ] Create git tag: `git tag -a v1.0.0+6-production -m "Production release"`
+- [ ] Push tag: `git push origin v1.0.0+6-production`
+
+#### 4. Rollback Procedure (If Needed)
+
+If issues arise in production:
+
+```bash
+# List available tags
+git tag -l
+
+# Checkout previous stable version
+git checkout v1.0.0+5-beta-stable
+
+# Create hotfix branch
+git checkout -b hotfix/rollback-beta-config
+
+# Make necessary fixes, then deploy
+```
+
+### Beta Mode Features
+
+When `isBetaMode = true`:
+
+**Unlocked for all users:**
+- ✅ All modules (M1-M6) accessible without premium
+- ✅ No trial limitations
+- ✅ No purchase prompts
+
+**Simplified onboarding (if `BetaConfig.simplifiedFlow = true`):**
+- Topic selection defaults to "SQL" for focused testing
+- Enhanced analytics tracking for Google Play metrics
+- Optional quiz flow (can skip directly to lessons)
+
+**Analytics events tracked:**
+- `topic_submitted` - When user selects a learning topic
+- `first_lesson_viewed` - First lesson engagement
+- `first_lesson_completed` - Lesson completion
+- `quiz_started` - Quiz attempt initiated
+- `quiz_completed` - Quiz completion with band/score
+- `second_session_within_48h` - Retention metric
+
 ## Backend Services
 
 ### App Hosting (Node.js Server)

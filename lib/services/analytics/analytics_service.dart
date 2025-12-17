@@ -232,6 +232,87 @@ class AnalyticsService {
     );
   }
 
+  /// Beta Analytics Events for Google Play Metrics
+  /// Track critical user journey events for beta testing
+
+  Future<void> trackTopicSubmitted({
+    required String topic,
+    required String source,
+  }) {
+    return track(
+      'topic_submitted',
+      properties: <String, Object?>{
+        'topic': topic,
+        'source': source, // 'search', 'recommendation', 'recent'
+      },
+    );
+  }
+
+  Future<void> trackFirstLessonViewed({
+    required String topic,
+    required String lessonType,
+  }) {
+    return track(
+      'first_lesson_viewed',
+      properties: <String, Object?>{
+        'topic': topic,
+        'lesson_type': lessonType, // 'micro', 'full'
+      },
+    );
+  }
+
+  Future<void> trackFirstLessonCompleted({
+    required String topic,
+    required int durationSeconds,
+  }) {
+    return track(
+      'first_lesson_completed',
+      properties: <String, Object?>{
+        'topic': topic,
+        'duration_s': durationSeconds,
+      },
+    );
+  }
+
+  Future<void> trackQuizStarted({
+    required String topic,
+    required String trigger,
+  }) {
+    return track(
+      'quiz_started',
+      properties: <String, Object?>{
+        'topic': topic,
+        'trigger': trigger, // 'auto', 'user_choice', 'skip_micro_lesson'
+      },
+    );
+  }
+
+  Future<void> trackQuizCompleted({
+    required String topic,
+    required String band,
+    required int scorePct,
+  }) {
+    return track(
+      'quiz_completed',
+      properties: <String, Object?>{
+        'topic': topic,
+        'band': band,
+        'score_pct': scorePct,
+      },
+    );
+  }
+
+  Future<void> trackSecondSessionWithin48h({
+    required String userId,
+  }) {
+    return track(
+      'second_session_within_48h',
+      properties: <String, Object?>{
+        'user_id': userId,
+      },
+    );
+  }
+
   Future<void> identifyGuest(String guestId) async {
     await init();
     _guestId = guestId;

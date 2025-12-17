@@ -7,6 +7,7 @@ import 'package:edaptia/features/adaptive_journey/adaptive_journey_screen.dart';
 import 'package:edaptia/features/adaptive_journey/widgets/adaptive_loading_indicator.dart';
 import 'package:edaptia/features/assessment/assessment_results_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/course/models.dart';
 import 'package:edaptia/services/local_quiz_cache.dart';
@@ -125,6 +126,12 @@ class _QuizScreenState extends State<QuizScreen> {
       );
 
       if (!mounted) return;
+
+      // Track quiz started for analytics
+      unawaited(AnalyticsService().trackQuizStarted(
+        topic: widget.topic,
+        trigger: 'auto',
+      ));
 
       setState(() {
         _session = session;
@@ -250,6 +257,13 @@ class _QuizScreenState extends State<QuizScreen> {
         topic: widget.topic,
         language: widget.language,
       );
+
+      // Track quiz completed for analytics
+      unawaited(AnalyticsService().trackQuizCompleted(
+        topic: widget.topic,
+        band: CourseApiService.placementBandToString(grade.band),
+        scorePct: grade.scorePct,
+      ));
 
       if (!mounted) return;
       setState(() {

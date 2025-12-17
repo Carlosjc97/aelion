@@ -13,6 +13,7 @@ import 'package:edaptia/features/quiz/quiz_screen.dart';
 import 'package:edaptia/features/settings/settings_view.dart';
 import 'package:edaptia/features/support/help_support_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
+import 'package:edaptia/services/analytics/analytics_service.dart';
 import 'package:edaptia/services/course_api_service.dart';
 import 'package:edaptia/services/google_sign_in_helper.dart';
 import 'package:edaptia/services/learner_state_service.dart';
@@ -130,6 +131,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
       final auth = _safeAuth();
       final userId = auth?.currentUser?.uid ?? 'anonymous';
       final languageCode = Localizations.localeOf(context).languageCode;
+
+      // Track topic submission for analytics
+      final source = presetTopic != null ? 'recommendation' : 'search';
+      await AnalyticsService().trackTopicSubmitted(
+        topic: rawTopic,
+        source: source,
+      );
 
       // NOTE: Re-enable when backend trackSearch endpoint is implemented
       // unawaited(
