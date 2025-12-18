@@ -4,7 +4,7 @@
 
 Built with Flutter, Firebase, and OpenAI GPT-4o with intelligent caching, defensive parsing, and real-time adaptive content generation.
 
-## Production Status (Dec 14, 2024)
+## Production Status (Dec 17, 2024)
 
 - **Play Store Beta**: 🚀 **LIVE** - https://play.google.com/apps/testing/com.aelion.learning
 - **Landing Page**: ✅ https://www.edaptia.io
@@ -12,6 +12,7 @@ Built with Flutter, Firebase, and OpenAI GPT-4o with intelligent caching, defens
 - **Firebase Functions**: ✅ DEPLOYED
 - **Backend Server**: https://aelion-110324120650.us-east4.run.app
 - **Beta Mode**: ✅ ALL USERS HAVE PREMIUM ACCESS (during beta)
+- **Adaptive Storytelling**: ✨ **NEW** - Explicit visualization of personalization
 
 ## What is Edaptia?
 
@@ -35,6 +36,31 @@ Professionals and teams who need fast results in:
 - **Creative Skills** (Design, Writing, Video)
 
 ## What's New (Dec 2024)
+
+### 🎭 Adaptive Storytelling (Dec 17, 2024) - **LATEST**
+
+**Problem Solved:** "Users don't see WHAT adapted based on their quiz"
+
+**New Features:**
+- ✨ **AdaptationResultScreen** - Post-quiz visualization showing:
+  * Detected level (Beginner/Intermediate/Advanced) with visual design
+  * Specific content adjustments (what's omitted, prioritized, reinforced)
+  * 3 personalized adaptations per level
+  * Smooth animations and band-specific colors
+- 🎯 **Humanized Quiz Copy** - Changed from "exam" language to "personalization":
+  * "Personaliza tu camino" instead of "Quiz de calibración"
+  * "Ayúdanos a conocerte" instead of "Pregunta X/Y"
+  * Psychology icon instead of quiz icon
+- 📚 **Preview Badge** - Clear context that micro-lesson is initial sample
+- 🎨 **Visual Design System** - Gradient backgrounds, icon system, smooth UX
+
+**Impact:** Users now UNDERSTAND and TRUST the adaptation (solves perception crisis)
+
+**Branch:** `feat/adaptive-storytelling`
+
+---
+
+### 🚀 Previous Updates
 
 - **🚀 Play Store Beta Launch** - Live on Google Play Closed Testing track
 - **🎯 Beta Mode Active** - All users have premium access during beta testing
