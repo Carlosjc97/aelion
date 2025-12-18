@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edaptia/config/beta_config.dart';
 import 'package:edaptia/features/adaptive_journey/adaptive_journey_screen.dart';
 import 'package:edaptia/features/adaptive_journey/widgets/adaptive_loading_indicator.dart';
+import 'package:edaptia/features/assessment/adaptation_result_screen.dart';
 import 'package:edaptia/features/assessment/assessment_results_screen.dart';
 import 'package:edaptia/l10n/app_localizations.dart';
 import 'package:edaptia/services/analytics/analytics_service.dart';
@@ -310,15 +312,30 @@ class _QuizScreenState extends State<QuizScreen> {
 
       setState(() => _submitting = false);
 
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => AdaptiveJourneyScreen(
-            topic: topic,
-            target: topic,
-            initialBand: grade.band,
+      // Show adaptation visualization (beta storytelling)
+      // This explicitly shows WHAT adapted based on quiz results
+      if (BetaConfig.simplifiedFlow) {
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => AdaptationResultScreen(
+              topic: topic,
+              band: grade.band,
+              scorePct: grade.scorePct,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Standard flow: directly to lessons
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => AdaptiveJourneyScreen(
+              topic: topic,
+              target: topic,
+              initialBand: grade.band,
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => _submitting = false);
@@ -415,9 +432,22 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Widget _buildIntro(AppLocalizations l10n) {
     final theme = Theme.of(context);
+
+    // Beta: Humanized copy (from "quiz" to "personalization")
+    final title = BetaConfig.simplifiedFlow
+        ? 'Personaliza tu camino'
+        : l10n.quizTitle;
+    final headerTitle = BetaConfig.simplifiedFlow
+        ? 'Cuéntanos qué ya sabes de ${widget.topic}'
+        : l10n.quizHeaderTitle(widget.topic);
+    final description = BetaConfig.simplifiedFlow
+        ? 'Con unas pocas preguntas, ajustaremos todo el contenido a tu nivel. '
+          'No es un examen, es para ayudarte a aprender mejor.'
+        : l10n.quizIntroDescription;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.quizTitle),
+        title: Text(title),
         leading: IconButton(
           key: const Key('quiz-exit'),
           icon: const Icon(Icons.close),
@@ -429,15 +459,17 @@ class _QuizScreenState extends State<QuizScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // Topic and Icon
+            // Topic and Icon - changed to personalization icon
             Icon(
-              Icons.quiz_outlined,
+              BetaConfig.simplifiedFlow
+                  ? Icons.psychology_outlined
+                  : Icons.quiz_outlined,
               size: 64,
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 24),
             Text(
-              l10n.quizHeaderTitle(widget.topic),
+              headerTitle,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -445,7 +477,7 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.quizIntroDescription,
+              description,
               style: theme.textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
@@ -471,7 +503,9 @@ class _QuizScreenState extends State<QuizScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Contenido generado en vivo',
+                          BetaConfig.simplifiedFlow
+                              ? 'Personalización en vivo'
+                              : 'Contenido generado en vivo',
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: Colors.blue.shade900,
                             fontWeight: FontWeight.bold,
@@ -479,7 +513,9 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Creamos este quiz específicamente para ti. Puede tomar unos segundos.',
+                          BetaConfig.simplifiedFlow
+                              ? 'Creamos estas preguntas específicamente para ${widget.topic}. Puede tomar unos segundos.'
+                              : 'Creamos este quiz específicamente para ti. Puede tomar unos segundos.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.blue.shade700,
                           ),
@@ -504,7 +540,9 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 ),
                 child: Text(
-                  l10n.startQuiz,
+                  BetaConfig.simplifiedFlow
+                      ? 'Comenzar personalización'
+                      : l10n.startQuiz,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -531,7 +569,9 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.quizTitle),
+        title: Text(BetaConfig.simplifiedFlow
+            ? 'Personaliza tu camino'
+            : l10n.quizTitle),
         leading: IconButton(
           key: const Key('quiz-exit'),
           icon: const Icon(Icons.close),
@@ -814,13 +854,20 @@ class _QuizProgressHeader extends StatelessWidget {
     final progressValue =
         total <= 0 ? 0.0 : (currentIndex + 1) / total.clamp(1, total);
 
+    // Beta: Humanized counter text
+    final counterText = BetaConfig.simplifiedFlow
+        ? 'Ayúdanos a conocerte ${currentIndex + 1}/$total'
+        : l10n.quizQuestionCounter(currentIndex + 1, total);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.quizHeaderTitle(topic),
+            BetaConfig.simplifiedFlow
+                ? topic
+                : l10n.quizHeaderTitle(topic),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -830,13 +877,14 @@ class _QuizProgressHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                l10n.quizQuestionCounter(currentIndex + 1, total),
+                counterText,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              Text(
-                l10n.quizTimeHint(maxMinutes),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              if (!BetaConfig.simplifiedFlow)
+                Text(
+                  l10n.quizTimeHint(maxMinutes),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
             ],
           ),
         ],
