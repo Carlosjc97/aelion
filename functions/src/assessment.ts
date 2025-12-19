@@ -183,15 +183,18 @@ export function gradeQuiz(
   theta = Math.max(-3, Math.min(3, theta));
 
   // Determine band based on theta
+  // Map IRT theta values to frontend PlacementBand enum
+  // Frontend expects: "basic", "intermediate", "advanced"
   let band: string;
-  if (theta > 1.5) {
-    band = "senior";
-  } else if (theta > 0.5) {
-    band = "mid-level";
+  if (theta > 1.0) {
+    // High ability: theta > 1.0 → Advanced level
+    band = "advanced";
   } else if (theta > -0.5) {
-    band = "junior";
+    // Mid ability: -0.5 < theta <= 1.0 → Intermediate level
+    band = "intermediate";
   } else {
-    band = "beginner";
+    // Low ability: theta <= -0.5 → Basic/Beginner level
+    band = "basic";
   }
 
   // Suggested depth
