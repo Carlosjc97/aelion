@@ -268,11 +268,23 @@ class _QuizScreenState extends State<QuizScreen> {
       ));
 
       if (!mounted) return;
-      setState(() {
-        _grade = grade;
-        _stage = _QuizStage.result;
-        _submitting = false;
-      });
+
+      // Beta simplified flow: skip detailed results screen, go directly to adaptation
+      if (BetaConfig.simplifiedFlow) {
+        setState(() {
+          _grade = grade;
+          _submitting = false;
+        });
+        // Navigate directly to adaptation result screen
+        await _finalizePlan();
+      } else {
+        // Standard flow: show detailed results screen first
+        setState(() {
+          _grade = grade;
+          _stage = _QuizStage.result;
+          _submitting = false;
+        });
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => _submitting = false);

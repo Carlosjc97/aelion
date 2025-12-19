@@ -323,7 +323,7 @@ async function saveLearnerState(userId: string, topic: string, state: LearnerSta
   );
 }
 
-async function updateLearnerState(
+export async function updateLearnerState(
   userId: string,
   topic: string,
   updates: Partial<LearnerState>,

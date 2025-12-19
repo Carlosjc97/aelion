@@ -711,6 +711,7 @@ import {
   OPENAI_SECRETS,
   getOpenAI,
   loadLearnerState,
+  updateLearnerState,
 } from "./generative-endpoints";
 import {
   authenticateRequest,
@@ -1136,6 +1137,13 @@ export const placementQuizGrade = onRequest({ cors: true }, async (req, res) => 
   }
 
   try {
+    // Authenticate user
+    const authContext = await authenticateRequest(req, authClient);
+    if (!authContext.userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
     const { quizId, answers } = req.body;
 
     if (!quizId || typeof quizId !== "string") {
@@ -1188,6 +1196,17 @@ export const placementQuizGrade = onRequest({ cors: true }, async (req, res) => 
 
     // Grade quiz
     const result = getAssessment().gradeQuiz(session.questions, answerMap);
+
+    // Update learner state with detected band to enable personalized content generation
+    try {
+      await updateLearnerState(authContext.userId, session.topic, {
+        level_band: result.band as any,
+      });
+      logger.info(`Updated learnerState for user ${authContext.userId}, topic ${session.topic}, band=${result.band}`);
+    } catch (stateError) {
+      logger.error("Failed to update learnerState after quiz:", stateError);
+      // Don't fail the request if state update fails - user still gets quiz results
+    }
 
     // Session cleanup happens via TTL or maintenance job
 
